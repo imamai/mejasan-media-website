@@ -32,6 +32,11 @@ export default function Navbar() {
   const dropdownTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pathname = usePathname();
 
+  /* Pages with light backgrounds need dark nav links even before scrolling */
+  const LIGHT_PAGES = ['/booking', '/blog', '/contact'];
+  const isLightPage = LIGHT_PAGES.some(p => pathname === p || pathname.startsWith(p + '/'));
+  const useDark = scrolled || isLightPage;
+
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);
     window.addEventListener('scroll', onScroll, { passive: true });
@@ -48,16 +53,16 @@ export default function Navbar() {
     dropdownTimer.current = setTimeout(() => setDropdown(null), 80);
   };
 
-  /* Adaptive colours based on scroll position */
-  const linkCls    = scrolled ? 'text-[#0F0F0F]/60 hover:text-[#0F0F0F]' : 'text-white/55 hover:text-white';
-  const activeCls  = scrolled ? 'text-[#0F0F0F]' : 'text-white';
-  const iconCls    = scrolled ? 'text-[#0F0F0F]/60 hover:text-[#0F0F0F]' : 'text-white/60 hover:text-white';
-  const portalCls  = scrolled ? 'text-[#0F0F0F]/65 hover:text-[#0F0F0F]' : 'text-white/60 hover:text-white';
+  /* Adaptive colours based on scroll position / page background */
+  const linkCls    = useDark ? 'text-[#0F0F0F]/60 hover:text-[#0F0F0F]' : 'text-white/55 hover:text-white';
+  const activeCls  = useDark ? 'text-[#0F0F0F]' : 'text-white';
+  const iconCls    = useDark ? 'text-[#0F0F0F]/60 hover:text-[#0F0F0F]' : 'text-white/60 hover:text-white';
+  const portalCls  = useDark ? 'text-[#0F0F0F]/65 hover:text-[#0F0F0F]' : 'text-white/60 hover:text-white';
 
-  const dropdownPanel = scrolled
+  const dropdownPanel = useDark
     ? 'bg-white border border-[#0F0F0F]/[0.08] shadow-lg'
     : 'bg-[#141414] border border-white/[0.08]';
-  const dropdownLink = scrolled
+  const dropdownLink = useDark
     ? 'text-[#0F0F0F]/55 hover:text-[#0F0F0F] hover:bg-[#0F0F0F]/[0.04]'
     : 'text-white/55 hover:text-white hover:bg-white/[0.04]';
 
@@ -65,14 +70,14 @@ export default function Navbar() {
     <>
       <nav
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-          scrolled
+          useDark
             ? 'bg-white/95 backdrop-blur-xl border-b border-[#0F0F0F]/[0.07]'
             : 'bg-transparent'
         }`}
         style={{ height: 'var(--navbar-height)' }}
       >
         <div className="max-w-[1400px] mx-auto px-4 sm:px-8 lg:px-16 h-full flex items-center justify-between">
-          <Logo dark={scrolled} />
+          <Logo dark={useDark} />
 
           {/* Desktop nav */}
           <div className="hidden lg:flex items-center gap-8">
