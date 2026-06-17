@@ -8,8 +8,8 @@ export default function PrivacyPage() {
       <div className="max-w-[800px] mx-auto px-4 sm:px-8">
         <div className="flex items-center gap-3 mb-4"><div className="w-8 h-px bg-[#E10600]" /><span className="text-[10px] font-display font-semibold tracking-[0.3em] text-[#E10600] uppercase">Legal</span></div>
         <h1 className="text-5xl font-heading font-light text-white mb-4">Privacy Policy</h1>
-        <p className="text-white/30 font-display text-sm mb-12">Last updated: January 2025</p>
-        <div className="prose prose-invert max-w-none prose-headings:font-heading prose-headings:font-light prose-p:text-white/50 prose-p:leading-relaxed prose-h2:text-3xl prose-h3:text-xl">
+        <p className="text-white/55 font-display text-sm mb-12">Last updated: January 2025</p>
+        <div className="prose prose-invert max-w-none prose-headings:font-heading prose-headings:font-light prose-p:text-white/65 prose-p:leading-relaxed prose-h2:text-3xl prose-h3:text-xl">
           <h2>1. Information We Collect</h2>
           <p>We collect information you provide directly to us when you make a booking enquiry, contact us through our website, or create a client portal account. This includes your name, email address, phone number, and project details.</p>
           <h2>2. How We Use Your Information</h2>

@@ -8,8 +8,8 @@ export default function TermsPage() {
       <div className="max-w-[800px] mx-auto px-4 sm:px-8">
         <div className="flex items-center gap-3 mb-4"><div className="w-8 h-px bg-[#E10600]" /><span className="text-[10px] font-display font-semibold tracking-[0.3em] text-[#E10600] uppercase">Legal</span></div>
         <h1 className="text-5xl font-heading font-light text-white mb-4">Terms of Service</h1>
-        <p className="text-white/30 font-display text-sm mb-12">Last updated: January 2025</p>
-        <div className="prose prose-invert max-w-none prose-headings:font-heading prose-headings:font-light prose-p:text-white/50 prose-p:leading-relaxed prose-h2:text-3xl prose-h3:text-xl">
+        <p className="text-white/55 font-display text-sm mb-12">Last updated: January 2025</p>
+        <div className="prose prose-invert max-w-none prose-headings:font-heading prose-headings:font-light prose-p:text-white/65 prose-p:leading-relaxed prose-h2:text-3xl prose-h3:text-xl">
           <h2>1. Services</h2>
           <p>Mejasan Media Production provides professional photography, videography, event coverage, drone footage, and branding services. By engaging our services, you agree to these terms.</p>
           <h2>2. Bookings and Deposits</h2>

@@ -235,7 +235,7 @@ export default function BookingPage() {
                   ['Budget',   watch('budget')],
                 ] as [string, string][]).filter(([,v]) => v?.trim()).map(([k,v]) => (
                   <div key={k} className="flex justify-between text-[13px]">
-                    <span className="text-[#0F0F0F]/40 font-display">{k}</span>
+                    <span className="text-[#0F0F0F]/55 font-display">{k}</span>
                     <span className="text-[#0F0F0F]/75 font-display text-right max-w-[200px] truncate">{v}</span>
                   </div>
                 ))}

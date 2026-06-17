@@ -53,7 +53,7 @@ function AuthForm({ onAuth }: { onAuth: (u: User, s: Session) => void }) {
         <div className="text-center mb-10">
           <div className="flex items-center justify-center gap-3 mb-4"><div className="w-8 h-px bg-[#E10600]" /><span className="text-[10px] font-display font-semibold tracking-[0.3em] text-[#E10600] uppercase">Client Portal</span><div className="w-8 h-px bg-[#E10600]" /></div>
           <h1 className="text-4xl font-heading font-light text-white mb-2">Welcome Back</h1>
-          <p className="text-white/35 text-sm font-display">Access your projects, galleries, and files</p>
+          <p className="text-white/55 text-sm font-display">Access your projects, galleries, and files</p>
         </div>
 
         {/* Tabs */}
@@ -70,7 +70,7 @@ function AuthForm({ onAuth }: { onAuth: (u: User, s: Session) => void }) {
             <motion.form key="login" initial={{opacity:0,y:8}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-8}} onSubmit={loginForm.handleSubmit(onLogin)} className="space-y-4">
               {([{f:'email',label:'Email',type:'email'},{f:'password',label:'Password',type:'password'}] as const).map(({f,label,type}) => (
                 <div key={f}>
-                  <label className="block text-[10px] font-display font-semibold tracking-widest uppercase text-white/40 mb-2">{label}</label>
+                  <label className="block text-[10px] font-display font-semibold tracking-widest uppercase text-white/55 mb-2">{label}</label>
                   <input type={type} {...loginForm.register(f)} className="w-full bg-[#141414] border border-white/[0.08] text-white/70 font-display text-sm px-4 py-3 focus:outline-none focus:border-[#E10600]/40" />
                   {loginForm.formState.errors[f] && <p className="text-[#E10600] text-xs mt-1">{loginForm.formState.errors[f]!.message as string}</p>}
                 </div>
@@ -81,7 +81,7 @@ function AuthForm({ onAuth }: { onAuth: (u: User, s: Session) => void }) {
             <motion.form key="signup" initial={{opacity:0,y:8}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-8}} onSubmit={signupForm.handleSubmit(onSignup)} className="space-y-4">
               {([{f:'name',label:'Full Name',type:'text'},{f:'email',label:'Email',type:'email'},{f:'password',label:'Password',type:'password'},{f:'confirm',label:'Confirm Password',type:'password'}] as const).map(({f,label,type}) => (
                 <div key={f}>
-                  <label className="block text-[10px] font-display font-semibold tracking-widest uppercase text-white/40 mb-2">{label}</label>
+                  <label className="block text-[10px] font-display font-semibold tracking-widest uppercase text-white/55 mb-2">{label}</label>
                   <input type={type} {...signupForm.register(f)} className="w-full bg-[#141414] border border-white/[0.08] text-white/70 font-display text-sm px-4 py-3 focus:outline-none focus:border-[#E10600]/40" />
                   {signupForm.formState.errors[f] && <p className="text-[#E10600] text-xs mt-1">{signupForm.formState.errors[f]!.message as string}</p>}
                 </div>
@@ -157,7 +157,7 @@ function Dashboard({ user, session, onSignOut }: { user: User; session: Session;
           <div className="text-[10px] font-display tracking-widest text-[#E10600] uppercase mb-0.5">Client Portal</div>
           <div className="text-sm font-display text-white">{user.email}</div>
         </div>
-        <button onClick={onSignOut} className="flex items-center gap-2 text-[10px] font-display text-white/30 hover:text-white transition-colors tracking-widest uppercase">
+        <button onClick={onSignOut} className="flex items-center gap-2 text-[10px] font-display text-white/50 hover:text-white transition-colors tracking-widest uppercase">
           <LogOut size={13} /> Sign Out
         </button>
       </div>
@@ -168,7 +168,7 @@ function Dashboard({ user, session, onSignOut }: { user: User; session: Session;
           <nav className="space-y-1 sticky top-24">
             {TABS.map(({ id, label, icon: Icon }) => (
               <button key={id} onClick={() => setTab(id)}
-                className={`w-full flex items-center gap-3 px-4 py-2.5 text-[11px] font-display tracking-widest uppercase transition-colors text-left ${tab===id?'text-white bg-white/[0.04]':'text-white/30 hover:text-white'}`}>
+                className={`w-full flex items-center gap-3 px-4 py-2.5 text-[11px] font-display tracking-widest uppercase transition-colors text-left ${tab===id?'text-white bg-white/[0.04]':'text-white/50 hover:text-white'}`}>
                 <Icon size={14} className={tab===id?'text-[#E10600]':'text-white/20'} />{label}
               </button>
             ))}
@@ -180,7 +180,7 @@ function Dashboard({ user, session, onSignOut }: { user: User; session: Session;
           <div className="flex gap-2 min-w-max">
             {TABS.map(({ id, label, icon: Icon }) => (
               <button key={id} onClick={() => setTab(id)}
-                className={`flex items-center gap-1.5 px-3 py-2 text-[9px] font-display tracking-widest uppercase whitespace-nowrap transition-colors border ${tab===id?'bg-[#E10600] text-white border-[#E10600]':'text-white/30 border-white/[0.08] hover:text-white'}`}>
+                className={`flex items-center gap-1.5 px-3 py-2 text-[9px] font-display tracking-widest uppercase whitespace-nowrap transition-colors border ${tab===id?'bg-[#E10600] text-white border-[#E10600]':'text-white/50 border-white/[0.1] hover:text-white'}`}>
                 <Icon size={11} />{label}
               </button>
             ))}
@@ -211,7 +211,7 @@ function Dashboard({ user, session, onSignOut }: { user: User; session: Session;
                 <div className="text-[10px] font-display tracking-widest text-[#E10600] uppercase mb-4">Quick Actions</div>
                 <div className="flex flex-wrap gap-2">
                   {[{l:'View Projects',t:'projects'},{l:'My Galleries',t:'galleries'},{l:'Invoices',t:'invoices'},{l:'Send Message',t:'messages'}].map(({l,t}) => (
-                    <button key={t} onClick={()=>setTab(t as typeof tab)} className="flex items-center gap-1.5 px-4 py-2 border border-white/[0.08] text-[10px] font-display text-white/50 hover:text-white hover:border-white/20 transition-colors">
+                    <button key={t} onClick={()=>setTab(t as typeof tab)} className="flex items-center gap-1.5 px-4 py-2 border border-white/[0.08] text-[10px] font-display text-white/65 hover:text-white hover:border-white/20 transition-colors">
                       {l} <ChevronRight size={10} />
                     </button>
                   ))}
@@ -244,9 +244,9 @@ function Dashboard({ user, session, onSignOut }: { user: User; session: Session;
                           {i < projectStage ? <CheckCircle size={14} className="text-white" /> : i === projectStage ? <Clock size={14} className="text-white" /> : <span className="text-[10px] text-white/30 font-display">{i+1}</span>}
                         </div>
                         <div>
-                          <div className={`text-[12px] font-display font-semibold ${i<=projectStage?'text-white':'text-white/25'}`}>{m}</div>
+                          <div className={`text-[12px] font-display font-semibold ${i<=projectStage?'text-white':'text-white/45'}`}>{m}</div>
                           {i === projectStage && <div className="text-[10px] text-[#E10600] font-display">In Progress</div>}
-                          {i < projectStage && <div className="text-[10px] text-white/20 font-display">Completed</div>}
+                          {i < projectStage && <div className="text-[10px] text-white/45 font-display">Completed</div>}
                         </div>
                       </div>
                     ))}
@@ -267,7 +267,7 @@ function Dashboard({ user, session, onSignOut }: { user: User; session: Session;
                   </div>
                 ))
               ) : (
-                <p className="text-[13px] text-white/25 font-display">No additional bookings found.</p>
+                <p className="text-[13px] text-white/50 font-display">No additional bookings found.</p>
               )}
             </div>
           )}
@@ -303,8 +303,8 @@ function Dashboard({ user, session, onSignOut }: { user: User; session: Session;
                 })
               ) : (
                 <div className="bg-[#141414] border border-white/[0.06] p-10 text-center">
-                  <Image className="w-8 h-8 text-white/15 mx-auto mb-3" />
-                  <p className="text-[13px] text-white/30 font-display">Your galleries will appear here once your project is delivered.</p>
+                  <Image className="w-8 h-8 text-white/35 mx-auto mb-3" />
+                  <p className="text-[13px] text-white/55 font-display">Your galleries will appear here once your project is delivered.</p>
                 </div>
               )}
               {lightbox && (

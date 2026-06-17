@@ -71,7 +71,7 @@ export default function ContactPage() {
                   <Icon size={16} className="text-[#E10600]" />
                 </div>
                 <div>
-                  <div className="text-[11px] font-display tracking-widest text-[#0F0F0F]/35 uppercase mb-0.5">{label}</div>
+                  <div className="text-[11px] font-display tracking-widest text-[#0F0F0F]/55 uppercase mb-0.5">{label}</div>
                   {href ? (
                     <a href={href} target={href.startsWith('http') ? '_blank' : undefined} rel="noopener noreferrer"
                       className="text-[15px] text-[#0F0F0F]/75 hover:text-[#E10600] transition-colors font-display">{value}</a>
@@ -150,7 +150,7 @@ export default function ContactPage() {
                 <ArrowRight size={13} className="group-hover:translate-x-0.5 transition-transform" />
               </button>
 
-              <p className="text-[12px] text-[#0F0F0F]/35 font-display text-center">We respond to all enquiries within 24 hours.</p>
+              <p className="text-[12px] text-[#0F0F0F]/55 font-display text-center">We respond to all enquiries within 24 hours.</p>
 
               <a
                 href={`https://wa.me/254700864849?text=${WA_MSG}`}

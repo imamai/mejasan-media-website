@@ -228,9 +228,9 @@ export default function HeroSection() {
           className="absolute bottom-7 right-6 sm:right-12 z-20 flex flex-col items-center gap-2"
           aria-hidden
         >
-          <span className="text-[9px] font-display text-white/30 tracking-[0.3em] uppercase" style={{ writingMode: 'vertical-rl' }}>Scroll</span>
+          <span className="text-[9px] font-display text-white/50 tracking-[0.3em] uppercase" style={{ writingMode: 'vertical-rl' }}>Scroll</span>
           <motion.div animate={{ y: [0, 5, 0] }} transition={{ duration: 1.6, repeat: Infinity }}>
-            <ChevronDown size={13} className="text-white/30" />
+            <ChevronDown size={13} className="text-white/50" />
           </motion.div>
         </motion.div>
       </div>

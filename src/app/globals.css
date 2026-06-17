@@ -46,6 +46,12 @@
   /* Hide scrollbar but keep functionality */
   .scrollbar-none::-webkit-scrollbar { display: none; }
   .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
+
+  /* Selection override for red-background sections */
+  .red-band ::selection {
+    background: #0B0B0B;
+    color: #FAFAFA;
+  }
 }
 
 @layer utilities {
@@ -118,7 +124,7 @@
     outline: none;
     transition: border-color 0.2s;
   }
-  .input-light::placeholder { color: rgba(15,15,15,0.3); }
+  .input-light::placeholder { color: rgba(15,15,15,0.5); }
   .input-light:focus { border-color: rgba(225,6,0,0.45); }
 
   .section-label {

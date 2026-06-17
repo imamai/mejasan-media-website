@@ -13,8 +13,8 @@ export default function Logo({ className = '', href = '/', logoUrl, dark = false
 
   const img = (
     <div className={`relative flex items-center ${className}`}>
-      <div className="relative w-24 h-24 shrink-0 overflow-hidden">
-        <Image src={src} alt="Mejasan Media Production" fill className="object-contain" />
+      <div className="relative w-26 h-26 shrink-0 overflow-hidden">
+        <Image src={src} alt="Mejasan Media Production" fill className={`object-contain${dark ? ' brightness-0' : ''}`} />
       </div>
     </div>
   );

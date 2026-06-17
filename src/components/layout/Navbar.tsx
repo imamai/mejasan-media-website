@@ -52,7 +52,7 @@ export default function Navbar() {
   const linkCls    = scrolled ? 'text-[#0F0F0F]/60 hover:text-[#0F0F0F]' : 'text-white/55 hover:text-white';
   const activeCls  = scrolled ? 'text-[#0F0F0F]' : 'text-white';
   const iconCls    = scrolled ? 'text-[#0F0F0F]/60 hover:text-[#0F0F0F]' : 'text-white/60 hover:text-white';
-  const portalCls  = scrolled ? 'text-[#0F0F0F]/45 hover:text-[#0F0F0F]' : 'text-white/45 hover:text-white';
+  const portalCls  = scrolled ? 'text-[#0F0F0F]/65 hover:text-[#0F0F0F]' : 'text-white/60 hover:text-white';
 
   const dropdownPanel = scrolled
     ? 'bg-white border border-[#0F0F0F]/[0.08] shadow-lg'

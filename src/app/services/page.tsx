@@ -88,7 +88,7 @@ export default function ServicesPage() {
                     <div className="w-12 h-12 bg-[#E10600]/10 flex items-center justify-center group-hover:bg-[#E10600]/20 transition-colors">
                       <Icon size={20} className="text-[#E10600]" />
                     </div>
-                    <span className="text-[10px] font-display text-[#0F0F0F]/20 tracking-[0.3em] uppercase mt-1">
+                    <span className="text-[10px] font-display text-[#0F0F0F]/40 tracking-[0.3em] uppercase mt-1">
                       {String(i + 1).padStart(2, '0')}
                     </span>
                   </div>

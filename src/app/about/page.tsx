@@ -93,7 +93,7 @@ export default function AboutPage() {
       </div>
 
       {/* Stats — red band, keep as-is */}
-      <section ref={statsRef} className="bg-[#E10600] py-14 sm:py-20">
+      <section ref={statsRef} className="red-band bg-[#E10600] py-14 sm:py-20">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-8 lg:px-16 grid grid-cols-2 lg:grid-cols-4 gap-8">
           {[{v:500,s:'+',l:'Projects'},{v:200,s:'+',l:'Weddings'},{v:50,s:'+',l:'Events'},{v:8,s:'+',l:'Years'}].map(({v,s,l}) => (
             <div key={l} className="text-center">

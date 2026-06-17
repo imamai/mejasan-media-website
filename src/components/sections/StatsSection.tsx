@@ -31,7 +31,7 @@ export default function StatsSection() {
   const inView = useInView(ref, { once: true, margin: '-100px' });
 
   return (
-    <section ref={ref} className="bg-[#E10600] py-16 sm:py-20">
+    <section ref={ref} className="red-band bg-[#E10600] py-16 sm:py-20">
       <div className="max-w-[1400px] mx-auto px-4 sm:px-8 lg:px-16">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-12">
           {STATS.map(({ value, suffix, label, desc }) => (

@@ -92,7 +92,7 @@ export default function BlogPage() {
                 <div className="text-[11px] font-display tracking-widest text-[#E10600] uppercase mb-4">{featured.category} · Featured</div>
                 <h2 className="text-[clamp(1.5rem,3vw,2.5rem)] font-heading font-light text-[#0F0F0F] mb-4 leading-tight group-hover:text-[#0F0F0F]/70 transition-colors">{featured.title}</h2>
                 <p className="text-[15px] text-[#0F0F0F]/55 leading-relaxed mb-6">{featured.excerpt}</p>
-                <div className="flex items-center gap-4 text-[12px] text-[#0F0F0F]/40 font-display mb-6">
+                <div className="flex items-center gap-4 text-[12px] text-[#0F0F0F]/55 font-display mb-6">
                   <span className="flex items-center gap-1.5"><Calendar size={11} />{new Date(featured.created_at).toLocaleDateString('en-KE',{year:'numeric',month:'short',day:'numeric'})}</span>
                   <span className="flex items-center gap-1.5"><Clock size={11} />{featured.read_time} min read</span>
                 </div>
@@ -117,7 +117,7 @@ export default function BlogPage() {
                   <div className="text-[10px] font-display tracking-widest text-[#E10600] uppercase mb-2">{post.category}</div>
                   <h3 className="text-base font-heading font-light text-[#0F0F0F] mb-2 leading-snug group-hover:text-[#0F0F0F]/70 transition-colors line-clamp-2">{post.title}</h3>
                   <p className="text-[13px] text-[#0F0F0F]/50 line-clamp-2 leading-relaxed mb-4">{post.excerpt}</p>
-                  <div className="flex items-center gap-3 text-[11px] text-[#0F0F0F]/35 font-display">
+                  <div className="flex items-center gap-3 text-[11px] text-[#0F0F0F]/55 font-display">
                     <span>{post.author_name}</span>
                     <span>·</span>
                     <span>{post.read_time} min</span>
