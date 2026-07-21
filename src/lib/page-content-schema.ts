@@ -277,6 +277,114 @@ export const photographyDefaults = {
     { name: 'Premium', price: 'KES 85,000', hours: '8 hours', imgs: '400+ edited', coverage: '2 photographers', includes: ['Everything in Essential', 'Engagement session', 'Album design', 'Drone coverage'], featured: true },
     { name: 'Luxury', price: 'KES 150,000+', hours: 'Full day', imgs: '600+ edited', coverage: '2 photographers + video', includes: ['Everything in Premium', 'Cinematic highlights', 'Hardcover album', 'Priority editing'], featured: false },
   ],
+  studioCharges: {
+    heading: 'Photo Studio Charges',
+    description: 'Walk-in studio session pricing for single, group, express, and creative portrait photos.',
+    items: [
+      { label: 'Single Photo', price: 'Ksh. 350', note: 'Delivery within 48 hrs' },
+      { label: 'Group Photo (2–3 people)', price: 'Ksh. 400', note: 'Delivery within 48 hrs' },
+      { label: 'Group Photo (4–6 people)', price: 'Ksh. 500', note: 'Delivery within 48 hrs' },
+      { label: 'Group Photo (7–10 people)', price: 'Ksh. 800', note: 'Delivery within 48 hrs' },
+      { label: 'Express Photo', price: 'Ksh. 450', note: 'Delivery within 12 hrs' },
+      { label: 'Creative Photo', price: 'Ksh. 500', note: 'Delivery within 72 hrs' },
+    ],
+  },
+  photoMounting: {
+    heading: 'Photo Mounting Charges',
+    description: 'Standard paper photo mounts, priced by size.',
+    items: [
+      { size: 'A1', price: 'Ksh. 5,500' },
+      { size: 'A2', price: 'Ksh. 3,500' },
+      { size: 'A3', price: 'Ksh. 2,500' },
+      { size: 'A4', price: 'Ksh. 1,500' },
+      { size: 'A5', price: 'Ksh. 600' },
+    ],
+  },
+  studioOffer: {
+    heading: 'Studio Offer',
+    description: 'Limited-time bulk print discount.',
+    items: [
+      { label: '10 pics', wasPrice: 'Ksh. 3,500', nowPrice: 'Ksh. 3,200' },
+      { label: '20 pics', wasPrice: 'Ksh. 7,000', nowPrice: 'Ksh. 6,200' },
+    ],
+  },
+  woodenMount: {
+    heading: 'Wooden Photo Mount',
+    description: "Display your cherished memories with Mejasan Media Production's handcrafted wooden photo mounts. Elegant, timeless, and perfect for any occasion.",
+    items: [
+      { size: 'A4', price: 'Ksh. 1,500' },
+      { size: 'A3', price: 'Ksh. 2,500' },
+      { size: 'A2', price: 'Ksh. 3,500' },
+      { size: 'A1', price: 'Ksh. 5,500' },
+      { size: 'A0', price: 'Ksh. 8,000' },
+    ],
+  },
+  traditionalWeddingPackages: {
+    heading: 'Traditional Wedding Packages',
+    description: 'Our customised Traditional Wedding packages cater for all your needs, offering a blend of candid shots, posed portraits and artistic compositions.',
+    note: 'Premium Cinematic Reels @ Ksh. 20,000, Phone Reel Videos @ Ksh. 10,000, Drone Cinematography @ Ksh. 15,000, Extended Party coverage @ Ksh. 20,000. Logistics and transport costs calculated separately per distance.',
+    packages: [
+      {
+        label: '1st Package',
+        photographyItems: ['Preliminary meeting & consultation', '1 Professional Photographer', '1 HD Photography Camera', 'Photography Lights', 'Unlimited edited soft copy photos', 'A day coverage'],
+        photographyPrice: 'Ksh. 25,000',
+        printsItems: ['Executive A4 Photo book — 150 Photos (8x12)', '2 A3 photo mounts'],
+        printsPrice: 'Ksh. 15,000',
+        videographyItems: ['1 Professional Videographer', '1 HD Video Camera', 'Well edited full event coverage HD video in a flash drive', 'Private YouTube link of the uploaded video'],
+        videographyPrice: 'Ksh. 30,000',
+        addOnsItems: [],
+        total: 'Ksh. 70,000',
+      },
+      {
+        label: '2nd Package',
+        photographyItems: ['Preliminary meeting & consultation', '2 Professional Photographers', '2 HD Photography Cameras', 'Photography Lights', 'Unlimited edited soft copy photos', 'A day coverage'],
+        photographyPrice: 'Ksh. 45,000',
+        printsItems: ['Executive A4 Photo book — 200 Photos (12x12)', '2 A3, 2 A4 photo mounts'],
+        printsPrice: 'Ksh. 20,000',
+        videographyItems: ['2 Professional Videographers', '2 4K Video Cameras', 'Well edited full event coverage HD video in a flash drive', 'Private YouTube link of the uploaded video'],
+        videographyPrice: 'Ksh. 60,000',
+        addOnsItems: ['Drone coverage — Ksh. 15,000'],
+        total: 'Ksh. 140,000',
+      },
+      {
+        label: '3rd Package',
+        photographyItems: ['Preliminary meeting & consultation', '3 Professional Photographers', '3 HD Photography Cameras', 'Photography Lights', 'Unlimited edited soft copy photos', 'A day coverage'],
+        photographyPrice: 'Ksh. 60,000',
+        printsItems: ['2 Executive A4 Photo books — 200 Photos (12x12)', '3 A3, 3 A4 photo mounts'],
+        printsPrice: 'Ksh. 40,000',
+        videographyItems: ['2 Professional Videographers', '2 4K Video Cameras', 'Well edited full event coverage HD video in a flash drive', 'Private YouTube link of the uploaded video', '5-minute event trailer'],
+        videographyPrice: 'Ksh. 70,000',
+        addOnsItems: ['Drone coverage — Ksh. 15,000', 'Reels — Ksh. 20,000'],
+        total: 'Ksh. 205,000',
+      },
+    ],
+  },
+  weddingQuotation: {
+    heading: 'Wedding Quotation',
+    description: 'Full wedding-day photography & videography packages.',
+    packages: [
+      {
+        label: '1st Package',
+        items: ['2 Photographers, cameras & lights', '1 Videographer', 'Unlimited edited soft copy photos', 'Wedding Photobook (8 by 12)', '3 Mounted Photos (1 A3, 2 A4)'],
+        price: 'Ksh. 100,000',
+      },
+      {
+        label: '2nd Package',
+        items: ['2 Photographers, cameras & lights', '2 Videographers, cameras & lights', 'Unlimited edited soft copy photos', 'Personalised Wedding Photobook (12 by 12)', '4 Mounted Photos (1 A2, 1 A3, 2 A4)', 'Well edited HD full event video in a flash disk and a private YouTube link'],
+        price: 'Ksh. 150,000',
+      },
+      {
+        label: '3rd Package',
+        items: ['2 Photographers, cameras & lights', '2 Videographers, cameras & lights', 'Unlimited edited soft copy photos', 'Wedding signage book (8 by 12)', '3 wedding reels', 'Wedding Photobook (24 by 18), 40 pages', '6 Mounted Photos (2 A2, 2 A3, 2 A4)', 'Well edited 4K full event video in 2 flash disks and private YouTube link', 'Wedding trailer', 'Engagement shoot (photos and video)', 'Drone service'],
+        price: 'Ksh. 230,000',
+      },
+      {
+        label: '4th Package',
+        items: ['2 Photographers, cameras & lights', '3 Videographers, cameras & lights', 'Unlimited edited soft copy photos', 'Wedding Signage Book (8 by 12)', '5 wedding reels', '1 Wedding Photobook (24 by 18), 40 pages & 2 mini Photobooks (for parents)', '8 Mounted Photos (1 A1, 2 A2, 3 A3, 2 A4)', 'Well edited 4K full event video in two flash disks and private YouTube link', 'Wedding trailer', 'Engagement shoot (photos and video)', 'Drone service', 'After-party / Evening Party coverage'],
+        price: 'Ksh. 305,000',
+      },
+    ],
+  },
   cta: { heading: 'Ready to tell your story?', text: "Every great image starts with a conversation. Let's discuss your vision." },
 };
 
@@ -297,12 +405,84 @@ const photographyPackageFields: SchemaField[] = [
   { type: 'boolean', key: 'featured', label: 'Highlight as "Most Popular"' },
 ];
 
+const studioChargeRowFields: SchemaField[] = [
+  { type: 'text', key: 'label', label: 'Item' },
+  { type: 'text', key: 'price', label: 'Price' },
+  { type: 'text', key: 'note', label: 'Note (e.g. delivery time)' },
+];
+
+const sizeChargeFields: SchemaField[] = [
+  { type: 'text', key: 'size', label: 'Size' },
+  { type: 'text', key: 'price', label: 'Price' },
+];
+
+const studioOfferRowFields: SchemaField[] = [
+  { type: 'text', key: 'label', label: 'Item' },
+  { type: 'text', key: 'wasPrice', label: 'Was' },
+  { type: 'text', key: 'nowPrice', label: 'Now' },
+];
+
+const traditionalWeddingPackageFields: SchemaField[] = [
+  { type: 'text', key: 'label', label: 'Package name' },
+  { type: 'stringlist', key: 'photographyItems', label: 'Photography — included (one per line)' },
+  { type: 'text', key: 'photographyPrice', label: 'Photography — price' },
+  { type: 'stringlist', key: 'printsItems', label: 'Prints — included (one per line)' },
+  { type: 'text', key: 'printsPrice', label: 'Prints — price' },
+  { type: 'stringlist', key: 'videographyItems', label: 'Videography — included (one per line)' },
+  { type: 'text', key: 'videographyPrice', label: 'Videography — price' },
+  { type: 'stringlist', key: 'addOnsItems', label: 'Add-ons (one per line)' },
+  { type: 'text', key: 'total', label: 'Grand total' },
+];
+
+const quotationPackageFields: SchemaField[] = [
+  { type: 'text', key: 'label', label: 'Package name' },
+  { type: 'stringlist', key: 'items', label: 'Included (one per line)' },
+  { type: 'text', key: 'price', label: 'Price' },
+];
+
 const photographySchema: SchemaField[] = [
   { type: 'group', key: 'hero', label: 'Hero', fields: plainHeroFields },
   { type: 'list', key: 'categories', label: 'Specialisations', itemLabelKey: 'title', itemFields: categoryFields,
     newItem: { title: 'New Category', img: '', imgPosition: 'center', desc: '' } },
   { type: 'list', key: 'packages', label: 'Packages', itemLabelKey: 'name', itemFields: photographyPackageFields,
     newItem: { name: 'New Package', price: '', hours: '', imgs: '', coverage: '', includes: [], featured: false } },
+  { type: 'group', key: 'studioCharges', label: 'Photo Studio Charges', fields: [
+    { type: 'text', key: 'heading', label: 'Heading' },
+    { type: 'textarea', key: 'description', label: 'Description' },
+    { type: 'list', key: 'items', label: 'Pricing rows', itemLabelKey: 'label', itemFields: studioChargeRowFields,
+      newItem: { label: 'New Item', price: '', note: '' } },
+  ] },
+  { type: 'group', key: 'photoMounting', label: 'Photo Mounting Charges', fields: [
+    { type: 'text', key: 'heading', label: 'Heading' },
+    { type: 'textarea', key: 'description', label: 'Description' },
+    { type: 'list', key: 'items', label: 'Sizes', itemLabelKey: 'size', itemFields: sizeChargeFields,
+      newItem: { size: 'New Size', price: '' } },
+  ] },
+  { type: 'group', key: 'studioOffer', label: 'Studio Offer', fields: [
+    { type: 'text', key: 'heading', label: 'Heading' },
+    { type: 'textarea', key: 'description', label: 'Description' },
+    { type: 'list', key: 'items', label: 'Offers', itemLabelKey: 'label', itemFields: studioOfferRowFields,
+      newItem: { label: 'New Offer', wasPrice: '', nowPrice: '' } },
+  ] },
+  { type: 'group', key: 'woodenMount', label: 'Wooden Photo Mount', fields: [
+    { type: 'text', key: 'heading', label: 'Heading' },
+    { type: 'textarea', key: 'description', label: 'Description' },
+    { type: 'list', key: 'items', label: 'Sizes', itemLabelKey: 'size', itemFields: sizeChargeFields,
+      newItem: { size: 'New Size', price: '' } },
+  ] },
+  { type: 'group', key: 'traditionalWeddingPackages', label: 'Traditional Wedding Packages', fields: [
+    { type: 'text', key: 'heading', label: 'Heading' },
+    { type: 'textarea', key: 'description', label: 'Description' },
+    { type: 'textarea', key: 'note', label: 'Footnote' },
+    { type: 'list', key: 'packages', label: 'Packages', itemLabelKey: 'label', itemFields: traditionalWeddingPackageFields,
+      newItem: { label: 'New Package', photographyItems: [], photographyPrice: '', printsItems: [], printsPrice: '', videographyItems: [], videographyPrice: '', addOnsItems: [], total: '' } },
+  ] },
+  { type: 'group', key: 'weddingQuotation', label: 'Wedding Quotation', fields: [
+    { type: 'text', key: 'heading', label: 'Heading' },
+    { type: 'textarea', key: 'description', label: 'Description' },
+    { type: 'list', key: 'packages', label: 'Packages', itemLabelKey: 'label', itemFields: quotationPackageFields,
+      newItem: { label: 'New Package', items: [], price: '' } },
+  ] },
   { type: 'group', key: 'cta', label: 'Bottom CTA', fields: ctaFields },
 ];
 

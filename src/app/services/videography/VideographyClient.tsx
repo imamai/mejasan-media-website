@@ -4,11 +4,17 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { ArrowRight, Check, Play, X, MessageCircle } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
-import type { VideographyContent } from '@/lib/page-content-schema';
+import type { VideographyContent, PhotographyContent } from '@/lib/page-content-schema';
 
 const WA_MSG = encodeURIComponent('Hi, I would like to enquire about your videography services and see demo reels.');
 
-export default function VideographyClient({ content }: { content: VideographyContent }) {
+export default function VideographyClient({
+  content, traditionalWeddingPackages, weddingQuotation,
+}: {
+  content: VideographyContent;
+  traditionalWeddingPackages: PhotographyContent['traditionalWeddingPackages'];
+  weddingQuotation: PhotographyContent['weddingQuotation'];
+}) {
   const [activeVideo, setActiveVideo] = useState<string | null>(null);
   const { hero, types, packages, cta } = content;
 
@@ -78,6 +84,82 @@ export default function VideographyClient({ content }: { content: VideographyCon
                   {includes.map((inc) => <li key={inc} className="flex items-center gap-2.5 text-[13px] text-[#0F0F0F]/65"><Check size={13} className="text-[#E10600] shrink-0" />{inc}</li>)}
                 </ul>
                 <Link href="/booking" className={`${featured ? 'btn-primary' : 'btn-outline-dark'} w-full justify-center`}>Book This Package</Link>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Traditional Wedding Packages — off-white (edited under Services — Photography) */}
+      <section className="bg-[#F5F5F0] py-24 md:py-32">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-8 lg:px-16">
+          <div className="flex items-center gap-3 mb-4"><div className="w-8 h-px bg-[#E10600]" /><span className="text-[10px] font-display tracking-[0.3em] text-[#E10600] uppercase font-semibold">Weddings</span></div>
+          <h2 className="text-[clamp(2rem,4vw,4rem)] font-heading font-light text-[#0F0F0F] mb-3">{traditionalWeddingPackages.heading}</h2>
+          <p className="text-[14px] text-[#0F0F0F]/50 font-display mb-12 max-w-2xl leading-relaxed">{traditionalWeddingPackages.description}</p>
+          <div className="grid md:grid-cols-3 gap-0.5">
+            {traditionalWeddingPackages.packages.map(({ label, photographyItems, photographyPrice, printsItems, printsPrice, videographyItems, videographyPrice, addOnsItems, total }) => (
+              <div key={label} className="p-8 border border-[#0F0F0F]/[0.07] bg-white flex flex-col">
+                <h3 className="text-xl font-heading font-light text-[#0F0F0F] mb-6">{label}</h3>
+                <div className="space-y-6 flex-1">
+                  <div>
+                    <div className="text-[10px] font-display tracking-widest text-[#E10600] uppercase mb-2">Photography</div>
+                    <ul className="space-y-1.5 mb-2">
+                      {photographyItems.map((it) => <li key={it} className="text-[12px] text-[#0F0F0F]/60 leading-relaxed">{it}</li>)}
+                    </ul>
+                    <div className="text-[13px] font-display font-semibold text-[#0F0F0F]">{photographyPrice}</div>
+                  </div>
+                  <div>
+                    <div className="text-[10px] font-display tracking-widest text-[#E10600] uppercase mb-2">Prints</div>
+                    <ul className="space-y-1.5 mb-2">
+                      {printsItems.map((it) => <li key={it} className="text-[12px] text-[#0F0F0F]/60 leading-relaxed">{it}</li>)}
+                    </ul>
+                    <div className="text-[13px] font-display font-semibold text-[#0F0F0F]">{printsPrice}</div>
+                  </div>
+                  <div>
+                    <div className="text-[10px] font-display tracking-widest text-[#E10600] uppercase mb-2">Videography</div>
+                    <ul className="space-y-1.5 mb-2">
+                      {videographyItems.map((it) => <li key={it} className="text-[12px] text-[#0F0F0F]/60 leading-relaxed">{it}</li>)}
+                    </ul>
+                    <div className="text-[13px] font-display font-semibold text-[#0F0F0F]">{videographyPrice}</div>
+                  </div>
+                  {addOnsItems.length > 0 && (
+                    <div>
+                      <div className="text-[10px] font-display tracking-widest text-[#E10600] uppercase mb-2">Add-Ons</div>
+                      <ul className="space-y-1.5">
+                        {addOnsItems.map((it) => <li key={it} className="text-[12px] text-[#0F0F0F]/60 leading-relaxed">{it}</li>)}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+                <div className="mt-6 pt-4 border-t border-[#0F0F0F]/[0.08] flex items-center justify-between">
+                  <span className="text-[10px] font-display tracking-widest text-[#0F0F0F]/40 uppercase">Grand Total</span>
+                  <span className="text-lg font-heading font-semibold text-[#E10600]">{total}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+          {traditionalWeddingPackages.note && <p className="text-[11px] text-[#0F0F0F]/35 mt-8 font-display leading-relaxed">{traditionalWeddingPackages.note}</p>}
+        </div>
+      </section>
+
+      {/* Wedding Quotation — white (edited under Services — Photography) */}
+      <section className="bg-white py-24 md:py-32">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-8 lg:px-16">
+          <div className="flex items-center gap-3 mb-4"><div className="w-8 h-px bg-[#E10600]" /><span className="text-[10px] font-display tracking-[0.3em] text-[#E10600] uppercase font-semibold">Weddings</span></div>
+          <h2 className="text-[clamp(2rem,4vw,4rem)] font-heading font-light text-[#0F0F0F] mb-3">{weddingQuotation.heading}</h2>
+          <p className="text-[14px] text-[#0F0F0F]/50 font-display mb-12 max-w-xl leading-relaxed">{weddingQuotation.description}</p>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-0.5">
+            {weddingQuotation.packages.map(({ label, items, price }) => (
+              <div key={label} className="p-6 border border-[#0F0F0F]/[0.07] bg-[#F5F5F0] flex flex-col">
+                <h3 className="text-lg font-heading font-light text-[#0F0F0F] mb-4">{label}</h3>
+                <ul className="space-y-2 mb-6 flex-1">
+                  {items.map((it) => (
+                    <li key={it} className="flex items-start gap-2 text-[12px] text-[#0F0F0F]/60 leading-relaxed">
+                      <Check size={12} className="text-[#E10600] shrink-0 mt-0.5" />{it}
+                    </li>
+                  ))}
+                </ul>
+                <div className="text-xl font-heading font-semibold text-[#E10600] pt-4 border-t border-[#0F0F0F]/[0.08]">{price}</div>
               </div>
             ))}
           </div>

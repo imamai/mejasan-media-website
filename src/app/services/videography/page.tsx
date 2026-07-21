@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { createClient } from '@/lib/supabase/server';
-import { getPageContent, type VideographyContent } from '@/lib/page-content-schema';
+import { getPageContent, type VideographyContent, type PhotographyContent } from '@/lib/page-content-schema';
 import VideographyClient from './VideographyClient';
 
 export const metadata: Metadata = {
@@ -10,8 +10,14 @@ export const metadata: Metadata = {
 
 export default async function VideographyPage() {
   const sb = await createClient();
-  const { data } = await sb.from('mejasan_page_content').select('content').eq('page_slug', 'services-videography').maybeSingle();
-  const content = getPageContent('services-videography', data?.content) as VideographyContent;
+  const [videographyRow, photographyRow] = await Promise.all([
+    sb.from('mejasan_page_content').select('content').eq('page_slug', 'services-videography').maybeSingle(),
+    sb.from('mejasan_page_content').select('content').eq('page_slug', 'services-photography').maybeSingle(),
+  ]);
+  const content = getPageContent('services-videography', videographyRow.data?.content) as VideographyContent;
+  // The wedding packages bundle videographers too, so they're edited once
+  // (under Photography in the admin Pages tab) and shown on both pages.
+  const { traditionalWeddingPackages, weddingQuotation } = getPageContent('services-photography', photographyRow.data?.content) as PhotographyContent;
 
-  return <VideographyClient content={content} />;
+  return <VideographyClient content={content} traditionalWeddingPackages={traditionalWeddingPackages} weddingQuotation={weddingQuotation} />;
 }

@@ -13,7 +13,7 @@ export default async function PhotographyPage() {
   const sb = await createClient();
   const { data } = await sb.from('mejasan_page_content').select('content').eq('page_slug', 'services-photography').maybeSingle();
   const content = getPageContent('services-photography', data?.content) as PhotographyContent;
-  const { hero, categories, packages, cta } = content;
+  const { hero, categories, packages, studioCharges, photoMounting, studioOffer, woodenMount, traditionalWeddingPackages, weddingQuotation, cta } = content;
 
   return (
     <div className="bg-[#0B0B0B]">
@@ -75,6 +75,142 @@ export default async function PhotographyPage() {
             ))}
           </div>
           <p className="text-[12px] text-[#0F0F0F]/30 mt-6 text-center font-display">All packages customisable. Contact us for destination and international pricing.</p>
+        </div>
+      </section>
+
+      {/* Studio walk-in pricing — off-white */}
+      <section className="bg-[#F5F5F0] py-24 md:py-32">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-8 lg:px-16">
+          <div className="flex items-center gap-3 mb-4"><div className="w-8 h-px bg-[#E10600]" /><span className="text-[10px] font-display tracking-[0.3em] text-[#E10600] uppercase font-semibold">Walk-In Pricing</span></div>
+          <h2 className="text-[clamp(2rem,4vw,4rem)] font-heading font-light text-[#0F0F0F] mb-3">{studioCharges.heading}</h2>
+          <p className="text-[14px] text-[#0F0F0F]/45 font-display mb-12 max-w-xl leading-relaxed">{studioCharges.description}</p>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-0.5 mb-16">
+            {studioCharges.items.map(({ label, price, note }) => (
+              <div key={label} className="p-6 border border-[#0F0F0F]/[0.07] bg-white">
+                <div className="text-[13px] font-display font-semibold text-[#0F0F0F] mb-2">{label}</div>
+                <div className="text-2xl font-heading text-[#0F0F0F] mb-1">{price}</div>
+                <div className="text-[11px] text-[#0F0F0F]/40 font-display">{note}</div>
+              </div>
+            ))}
+          </div>
+
+          <h3 className="text-2xl font-heading font-light text-[#0F0F0F] mb-3">{photoMounting.heading}</h3>
+          <p className="text-[13px] text-[#0F0F0F]/45 font-display mb-8 max-w-xl leading-relaxed">{photoMounting.description}</p>
+          <div className="grid grid-cols-3 sm:grid-cols-5 gap-0.5 mb-16">
+            {photoMounting.items.map(({ size, price }) => (
+              <div key={size} className="p-5 border border-[#0F0F0F]/[0.07] bg-white text-center">
+                <div className="text-lg font-heading font-semibold text-[#0F0F0F]">{size}</div>
+                <div className="text-[12px] text-[#E10600] font-display font-semibold mt-1">{price}</div>
+              </div>
+            ))}
+          </div>
+
+          <h3 className="text-2xl font-heading font-light text-[#0F0F0F] mb-3">{studioOffer.heading}</h3>
+          <p className="text-[13px] text-[#0F0F0F]/45 font-display mb-8 max-w-xl leading-relaxed">{studioOffer.description}</p>
+          <div className="grid sm:grid-cols-2 gap-0.5">
+            {studioOffer.items.map(({ label, wasPrice, nowPrice }) => (
+              <div key={label} className="p-6 border border-[#E10600]/30 bg-white flex items-center justify-between">
+                <span className="text-[14px] font-display font-semibold text-[#0F0F0F]">{label}</span>
+                <span className="text-[13px] font-display">
+                  <span className="line-through text-[#0F0F0F]/30 mr-2">{wasPrice}</span>
+                  <span className="text-[#E10600] font-semibold">{nowPrice}</span>
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Wooden Photo Mount — white */}
+      <section className="bg-white py-24 md:py-32">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-8 lg:px-16">
+          <div className="flex items-center gap-3 mb-4"><div className="w-8 h-px bg-[#E10600]" /><span className="text-[10px] font-display tracking-[0.3em] text-[#E10600] uppercase font-semibold">Keepsakes</span></div>
+          <h2 className="text-[clamp(2rem,4vw,4rem)] font-heading font-light text-[#0F0F0F] mb-3">{woodenMount.heading}</h2>
+          <p className="text-[14px] text-[#0F0F0F]/50 font-display mb-12 max-w-xl leading-relaxed">{woodenMount.description}</p>
+          <div className="grid grid-cols-3 sm:grid-cols-5 gap-0.5">
+            {woodenMount.items.map(({ size, price }) => (
+              <div key={size} className="p-6 border border-[#0F0F0F]/[0.07] bg-[#F5F5F0] text-center">
+                <div className="text-xl font-heading font-semibold text-[#0F0F0F]">{size}</div>
+                <div className="text-[12px] text-[#E10600] font-display font-semibold mt-1">{price}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Traditional Wedding Packages — off-white */}
+      <section className="bg-[#F5F5F0] py-24 md:py-32">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-8 lg:px-16">
+          <div className="flex items-center gap-3 mb-4"><div className="w-8 h-px bg-[#E10600]" /><span className="text-[10px] font-display tracking-[0.3em] text-[#E10600] uppercase font-semibold">Weddings</span></div>
+          <h2 className="text-[clamp(2rem,4vw,4rem)] font-heading font-light text-[#0F0F0F] mb-3">{traditionalWeddingPackages.heading}</h2>
+          <p className="text-[14px] text-[#0F0F0F]/50 font-display mb-12 max-w-2xl leading-relaxed">{traditionalWeddingPackages.description}</p>
+          <div className="grid md:grid-cols-3 gap-0.5">
+            {traditionalWeddingPackages.packages.map(({ label, photographyItems, photographyPrice, printsItems, printsPrice, videographyItems, videographyPrice, addOnsItems, total }) => (
+              <div key={label} className="p-8 border border-[#0F0F0F]/[0.07] bg-white flex flex-col">
+                <h3 className="text-xl font-heading font-light text-[#0F0F0F] mb-6">{label}</h3>
+                <div className="space-y-6 flex-1">
+                  <div>
+                    <div className="text-[10px] font-display tracking-widest text-[#E10600] uppercase mb-2">Photography</div>
+                    <ul className="space-y-1.5 mb-2">
+                      {photographyItems.map((it) => <li key={it} className="text-[12px] text-[#0F0F0F]/60 leading-relaxed">{it}</li>)}
+                    </ul>
+                    <div className="text-[13px] font-display font-semibold text-[#0F0F0F]">{photographyPrice}</div>
+                  </div>
+                  <div>
+                    <div className="text-[10px] font-display tracking-widest text-[#E10600] uppercase mb-2">Prints</div>
+                    <ul className="space-y-1.5 mb-2">
+                      {printsItems.map((it) => <li key={it} className="text-[12px] text-[#0F0F0F]/60 leading-relaxed">{it}</li>)}
+                    </ul>
+                    <div className="text-[13px] font-display font-semibold text-[#0F0F0F]">{printsPrice}</div>
+                  </div>
+                  <div>
+                    <div className="text-[10px] font-display tracking-widest text-[#E10600] uppercase mb-2">Videography</div>
+                    <ul className="space-y-1.5 mb-2">
+                      {videographyItems.map((it) => <li key={it} className="text-[12px] text-[#0F0F0F]/60 leading-relaxed">{it}</li>)}
+                    </ul>
+                    <div className="text-[13px] font-display font-semibold text-[#0F0F0F]">{videographyPrice}</div>
+                  </div>
+                  {addOnsItems.length > 0 && (
+                    <div>
+                      <div className="text-[10px] font-display tracking-widest text-[#E10600] uppercase mb-2">Add-Ons</div>
+                      <ul className="space-y-1.5">
+                        {addOnsItems.map((it) => <li key={it} className="text-[12px] text-[#0F0F0F]/60 leading-relaxed">{it}</li>)}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+                <div className="mt-6 pt-4 border-t border-[#0F0F0F]/[0.08] flex items-center justify-between">
+                  <span className="text-[10px] font-display tracking-widest text-[#0F0F0F]/40 uppercase">Grand Total</span>
+                  <span className="text-lg font-heading font-semibold text-[#E10600]">{total}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+          {traditionalWeddingPackages.note && <p className="text-[11px] text-[#0F0F0F]/35 mt-8 font-display leading-relaxed">{traditionalWeddingPackages.note}</p>}
+        </div>
+      </section>
+
+      {/* Wedding Quotation — white */}
+      <section className="bg-white py-24 md:py-32">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-8 lg:px-16">
+          <div className="flex items-center gap-3 mb-4"><div className="w-8 h-px bg-[#E10600]" /><span className="text-[10px] font-display tracking-[0.3em] text-[#E10600] uppercase font-semibold">Weddings</span></div>
+          <h2 className="text-[clamp(2rem,4vw,4rem)] font-heading font-light text-[#0F0F0F] mb-3">{weddingQuotation.heading}</h2>
+          <p className="text-[14px] text-[#0F0F0F]/50 font-display mb-12 max-w-xl leading-relaxed">{weddingQuotation.description}</p>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-0.5">
+            {weddingQuotation.packages.map(({ label, items, price }) => (
+              <div key={label} className="p-6 border border-[#0F0F0F]/[0.07] bg-[#F5F5F0] flex flex-col">
+                <h3 className="text-lg font-heading font-light text-[#0F0F0F] mb-4">{label}</h3>
+                <ul className="space-y-2 mb-6 flex-1">
+                  {items.map((it) => (
+                    <li key={it} className="flex items-start gap-2 text-[12px] text-[#0F0F0F]/60 leading-relaxed">
+                      <Check size={12} className="text-[#E10600] shrink-0 mt-0.5" />{it}
+                    </li>
+                  ))}
+                </ul>
+                <div className="text-xl font-heading font-semibold text-[#E10600] pt-4 border-t border-[#0F0F0F]/[0.08]">{price}</div>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
