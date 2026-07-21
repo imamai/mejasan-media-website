@@ -7,7 +7,7 @@ interface Params { params: Promise<{ slug: string }> }
 
 interface ProjectView {
   title: string; client: string; category: string; location: string; year: string;
-  hero: string; challenge: string; solution: string; results: string[];
+  hero: string; heroPosition: string; challenge: string; solution: string; results: string[];
   gallery: string[]; testimonial?: { text: string; name: string; role: string };
   related: Array<{ title: string; slug: string; img: string }>;
 }
@@ -16,6 +16,7 @@ const PROJECTS: Record<string, ProjectView> = {
   'sarah-james-wedding': {
     title: 'Sarah & James', client: 'Private Wedding', category: 'Weddings', location: 'Nairobi', year: '2024',
     hero: 'https://images.unsplash.com/photo-1519741497674-611481863552?w=1920&q=80',
+    heroPosition: 'center',
     challenge: 'The couple wanted a documentary-style wedding film and gallery that felt timeless — not commercial. Every moment from sunrise preparation to the final dance had to be captured authentically.',
     solution: 'We deployed a 3-person team with dual cameras, a drone for aerial ceremony coverage, and a dedicated audio engineer for the speeches. The edit was crafted over 3 weeks to a custom music score.',
     results: ['650+ edited images delivered', '12-minute cinematic wedding film', '3-minute social media highlight', 'Hardcover album designed and printed'],
@@ -36,6 +37,7 @@ const PROJECTS: Record<string, ProjectView> = {
   'safaricom-summit-2024': {
     title: 'Safaricom Leadership Summit', client: 'Safaricom PLC', category: 'Corporate', location: 'Nairobi', year: '2024',
     hero: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=1920&q=80',
+    heroPosition: 'center',
     challenge: 'A 2-day leadership summit with 800 attendees required comprehensive documentation for internal comms, press releases, and annual report use — all with same-day preview delivery.',
     solution: 'Four-camera team with a dedicated drone operator for venue aerials. A same-day editing workflow delivered 50 press-ready images by 6pm on Day 1.',
     results: ['1,200+ images delivered across 2 days', 'Same-day press pack (50 images)', 'Aerial venue coverage', 'Annual report feature spread'],
@@ -56,6 +58,7 @@ const PROJECTS: Record<string, ProjectView> = {
 const DEFAULT: ProjectView = {
   title: 'Project',  client: 'Client', category: 'Portfolio', location: 'Kenya', year: '2024',
   hero: 'https://images.unsplash.com/photo-1519741497674-611481863552?w=1920&q=80',
+  heroPosition: 'center',
   challenge: 'A comprehensive visual documentation project requiring premium execution and creative direction.',
   solution: 'Our full-service team brought the necessary equipment, expertise, and creative vision to execute the project to world-class standard.',
   results: ['Premium deliverables on time', 'Client satisfaction guaranteed'],
@@ -73,6 +76,7 @@ function mapPortfolioRow(row: Record<string, unknown>): ProjectView {
     location: (metadata.location as string) ?? DEFAULT.location,
     year: (metadata.year as string) ?? (row.published_at ? String(new Date(row.published_at as string).getFullYear()) : DEFAULT.year),
     hero: (row.cover_image as string) || DEFAULT.hero,
+    heroPosition: (metadata.cover_image_position as string) ?? DEFAULT.heroPosition,
     challenge: (metadata.challenge as string) || (row.description as string) || DEFAULT.challenge,
     solution: (metadata.solution as string) || DEFAULT.solution,
     results: Array.isArray(metadata.results) ? (metadata.results as string[]) : DEFAULT.results,
@@ -104,7 +108,7 @@ export default async function ProjectPage({ params }: Params) {
       {/* Hero */}
       <div className="relative h-[70vh] min-h-[500px] flex items-end overflow-hidden">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={p.hero} alt={p.title} className="absolute inset-0 w-full h-full object-cover opacity-50" />
+        <img src={p.hero} alt={p.title} className="absolute inset-0 w-full h-full object-cover opacity-50" style={{ objectPosition: p.heroPosition }} />
         <div className="absolute inset-0 bg-gradient-to-t from-[#0B0B0B] via-[#0B0B0B]/20 to-transparent" />
         <div className="relative z-10 max-w-[1400px] mx-auto px-4 sm:px-8 lg:px-16 pb-16 w-full">
           <Link href="/portfolio" className="inline-flex items-center gap-2 text-[11px] font-display text-white/30 hover:text-white transition-colors mb-6 tracking-widest uppercase">

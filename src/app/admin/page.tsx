@@ -16,6 +16,7 @@ import type { User } from '@supabase/supabase-js';
 import { PAGE_CONTENT, PAGE_SLUGS, getPageContent } from '@/lib/page-content-schema';
 import PageContentEditor from '@/components/admin/PageContentEditor';
 import ImageUploadField from '@/components/admin/ImageUploadField';
+import FocalPointPicker from '@/components/admin/FocalPointPicker';
 import DocumentUploadField, { type UploadedDoc } from '@/components/admin/DocumentUploadField';
 import QRCode from 'qrcode';
 
@@ -174,26 +175,30 @@ type PortfolioForm = {
   cover_image: string;
   description: string;
   is_published: boolean;
+  metadata: Record<string, unknown>;
 };
 
 function PortfolioModal({
   item, onClose, onSave,
 }: { item?: Record<string, unknown> | null; onClose: () => void; onSave: (data: PortfolioForm, id?: string) => Promise<void> }) {
   const [busy, setBusy] = useState(false);
+  const existingMetadata = (item?.metadata as Record<string, unknown>) ?? {};
   const [form, setForm] = useState<PortfolioForm>({
     title: (item?.title as string) ?? '',
     category: (item?.category as string) ?? 'photography',
     cover_image: (item?.cover_image as string) ?? '',
     description: (item?.description as string) ?? '',
     is_published: (item?.is_published as boolean) ?? false,
+    metadata: existingMetadata,
   });
+  const [coverImagePosition, setCoverImagePosition] = useState<string>((existingMetadata.cover_image_position as string) ?? 'center');
 
   const set = (k: keyof PortfolioForm, v: string | boolean) => setForm((f) => ({ ...f, [k]: v }));
 
   const submit = async () => {
     if (!form.title || !form.cover_image) { toast.error('Title and cover image are required'); return; }
     setBusy(true);
-    await onSave(form, item?.id as string | undefined);
+    await onSave({ ...form, metadata: { ...existingMetadata, cover_image_position: coverImagePosition } }, item?.id as string | undefined);
     setBusy(false);
   };
 
@@ -212,6 +217,10 @@ function PortfolioModal({
         </Field>
         <Field label="Cover Image">
           <ImageUploadField value={form.cover_image} onChange={(v) => set('cover_image', v)} folder="portfolio" />
+        </Field>
+        <Field label="Focal Point">
+          <p className="text-[10px] text-white/25 font-display mb-2">Which part of the photo should stay visible when it's cropped.</p>
+          <FocalPointPicker value={coverImagePosition} onChange={setCoverImagePosition} />
         </Field>
         <Field label="Description">
           <textarea rows={3} value={form.description} onChange={(e) => set('description', e.target.value)} className={textareaCls} placeholder="Short description…" />
@@ -911,7 +920,7 @@ function AdminDashboard({ user, onSignOut }: { user: User; onSignOut: () => void
             <div key={p.id as string} className="bg-[#141414] border border-white/[0.06] overflow-hidden">
               <div className="relative aspect-video">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={p.cover_image as string} alt={p.title as string} className="w-full h-full object-cover opacity-70" />
+                <img src={p.cover_image as string} alt={p.title as string} className="w-full h-full object-cover opacity-70" style={{ objectPosition: (p.metadata as Record<string, unknown> | undefined)?.cover_image_position as string }} />
               </div>
               <div className="p-4">
                 <div className="flex items-center justify-between mb-1">

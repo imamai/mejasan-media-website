@@ -6,24 +6,24 @@ import { motion, AnimatePresence, useInView } from 'framer-motion';
 import { X, ZoomIn, Download, ChevronLeft, ChevronRight } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 
-interface Item { id: string; title: string; category: string; location: string; image: string; slug: string; }
+interface Item { id: string; title: string; category: string; location: string; image: string; imagePosition: string; slug: string; }
 
 const FALLBACK: Item[] = [
-  { id:'1',  category:'Weddings',  title:'Sarah & James',       location:'Nairobi',  image:'https://images.unsplash.com/photo-1519741497674-611481863552?w=800&q=80', slug:'sarah-james-wedding' },
-  { id:'2',  category:'Corporate', title:'Safaricom Summit',    location:'Nairobi',  image:'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=600&q=80', slug:'safaricom-summit-2024' },
-  { id:'3',  category:'Drone',     title:'Nairobi Skyline',     location:'Nairobi',  image:'https://images.unsplash.com/photo-1508444845599-5c89863b1c44?w=600&q=80', slug:'nairobi-skyline-aerial' },
-  { id:'4',  category:'Events',    title:'UN Climate Summit',   location:'Nairobi',  image:'https://images.unsplash.com/photo-1587825140708-dfaf72ae4b04?w=600&q=80', slug:'un-climate-summit' },
-  { id:'5',  category:'Weddings',  title:'Mary & Peter',        location:'Mombasa',  image:'https://images.unsplash.com/photo-1606216794074-735e91aa2c92?w=600&q=80', slug:'mary-peter-wedding' },
-  { id:'6',  category:'Branding',  title:'KCB Campaign',        location:'Nairobi',  image:'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=600&q=80', slug:'kcb-brand-campaign' },
-  { id:'7',  category:'Corporate', title:'Equity Bank Gala',    location:'Nairobi',  image:'https://images.unsplash.com/photo-1611532736597-de2d4265fba3?w=600&q=80', slug:'equity-bank-gala' },
-  { id:'8',  category:'Drone',     title:'Rift Valley Survey',  location:'Nakuru',   image:'https://images.unsplash.com/photo-1473968512647-3e447244af8f?w=800&q=80', slug:'rift-valley-survey' },
-  { id:'9',  category:'Weddings',  title:'Anne & David',        location:'Karen',    image:'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=600&q=80', slug:'anne-david-wedding' },
-  { id:'10', category:'Events',    title:'Tech Summit Kenya',   location:'Nairobi',  image:'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=600&q=80', slug:'tech-summit-kenya' },
-  { id:'11', category:'Corporate', title:'Kenya Railways',      location:'Nairobi',  image:'https://images.unsplash.com/photo-1474487548417-781cb71495f3?w=600&q=80', slug:'kenya-railways-docs' },
-  { id:'12', category:'Drone',     title:'Lake Naivasha',       location:'Naivasha', image:'https://images.unsplash.com/photo-1494783367193-149034c05e8f?w=800&q=80', slug:'lake-naivasha-aerial' },
-  { id:'13', category:'Branding',  title:'Airtel Africa',       location:'Nairobi',  image:'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600&q=80', slug:'airtel-africa-campaign' },
-  { id:'14', category:'Weddings',  title:'Lina & Sam',          location:'Diani',    image:'https://images.unsplash.com/photo-1583939003579-730e3918a45a?w=600&q=80', slug:'lina-sam-wedding' },
-  { id:'15', category:'Events',    title:'Nairobi Fashion Week', location:'Nairobi', image:'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=600&q=80', slug:'nairobi-fashion-week' },
+  { id:'1',  category:'Weddings',  title:'Sarah & James',       location:'Nairobi',  image:'https://images.unsplash.com/photo-1519741497674-611481863552?w=800&q=80', slug:'sarah-james-wedding', imagePosition:'center' },
+  { id:'2',  category:'Corporate', title:'Safaricom Summit',    location:'Nairobi',  image:'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=600&q=80', slug:'safaricom-summit-2024', imagePosition:'center' },
+  { id:'3',  category:'Drone',     title:'Nairobi Skyline',     location:'Nairobi',  image:'https://images.unsplash.com/photo-1508444845599-5c89863b1c44?w=600&q=80', slug:'nairobi-skyline-aerial', imagePosition:'center' },
+  { id:'4',  category:'Events',    title:'UN Climate Summit',   location:'Nairobi',  image:'https://images.unsplash.com/photo-1587825140708-dfaf72ae4b04?w=600&q=80', slug:'un-climate-summit', imagePosition:'center' },
+  { id:'5',  category:'Weddings',  title:'Mary & Peter',        location:'Mombasa',  image:'https://images.unsplash.com/photo-1606216794074-735e91aa2c92?w=600&q=80', slug:'mary-peter-wedding', imagePosition:'center' },
+  { id:'6',  category:'Branding',  title:'KCB Campaign',        location:'Nairobi',  image:'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=600&q=80', slug:'kcb-brand-campaign', imagePosition:'center' },
+  { id:'7',  category:'Corporate', title:'Equity Bank Gala',    location:'Nairobi',  image:'https://images.unsplash.com/photo-1611532736597-de2d4265fba3?w=600&q=80', slug:'equity-bank-gala', imagePosition:'center' },
+  { id:'8',  category:'Drone',     title:'Rift Valley Survey',  location:'Nakuru',   image:'https://images.unsplash.com/photo-1473968512647-3e447244af8f?w=800&q=80', slug:'rift-valley-survey', imagePosition:'center' },
+  { id:'9',  category:'Weddings',  title:'Anne & David',        location:'Karen',    image:'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=600&q=80', slug:'anne-david-wedding', imagePosition:'center' },
+  { id:'10', category:'Events',    title:'Tech Summit Kenya',   location:'Nairobi',  image:'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=600&q=80', slug:'tech-summit-kenya', imagePosition:'center' },
+  { id:'11', category:'Corporate', title:'Kenya Railways',      location:'Nairobi',  image:'https://images.unsplash.com/photo-1474487548417-781cb71495f3?w=600&q=80', slug:'kenya-railways-docs', imagePosition:'center' },
+  { id:'12', category:'Drone',     title:'Lake Naivasha',       location:'Naivasha', image:'https://images.unsplash.com/photo-1494783367193-149034c05e8f?w=800&q=80', slug:'lake-naivasha-aerial', imagePosition:'center' },
+  { id:'13', category:'Branding',  title:'Airtel Africa',       location:'Nairobi',  image:'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600&q=80', slug:'airtel-africa-campaign', imagePosition:'center' },
+  { id:'14', category:'Weddings',  title:'Lina & Sam',          location:'Diani',    image:'https://images.unsplash.com/photo-1583939003579-730e3918a45a?w=600&q=80', slug:'lina-sam-wedding', imagePosition:'center' },
+  { id:'15', category:'Events',    title:'Nairobi Fashion Week', location:'Nairobi', image:'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=600&q=80', slug:'nairobi-fashion-week', imagePosition:'center' },
 ];
 
 const CATS = ['All','Weddings','Corporate','Events','Drone','Branding'];
@@ -136,7 +136,7 @@ export default function PortfolioPage() {
         /* Field names match the schema: cover_image (not cover_image_url) */
         const { data } = await sb
           .from('mejasan_portfolio')
-          .select('id,title,category,cover_image,slug')
+          .select('id,title,category,cover_image,slug,metadata')
           .eq('is_published', true)
           .order('sort_order')
           .order('created_at', { ascending: false });
@@ -147,6 +147,7 @@ export default function PortfolioPage() {
             category: r.category.replace(/_/g,' ').replace(/\b\w/g,(c:string)=>c.toUpperCase()),
             location: '',
             image: r.cover_image ?? '',
+            imagePosition: (r.metadata as Record<string, unknown> | null)?.cover_image_position as string ?? 'center',
             slug: r.slug ?? r.id,
           })));
         }
@@ -206,7 +207,7 @@ export default function PortfolioPage() {
                 onClick={() => setLightbox(i)}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={item.image} alt={item.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                <img src={item.image} alt={item.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" style={{ objectPosition: item.imagePosition }} />
                 <div className="absolute inset-0 bg-[#0B0B0B]/0 group-hover:bg-[#0B0B0B]/55 transition-all duration-300 flex items-center justify-center">
                   <ZoomIn size={20} className="text-white opacity-0 group-hover:opacity-100 transition-opacity" aria-hidden />
                 </div>
