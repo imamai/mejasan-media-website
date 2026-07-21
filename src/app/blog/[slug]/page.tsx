@@ -1,13 +1,16 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowLeft, Calendar, Clock, ArrowRight } from 'lucide-react';
+import { createClient } from '@/lib/supabase/server';
 
 interface Params { params: Promise<{ slug: string }> }
 
-const POSTS: Record<string, {
+interface PostView {
   title: string; excerpt: string; category: string; author: string;
   avatar: string; date: string; readTime: number; cover: string; content: string;
-}> = {
+}
+
+const POSTS: Record<string, PostView> = {
   'how-to-plan-your-wedding-photography': {
     title: 'How to Plan Your Wedding Photography Timeline',
     excerpt: 'The secret to stress-free wedding day photos lies in your timeline.',
@@ -96,7 +99,7 @@ At Mejasan, every drone flight is planned, permitted, and insured. Your project 
   },
 };
 
-const DEFAULT = {
+const DEFAULT: PostView = {
   title: 'Blog Post', excerpt: 'Read our latest insights.', category: 'Journal',
   author: 'Mejasan Team', avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&q=80',
   date: 'January 2025', readTime: 5,
@@ -104,9 +107,31 @@ const DEFAULT = {
   content: '## Coming Soon\n\nThis article is being prepared. Check back soon for the full story.',
 };
 
+function mapBlogRow(row: Record<string, unknown>): PostView {
+  const dateSource = (row.published_at as string) ?? (row.created_at as string);
+  return {
+    title: (row.title as string) ?? DEFAULT.title,
+    excerpt: (row.excerpt as string) ?? DEFAULT.excerpt,
+    category: (row.category as string) ?? DEFAULT.category,
+    author: (row.author_name as string) ?? DEFAULT.author,
+    avatar: DEFAULT.avatar,
+    date: dateSource ? new Date(dateSource).toLocaleDateString('en-KE', { year: 'numeric', month: 'long', day: 'numeric' }) : DEFAULT.date,
+    readTime: (row.read_time as number) ?? DEFAULT.readTime,
+    cover: (row.cover_image as string) || DEFAULT.cover,
+    content: (row.content as string) || DEFAULT.content,
+  };
+}
+
+async function loadPost(slug: string): Promise<PostView> {
+  const sb = await createClient();
+  const { data: row } = await sb.from('mejasan_blog_posts').select('*').eq('slug', slug).eq('is_published', true).maybeSingle();
+  if (row) return mapBlogRow(row as Record<string, unknown>);
+  return POSTS[slug] ?? { ...DEFAULT, title: slug.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()) };
+}
+
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { slug } = await params;
-  const post = POSTS[slug] ?? DEFAULT;
+  const post = await loadPost(slug);
   return {
     title: post.title,
     description: post.excerpt,
@@ -128,7 +153,7 @@ function mdToHtml(md: string): string {
 
 export default async function BlogPostPage({ params }: Params) {
   const { slug } = await params;
-  const post = POSTS[slug] ?? { ...DEFAULT, title: slug.replace(/-/g,' ').replace(/\b\w/g,c=>c.toUpperCase()) };
+  const post = await loadPost(slug);
   const htmlContent = mdToHtml(post.content);
 
   const jsonLd = {

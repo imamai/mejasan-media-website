@@ -8,10 +8,16 @@ import toast from 'react-hot-toast';
 import {
   BarChart3, Users, Calendar, Camera, FileText, MessageSquare, Settings, LogOut,
   ChevronDown, Check, Upload, RefreshCw, Eye, Trash2, Edit3, Plus, TrendingUp,
-  DollarSign, Star, X, Image as ImageIcon, Save, AlertTriangle,
+  DollarSign, Star, X, Image as ImageIcon, Save, AlertTriangle, Layout,
+  QrCode, Copy, Download as DownloadIcon,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import type { User } from '@supabase/supabase-js';
+import { PAGE_CONTENT, PAGE_SLUGS, getPageContent } from '@/lib/page-content-schema';
+import PageContentEditor from '@/components/admin/PageContentEditor';
+import ImageUploadField from '@/components/admin/ImageUploadField';
+import DocumentUploadField, { type UploadedDoc } from '@/components/admin/DocumentUploadField';
+import QRCode from 'qrcode';
 
 /* ── Login ─────────────────────────────────────────────────────────── */
 const loginSchema = z.object({ email: z.string().email(), password: z.string().min(6) });
@@ -165,7 +171,7 @@ function DeleteConfirm({ label, onConfirm, onClose, busy }: { label: string; onC
 type PortfolioForm = {
   title: string;
   category: string;
-  cover_image_url: string;
+  cover_image: string;
   description: string;
   is_published: boolean;
 };
@@ -177,7 +183,7 @@ function PortfolioModal({
   const [form, setForm] = useState<PortfolioForm>({
     title: (item?.title as string) ?? '',
     category: (item?.category as string) ?? 'photography',
-    cover_image_url: (item?.cover_image_url as string) ?? '',
+    cover_image: (item?.cover_image as string) ?? '',
     description: (item?.description as string) ?? '',
     is_published: (item?.is_published as boolean) ?? false,
   });
@@ -185,7 +191,7 @@ function PortfolioModal({
   const set = (k: keyof PortfolioForm, v: string | boolean) => setForm((f) => ({ ...f, [k]: v }));
 
   const submit = async () => {
-    if (!form.title || !form.cover_image_url) { toast.error('Title and image URL are required'); return; }
+    if (!form.title || !form.cover_image) { toast.error('Title and cover image are required'); return; }
     setBusy(true);
     await onSave(form, item?.id as string | undefined);
     setBusy(false);
@@ -204,12 +210,8 @@ function PortfolioModal({
             ))}
           </select>
         </Field>
-        <Field label="Cover Image URL">
-          <input value={form.cover_image_url} onChange={(e) => set('cover_image_url', e.target.value)} className={inputCls} placeholder="https://…" />
-          {form.cover_image_url && (
-            /* eslint-disable-next-line @next/next/no-img-element */
-            <img src={form.cover_image_url} alt="preview" className="mt-2 w-full h-32 object-cover opacity-60" />
-          )}
+        <Field label="Cover Image">
+          <ImageUploadField value={form.cover_image} onChange={(v) => set('cover_image', v)} folder="portfolio" />
         </Field>
         <Field label="Description">
           <textarea rows={3} value={form.description} onChange={(e) => set('description', e.target.value)} className={textareaCls} placeholder="Short description…" />
@@ -234,10 +236,10 @@ type BlogForm = {
   title: string;
   slug: string;
   category: string;
-  author: string;
+  author_name: string;
   excerpt: string;
   content: string;
-  cover_image_url: string;
+  cover_image: string;
   is_published: boolean;
 };
 
@@ -253,10 +255,10 @@ function BlogModal({
     title: (post?.title as string) ?? '',
     slug: (post?.slug as string) ?? '',
     category: (post?.category as string) ?? '',
-    author: (post?.author as string) ?? '',
+    author_name: (post?.author_name as string) ?? '',
     excerpt: (post?.excerpt as string) ?? '',
     content: (post?.content as string) ?? '',
-    cover_image_url: (post?.cover_image_url as string) ?? '',
+    cover_image: (post?.cover_image as string) ?? '',
     is_published: (post?.is_published as boolean) ?? false,
   });
 
@@ -287,12 +289,12 @@ function BlogModal({
         </div>
         <div className="grid grid-cols-2 gap-4">
           <Field label="Author">
-            <input value={form.author} onChange={(e) => set('author', e.target.value)} className={inputCls} placeholder="Author name" />
-          </Field>
-          <Field label="Cover Image URL">
-            <input value={form.cover_image_url} onChange={(e) => set('cover_image_url', e.target.value)} className={inputCls} placeholder="https://…" />
+            <input value={form.author_name} onChange={(e) => set('author_name', e.target.value)} className={inputCls} placeholder="Author name" />
           </Field>
         </div>
+        <Field label="Cover Image">
+          <ImageUploadField value={form.cover_image} onChange={(v) => set('cover_image', v)} folder="blog" />
+        </Field>
         <Field label="Excerpt">
           <textarea rows={2} value={form.excerpt} onChange={(e) => set('excerpt', e.target.value)} className={textareaCls} placeholder="Short summary shown in listing" />
         </Field>
@@ -374,8 +376,57 @@ function TestimonialModal({
   );
 }
 
+/* ── Event Document Modal ───────────────────────────────────────────── */
+type DocumentForm = { event_name: string; description: string; booking_id: string; doc: UploadedDoc | null };
+
+function DocumentModal({
+  bookings, onClose, onSave,
+}: { bookings: Record<string, unknown>[]; onClose: () => void; onSave: (data: DocumentForm) => Promise<void> }) {
+  const [busy, setBusy] = useState(false);
+  const [form, setForm] = useState<DocumentForm>({ event_name: '', description: '', booking_id: '', doc: null });
+
+  const set = <K extends keyof DocumentForm>(k: K, v: DocumentForm[K]) => setForm((f) => ({ ...f, [k]: v }));
+
+  const submit = async () => {
+    if (!form.event_name || !form.doc) { toast.error('Event name and a file are required'); return; }
+    setBusy(true);
+    await onSave(form);
+    setBusy(false);
+  };
+
+  return (
+    <Modal title="Share a Document" onClose={onClose}>
+      <div className="space-y-4">
+        <Field label="Event Name">
+          <input value={form.event_name} onChange={(e) => set('event_name', e.target.value)} className={inputCls} placeholder="e.g. Jane Doe Memorial Service" />
+        </Field>
+        <Field label="Linked Booking (optional)">
+          <select value={form.booking_id} onChange={(e) => set('booking_id', e.target.value)} className={selectCls}>
+            <option value="">— None —</option>
+            {bookings.map((b) => (
+              <option key={b.id as string} value={b.id as string}>{(b.client_name as string) ?? (b.client_email as string)} · {b.reference as string}</option>
+            ))}
+          </select>
+        </Field>
+        <Field label="Description (optional)">
+          <textarea rows={2} value={form.description} onChange={(e) => set('description', e.target.value)} className={textareaCls} placeholder="Shown to whoever opens the link" />
+        </Field>
+        <Field label="Document">
+          <DocumentUploadField value={form.doc} onChange={(doc) => set('doc', doc)} />
+        </Field>
+        <div className="flex gap-3 pt-2">
+          <button onClick={onClose} className="btn-outline-dark flex-1 justify-center py-2.5 text-[11px]">Cancel</button>
+          <button onClick={submit} disabled={busy} className="btn-primary flex-1 justify-center disabled:opacity-50">
+            <Save size={12} /> {busy ? 'Saving…' : 'Save & Generate Link'}
+          </button>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
 /* ── Dashboard ─────────────────────────────────────────────────────── */
-type TabId = 'overview' | 'leads' | 'bookings' | 'clients' | 'projects' | 'portfolio' | 'blog' | 'testimonials' | 'invoices' | 'gallery' | 'settings';
+type TabId = 'overview' | 'leads' | 'bookings' | 'clients' | 'projects' | 'portfolio' | 'blog' | 'testimonials' | 'pages' | 'documents' | 'invoices' | 'gallery' | 'settings';
 
 function AdminDashboard({ user, onSignOut }: { user: User; onSignOut: () => void }) {
   const [tab, setTab] = useState<TabId>('overview');
@@ -384,12 +435,14 @@ function AdminDashboard({ user, onSignOut }: { user: User; onSignOut: () => void
   const [portfolio, setPortfolio] = useState<Record<string, unknown>[]>([]);
   const [blog, setBlog] = useState<Record<string, unknown>[]>([]);
   const [testimonials, setTestimonials] = useState<Record<string, unknown>[]>([]);
+  const [documents, setDocuments] = useState<Record<string, unknown>[]>([]);
   const [openStatusId, setOpenStatusId] = useState<string | null>(null);
 
   /* Modals */
   const [portfolioModal, setPortfolioModal] = useState<{ item?: Record<string, unknown> | null } | null>(null);
   const [blogModal, setBlogModal] = useState<{ post?: Record<string, unknown> | null } | null>(null);
   const [testimonialModal, setTestimonialModal] = useState<{ item?: Record<string, unknown> | null } | null>(null);
+  const [documentModal, setDocumentModal] = useState(false);
   const [deleteModal, setDeleteModal] = useState<{ label: string; onConfirm: () => Promise<void> } | null>(null);
   const [deleteBusy, setDeleteBusy] = useState(false);
 
@@ -402,22 +455,30 @@ function AdminDashboard({ user, onSignOut }: { user: User; onSignOut: () => void
   const [settings, setSettings] = useState({ name: 'Mejasan Media Production', email: 'info@mejasanmedia.com', phone: '+254 700 864 849', location: 'Kisumu, Kenya', whatsapp: '+254700864849' });
   const [savingSettings, setSavingSettings] = useState(false);
 
+  /* Page content (About + Services) */
+  const [pageSlug, setPageSlug] = useState<string>(PAGE_SLUGS[0]);
+  const [pageContent, setPageContent] = useState<Record<string, unknown> | null>(null);
+  const [pageLoading, setPageLoading] = useState(false);
+  const [pageSaving, setPageSaving] = useState(false);
+
   const sb = createClient();
 
   const fetchAll = async () => {
     try {
-      const [l, b, p, bl, t] = await Promise.all([
+      const [l, b, p, bl, t, d] = await Promise.all([
         sb.from('mejasan_contact_submissions').select('*').order('created_at', { ascending: false }).limit(30),
         sb.from('mejasan_bookings').select('*').order('created_at', { ascending: false }).limit(30),
         sb.from('mejasan_portfolio').select('*').order('sort_order').limit(50),
         sb.from('mejasan_blog_posts').select('*').order('created_at', { ascending: false }).limit(20),
         sb.from('mejasan_testimonials').select('*').order('created_at', { ascending: false }).limit(30),
+        sb.from('mejasan_event_documents').select('*').order('created_at', { ascending: false }).limit(50),
       ]);
       if (l.data) setLeads(l.data as Record<string, unknown>[]);
       if (b.data) setBookings(b.data as Record<string, unknown>[]);
       if (p.data) setPortfolio(p.data as Record<string, unknown>[]);
       if (bl.data) setBlog(bl.data as Record<string, unknown>[]);
       if (t.data) setTestimonials(t.data as Record<string, unknown>[]);
+      if (d.data) setDocuments(d.data as Record<string, unknown>[]);
     } catch { /* silent */ }
   };
 
@@ -434,7 +495,23 @@ function AdminDashboard({ user, onSignOut }: { user: User; onSignOut: () => void
     } catch { /* bucket may not exist yet */ }
   };
 
-  useEffect(() => { fetchAll(); fetchGallery(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  const fetchPageContent = async (slug: string) => {
+    setPageLoading(true);
+    const { data } = await sb.from('mejasan_page_content').select('content').eq('page_slug', slug).maybeSingle();
+    setPageContent(getPageContent(slug, data?.content));
+    setPageLoading(false);
+  };
+
+  const savePageContent = async () => {
+    if (!pageContent) return;
+    setPageSaving(true);
+    const { error } = await sb.from('mejasan_page_content').upsert({ page_slug: pageSlug, content: pageContent }, { onConflict: 'page_slug' });
+    setPageSaving(false);
+    if (error) { console.error('Page content save failed:', error); toast.error(`Save failed: ${error.message}`); }
+    else toast.success('Page content saved');
+  };
+
+  useEffect(() => { fetchAll(); fetchGallery(); fetchPageContent(pageSlug); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const updateBookingStatus = async (id: string, status: string) => {
     await sb.from('mejasan_bookings').update({ status }).eq('id', id);
@@ -543,6 +620,61 @@ function AdminDashboard({ user, onSignOut }: { user: User; onSignOut: () => void
     });
   };
 
+  /* Event document CRUD */
+  const saveDocument = async (data: DocumentForm) => {
+    if (!data.doc) return;
+    const { data: row, error } = await sb.from('mejasan_event_documents').insert({
+      event_name: data.event_name,
+      description: data.description || null,
+      booking_id: data.booking_id || null,
+      file_url: data.doc.url,
+      file_name: data.doc.name,
+      file_type: data.doc.type,
+    }).select().single();
+    if (error) { toast.error('Save failed — has the event_documents migration been run?'); return; }
+    setDocuments((d) => [row as Record<string, unknown>, ...d]);
+    toast.success('Document shared — link and QR code ready');
+    setDocumentModal(false);
+  };
+
+  const toggleDocActive = async (id: string, current: boolean) => {
+    const { error } = await sb.from('mejasan_event_documents').update({ is_active: !current }).eq('id', id);
+    if (error) { toast.error('Update failed'); return; }
+    setDocuments((d) => d.map((x) => (x.id === id ? { ...x, is_active: !current } : x)));
+    toast.success(!current ? 'Link re-activated' : 'Link revoked');
+  };
+
+  const deleteDocument = async (id: string, name: string) => {
+    setDeleteModal({
+      label: name,
+      onConfirm: async () => {
+        setDeleteBusy(true);
+        const { error } = await sb.from('mejasan_event_documents').delete().eq('id', id);
+        setDeleteBusy(false);
+        if (error) { toast.error('Delete failed'); return; }
+        setDocuments((d) => d.filter((x) => x.id !== id));
+        toast.success('Document removed');
+        setDeleteModal(null);
+      },
+    });
+  };
+
+  const docLink = (token: string) => `${window.location.origin}/e/${token}`;
+
+  const copyDocLink = (token: string) => {
+    navigator.clipboard.writeText(docLink(token)).then(() => toast.success('Link copied'));
+  };
+
+  const downloadDocQr = async (token: string, label: string) => {
+    try {
+      const dataUrl = await QRCode.toDataURL(docLink(token), { width: 512, margin: 2 });
+      const a = document.createElement('a');
+      a.href = dataUrl;
+      a.download = `${slugify(label) || 'event'}-qr.png`;
+      a.click();
+    } catch { toast.error('Could not generate QR code'); }
+  };
+
   /* Gallery upload */
   const handleUpload = async (e: ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? []);
@@ -597,6 +729,8 @@ function AdminDashboard({ user, onSignOut }: { user: User; onSignOut: () => void
     { id: 'portfolio', label: 'Portfolio', icon: Camera },
     { id: 'blog', label: 'Blog', icon: FileText },
     { id: 'testimonials', label: 'Reviews', icon: Star },
+    { id: 'pages', label: 'Pages', icon: Layout },
+    { id: 'documents', label: 'Documents', icon: QrCode },
     { id: 'invoices', label: 'Invoices', icon: DollarSign },
     { id: 'gallery', label: 'Gallery', icon: ImageIcon },
     { id: 'settings', label: 'Settings', icon: Settings },
@@ -777,7 +911,7 @@ function AdminDashboard({ user, onSignOut }: { user: User; onSignOut: () => void
             <div key={p.id as string} className="bg-[#141414] border border-white/[0.06] overflow-hidden">
               <div className="relative aspect-video">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={p.cover_image_url as string} alt={p.title as string} className="w-full h-full object-cover opacity-70" />
+                <img src={p.cover_image as string} alt={p.title as string} className="w-full h-full object-cover opacity-70" />
               </div>
               <div className="p-4">
                 <div className="flex items-center justify-between mb-1">
@@ -831,7 +965,7 @@ function AdminDashboard({ user, onSignOut }: { user: User; onSignOut: () => void
             <tr key={b.id as string} className="hover:bg-white/[0.02]">
               <TD className="text-white font-semibold max-w-[200px] truncate">{b.title as string}</TD>
               <TD>{b.category as string}</TD>
-              <TD>{(b.author as string) ?? '—'}</TD>
+              <TD>{(b.author_name as string) ?? '—'}</TD>
               <TD>{b.created_at ? new Date(b.created_at as string).toLocaleDateString('en-KE') : '—'}</TD>
               <TD><Chip status={b.is_published ? 'published' : 'draft'} /></TD>
               <TD>
@@ -879,6 +1013,86 @@ function AdminDashboard({ user, onSignOut }: { user: User; onSignOut: () => void
           ))}
           {testimonials.length === 0 && <tr><td colSpan={6} className="px-5 py-12 text-center text-[12px] text-white/20">No testimonials yet.</td></tr>}
         </AdminTable>
+      </div>
+    ),
+
+    pages: (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <h2 className="text-2xl font-heading font-light text-white">Pages</h2>
+          <div className="flex items-center gap-3">
+            <select
+              value={pageSlug}
+              onChange={(e) => { setPageSlug(e.target.value); fetchPageContent(e.target.value); }}
+              className={`${selectCls} w-auto`}
+            >
+              {PAGE_SLUGS.map((slug) => <option key={slug} value={slug}>{PAGE_CONTENT[slug].label}</option>)}
+            </select>
+            <button onClick={savePageContent} disabled={pageSaving || pageLoading || !pageContent} className="btn-primary disabled:opacity-50">
+              <Save size={13} /> {pageSaving ? 'Saving…' : 'Save Changes'}
+            </button>
+          </div>
+        </div>
+        <p className="text-[12px] text-white/25 font-display">
+          Edit the images and text shown on this page. Changes go live as soon as you hit Save.
+        </p>
+        {pageLoading && <p className="text-[12px] text-white/25 font-display">Loading…</p>}
+        {!pageLoading && pageContent && (
+          <PageContentEditor schema={PAGE_CONTENT[pageSlug].schema} value={pageContent} onChange={setPageContent} />
+        )}
+      </div>
+    ),
+
+    documents: (
+      <div>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-heading font-light text-white">Shared Documents</h2>
+          <button onClick={() => setDocumentModal(true)} className="btn-primary flex items-center gap-2 text-[10px]">
+            <Plus size={12} /> Share a Document
+          </button>
+        </div>
+        <p className="text-[12px] text-white/25 font-display mb-6">
+          Upload a eulogy, program, or other document for a specific event. Each one gets a private link and a
+          downloadable QR code that clients can use to view or download the file directly — no login required.
+        </p>
+        <div className="space-y-3">
+          {documents.map((doc) => {
+            const booking = bookings.find((b) => b.id === doc.booking_id);
+            return (
+              <div key={doc.id as string} className="bg-[#141414] border border-white/[0.06] p-5 flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-[13px] font-display font-semibold text-white truncate">{doc.event_name as string}</span>
+                    <Chip status={doc.is_active ? 'published' : 'draft'} />
+                  </div>
+                  <div className="text-[11px] text-white/30 font-display truncate">
+                    {doc.file_name as string}{booking ? ` · Linked to ${(booking.client_name as string) ?? (booking.reference as string)}` : ''} · {(doc.view_count as number) ?? 0} view(s)
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <button onClick={() => copyDocLink(doc.access_token as string)} className="flex items-center gap-1 text-[9px] font-display text-white/40 hover:text-white transition-colors border border-white/[0.08] px-2 py-1.5">
+                    <Copy size={11} /> Copy Link
+                  </button>
+                  <button onClick={() => downloadDocQr(doc.access_token as string, doc.event_name as string)} className="flex items-center gap-1 text-[9px] font-display text-white/40 hover:text-white transition-colors border border-white/[0.08] px-2 py-1.5">
+                    <DownloadIcon size={11} /> QR Code
+                  </button>
+                  <button onClick={() => toggleDocActive(doc.id as string, doc.is_active as boolean)} className="flex items-center gap-1 text-[9px] font-display text-white/40 hover:text-white transition-colors border border-white/[0.08] px-2 py-1.5">
+                    <Eye size={11} /> {doc.is_active ? 'Revoke' : 'Reactivate'}
+                  </button>
+                  <button onClick={() => deleteDocument(doc.id as string, doc.event_name as string)} className="flex items-center gap-1 text-[9px] font-display text-white/40 hover:text-red-400 transition-colors border border-white/[0.08] px-2 py-1.5">
+                    <Trash2 size={11} />
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+          {documents.length === 0 && (
+            <div className="py-16 text-center bg-[#141414] border border-white/[0.06]">
+              <QrCode size={24} className="text-white/15 mx-auto mb-3" />
+              <p className="text-[12px] text-white/25">No documents shared yet.</p>
+            </div>
+          )}
+        </div>
       </div>
     ),
 
@@ -1049,6 +1263,9 @@ function AdminDashboard({ user, onSignOut }: { user: User; onSignOut: () => void
       )}
       {testimonialModal !== null && (
         <TestimonialModal item={testimonialModal.item} onClose={() => setTestimonialModal(null)} onSave={saveTestimonial} />
+      )}
+      {documentModal && (
+        <DocumentModal bookings={bookings} onClose={() => setDocumentModal(false)} onSave={saveDocument} />
       )}
       {deleteModal && (
         <DeleteConfirm label={deleteModal.label} onConfirm={deleteModal.onConfirm} onClose={() => setDeleteModal(null)} busy={deleteBusy} />

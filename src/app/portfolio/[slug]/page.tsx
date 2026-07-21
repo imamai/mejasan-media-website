@@ -1,15 +1,18 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowLeft, ArrowRight, Star } from 'lucide-react';
+import { createClient } from '@/lib/supabase/server';
 
 interface Params { params: Promise<{ slug: string }> }
 
-const PROJECTS: Record<string, {
+interface ProjectView {
   title: string; client: string; category: string; location: string; year: string;
   hero: string; challenge: string; solution: string; results: string[];
   gallery: string[]; testimonial?: { text: string; name: string; role: string };
   related: Array<{ title: string; slug: string; img: string }>;
-}> = {
+}
+
+const PROJECTS: Record<string, ProjectView> = {
   'sarah-james-wedding': {
     title: 'Sarah & James', client: 'Private Wedding', category: 'Weddings', location: 'Nairobi', year: '2024',
     hero: 'https://images.unsplash.com/photo-1519741497674-611481863552?w=1920&q=80',
@@ -50,7 +53,7 @@ const PROJECTS: Record<string, {
   },
 };
 
-const DEFAULT = {
+const DEFAULT: ProjectView = {
   title: 'Project',  client: 'Client', category: 'Portfolio', location: 'Kenya', year: '2024',
   hero: 'https://images.unsplash.com/photo-1519741497674-611481863552?w=1920&q=80',
   challenge: 'A comprehensive visual documentation project requiring premium execution and creative direction.',
@@ -60,15 +63,41 @@ const DEFAULT = {
   related: [],
 };
 
+function mapPortfolioRow(row: Record<string, unknown>): ProjectView {
+  const metadata = (row.metadata as Record<string, unknown>) ?? {};
+  const images = Array.isArray(row.images) ? (row.images as string[]) : [];
+  return {
+    title: (row.title as string) ?? DEFAULT.title,
+    client: (row.client_name as string) ?? DEFAULT.client,
+    category: (row.category as string) ?? DEFAULT.category,
+    location: (metadata.location as string) ?? DEFAULT.location,
+    year: (metadata.year as string) ?? (row.published_at ? String(new Date(row.published_at as string).getFullYear()) : DEFAULT.year),
+    hero: (row.cover_image as string) || DEFAULT.hero,
+    challenge: (metadata.challenge as string) || (row.description as string) || DEFAULT.challenge,
+    solution: (metadata.solution as string) || DEFAULT.solution,
+    results: Array.isArray(metadata.results) ? (metadata.results as string[]) : DEFAULT.results,
+    gallery: images.length > 0 ? images : DEFAULT.gallery,
+    testimonial: metadata.testimonial as ProjectView['testimonial'],
+    related: Array.isArray(metadata.related) ? (metadata.related as ProjectView['related']) : [],
+  };
+}
+
+async function loadProject(slug: string): Promise<ProjectView> {
+  const sb = await createClient();
+  const { data: row } = await sb.from('mejasan_portfolio').select('*').eq('slug', slug).eq('is_published', true).maybeSingle();
+  if (row) return mapPortfolioRow(row as Record<string, unknown>);
+  return PROJECTS[slug] ?? { ...DEFAULT, title: slug.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()) };
+}
+
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { slug } = await params;
-  const p = PROJECTS[slug] ?? DEFAULT;
+  const p = await loadProject(slug);
   return { title: p.title, description: `${p.category} project for ${p.client} in ${p.location}, ${p.year}.` };
 }
 
 export default async function ProjectPage({ params }: Params) {
   const { slug } = await params;
-  const p = PROJECTS[slug] ?? { ...DEFAULT, title: slug.replace(/-/g,' ').replace(/\b\w/g,c=>c.toUpperCase()) };
+  const p = await loadProject(slug);
 
   return (
     <div className="bg-[#0B0B0B]">

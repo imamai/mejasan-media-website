@@ -326,6 +326,37 @@ create table if not exists mejasan_settings (
 );
 
 -- ============================================================
+-- PAGE CONTENT (About + Services copy/images, editable from /admin)
+-- ============================================================
+
+create table if not exists mejasan_page_content (
+  id          uuid primary key default uuid_generate_v4(),
+  page_slug   text not null unique,
+  content     jsonb not null default '{}',
+  updated_at  timestamptz not null default now()
+);
+
+-- ============================================================
+-- EVENT DOCUMENTS (eulogies, programs, etc. shared via link + QR code)
+-- Deliberately admin-only RLS — see storage/RLS section below for why.
+-- ============================================================
+
+create table if not exists mejasan_event_documents (
+  id            uuid primary key default uuid_generate_v4(),
+  event_name    text not null,
+  description   text,
+  booking_id    uuid references mejasan_bookings(id),
+  file_url      text not null,
+  file_name     text,
+  file_type     text,
+  access_token  text not null unique default replace(uuid_generate_v4()::text, '-', ''),
+  is_active     boolean not null default true,
+  view_count    int not null default 0,
+  created_at    timestamptz not null default now(),
+  updated_at    timestamptz not null default now()
+);
+
+-- ============================================================
 -- INDEXES
 -- ============================================================
 
@@ -375,7 +406,9 @@ begin
     'mejasan_portfolio',
     'mejasan_blog_posts',
     'mejasan_invoices',
-    'mejasan_contracts'
+    'mejasan_contracts',
+    'mejasan_page_content',
+    'mejasan_event_documents'
   ] loop
     execute format('
       drop trigger if exists trg_%s_updated_at on %s;
@@ -427,6 +460,8 @@ alter table mejasan_messages            enable row level security;
 alter table mejasan_notifications       enable row level security;
 alter table mejasan_activity_logs       enable row level security;
 alter table mejasan_settings            enable row level security;
+alter table mejasan_page_content        enable row level security;
+alter table mejasan_event_documents     enable row level security;
 
 -- Helper: is admin
 create or replace function mejasan_is_admin(uid uuid)
@@ -592,10 +627,58 @@ create policy "Admins manage settings" on mejasan_settings for all
   using (mejasan_is_admin(auth.uid()))
   with check (mejasan_is_admin(auth.uid()));
 
+-- ---- mejasan_page_content (public read — site copy is always public) ----
+create policy "Public view page content" on mejasan_page_content for select
+  using (true);
+
+create policy "Admins manage page content" on mejasan_page_content for all
+  using (mejasan_is_admin(auth.uid()))
+  with check (mejasan_is_admin(auth.uid()));
+
+-- ---- mejasan_event_documents (admin-only — see table comment above) ----
+create policy "Admins manage event documents" on mejasan_event_documents for all
+  using (mejasan_is_admin(auth.uid()))
+  with check (mejasan_is_admin(auth.uid()));
+
 -- ============================================================
 -- STORAGE BUCKETS
--- (Run via Supabase Dashboard > Storage or via API)
 -- ============================================================
+
+-- Bucket: mejasan-media (public) — used by the admin's Gallery tab and Pages
+-- content editor for all image uploads.
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('mejasan-media', 'mejasan-media', true, 20971520, array['image/jpeg','image/png','image/webp','image/gif'])
+on conflict (id) do nothing;
+
+create policy "Public read mejasan-media" on storage.objects for select
+  using (bucket_id = 'mejasan-media');
+
+create policy "Admins upload mejasan-media" on storage.objects for insert
+  with check (bucket_id = 'mejasan-media' and mejasan_is_admin(auth.uid()));
+
+create policy "Admins update mejasan-media" on storage.objects for update
+  using (bucket_id = 'mejasan-media' and mejasan_is_admin(auth.uid()));
+
+create policy "Admins delete mejasan-media" on storage.objects for delete
+  using (bucket_id = 'mejasan-media' and mejasan_is_admin(auth.uid()));
+
+-- Bucket: mejasan-event-docs (public) — files linked from mejasan_event_documents,
+-- shared with clients via a private link + QR code (see table comment above).
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('mejasan-event-docs', 'mejasan-event-docs', true, 52428800, array['application/pdf','image/jpeg','image/png','image/webp','application/msword','application/vnd.openxmlformats-officedocument.wordprocessingml.document'])
+on conflict (id) do nothing;
+
+create policy "Public read mejasan-event-docs" on storage.objects for select
+  using (bucket_id = 'mejasan-event-docs');
+
+create policy "Admins upload mejasan-event-docs" on storage.objects for insert
+  with check (bucket_id = 'mejasan-event-docs' and mejasan_is_admin(auth.uid()));
+
+create policy "Admins update mejasan-event-docs" on storage.objects for update
+  using (bucket_id = 'mejasan-event-docs' and mejasan_is_admin(auth.uid()));
+
+create policy "Admins delete mejasan-event-docs" on storage.objects for delete
+  using (bucket_id = 'mejasan-event-docs' and mejasan_is_admin(auth.uid()));
 
 -- Bucket: mejasan-portfolio (public)
 -- insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
@@ -620,10 +703,25 @@ create policy "Admins manage settings" on mejasan_settings for all
 insert into mejasan_settings (key, value, description) values
   ('company_name',    'Mejasan Media Production',      'Company display name'),
   ('company_email',   'info@mejasanmedia.com',         'Primary contact email'),
-  ('company_phone',   '+254 700 000 000',              'Primary contact phone'),
-  ('company_address', 'Nairobi, Kenya',                'Physical address'),
+  ('company_phone',   '+254 700 864 849',              'Primary contact phone'),
+  ('company_address', 'Kisumu, Kenya',                'Physical address'),
   ('currency',        'KES',                           'Default currency'),
   ('tax_rate',        '16',                            'VAT rate percentage'),
   ('deposit_percent', '50',                            'Booking deposit percentage'),
   ('booking_lead_days','7',                            'Minimum days before booking')
 on conflict (key) do nothing;
+
+-- ============================================================
+-- SEED: Page content placeholders (filled with real defaults at
+-- runtime from src/lib/page-content-schema.ts until an admin edits them)
+-- ============================================================
+
+insert into mejasan_page_content (page_slug, content) values
+  ('about',                 '{}'),
+  ('services',              '{}'),
+  ('services-photography',  '{}'),
+  ('services-videography',  '{}'),
+  ('services-events',       '{}'),
+  ('services-drone',        '{}'),
+  ('services-branding',     '{}')
+on conflict (page_slug) do nothing;
