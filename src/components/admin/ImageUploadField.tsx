@@ -21,7 +21,7 @@ export default function ImageUploadField({
     const path = `${folder}/${Date.now()}-${file.name}`;
     const { error } = await sb.storage.from(BUCKET).upload(path, file, { upsert: false });
     setUploading(false);
-    if (error) { toast.error('Upload failed'); return; }
+    if (error) { console.error('Image upload failed:', error); toast.error(`Upload failed: ${error.message}`); return; }
     const { data: { publicUrl } } = sb.storage.from(BUCKET).getPublicUrl(path);
     onChange(publicUrl);
     toast.success('Image uploaded');

@@ -21,7 +21,7 @@ export async function GET(req: Request) {
     const admin = await createAdminClient();
     const { data: gallery } = await admin
       .from('mejasan_galleries')
-      .select('client_user_id, gallery_images(url)')
+      .select('client_user_id, mejasan_gallery_images(url)')
       .eq('id', galleryId)
       .single();
 
@@ -29,7 +29,7 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: 'Gallery not found or access denied' }, { status: 403 });
     }
 
-    const urls = (gallery.gallery_images as { url: string }[]).map((i) => i.url);
+    const urls = (gallery.mejasan_gallery_images as { url: string }[]).map((i) => i.url);
     return NextResponse.json({ urls });
   } catch (e: unknown) {
     return NextResponse.json({ error: e instanceof Error ? e.message : 'Error' }, { status: 500 });

@@ -9,7 +9,7 @@ import {
   BarChart3, Users, Calendar, Camera, FileText, MessageSquare, Settings, LogOut,
   ChevronDown, Check, Upload, RefreshCw, Eye, Trash2, Edit3, Plus, TrendingUp,
   DollarSign, Star, X, Image as ImageIcon, Save, AlertTriangle, Layout,
-  QrCode, Copy, Download as DownloadIcon,
+  QrCode, Copy, Download as DownloadIcon, MessageCircle, Send,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import type { User } from '@supabase/supabase-js';
@@ -18,6 +18,8 @@ import PageContentEditor from '@/components/admin/PageContentEditor';
 import ImageUploadField from '@/components/admin/ImageUploadField';
 import FocalPointPicker from '@/components/admin/FocalPointPicker';
 import DocumentUploadField, { type UploadedDoc } from '@/components/admin/DocumentUploadField';
+import ProjectMediaUploader, { type ProjectFile } from '@/components/admin/ProjectMediaUploader';
+import { PROJECT_STAGES, PROJECT_STATUSES } from '@/lib/project-stages';
 import QRCode from 'qrcode';
 
 /* ── Login ─────────────────────────────────────────────────────────── */
@@ -389,26 +391,157 @@ function TestimonialModal({
   );
 }
 
+/* ── Project Modal ──────────────────────────────────────────────────── */
+type ProjectForm = {
+  title: string;
+  description: string;
+  service: string;
+  client_user_id: string;
+  stage: number;
+  start_date: string;
+  delivery_date: string;
+  status: string;
+  cover_image: string;
+};
+
+function ProjectModal({
+  item, clients, onClose, onSave,
+}: {
+  item?: Record<string, unknown> | null;
+  clients: Record<string, unknown>[];
+  onClose: () => void;
+  onSave: (data: ProjectForm, id?: string) => Promise<void>;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [form, setForm] = useState<ProjectForm>({
+    title: (item?.title as string) ?? '',
+    description: (item?.description as string) ?? '',
+    service: (item?.service as string) ?? '',
+    client_user_id: (item?.client_user_id as string) ?? '',
+    stage: (item?.stage as number) ?? 0,
+    start_date: (item?.start_date as string) ?? '',
+    delivery_date: (item?.delivery_date as string) ?? '',
+    status: (item?.status as string) ?? 'active',
+    cover_image: (item?.cover_image as string) ?? '',
+  });
+
+  const set = <K extends keyof ProjectForm>(k: K, v: ProjectForm[K]) => setForm((f) => ({ ...f, [k]: v }));
+
+  const submit = async () => {
+    if (!form.title || !form.client_user_id) { toast.error('Title and client are required'); return; }
+    setBusy(true);
+    await onSave(form, item?.id as string | undefined);
+    setBusy(false);
+  };
+
+  return (
+    <Modal title={item ? 'Edit Project' : 'Add Project'} onClose={onClose}>
+      <div className="space-y-4">
+        <Field label="Title">
+          <input value={form.title} onChange={(e) => set('title', e.target.value)} className={inputCls} placeholder="e.g. Sarah & James Wedding" />
+        </Field>
+        <Field label="Client">
+          <select value={form.client_user_id} onChange={(e) => set('client_user_id', e.target.value)} className={selectCls}>
+            <option value="">— Select a client —</option>
+            {clients.map((c) => (
+              <option key={c.id as string} value={c.id as string}>{(c.name as string) ?? (c.email as string)} · {c.email as string}</option>
+            ))}
+          </select>
+          {clients.length === 0 && <p className="text-[10px] text-white/25 font-display mt-1">No client accounts exist yet — they sign up via the client portal.</p>}
+        </Field>
+        <Field label="Service">
+          <input value={form.service} onChange={(e) => set('service', e.target.value)} className={inputCls} placeholder="e.g. Wedding Photography" />
+        </Field>
+        <div className="grid grid-cols-2 gap-4">
+          <Field label="Stage">
+            <select value={form.stage} onChange={(e) => set('stage', Number(e.target.value))} className={selectCls}>
+              {PROJECT_STAGES.map((label, i) => <option key={label} value={i}>{label}</option>)}
+            </select>
+          </Field>
+          <Field label="Status">
+            <select value={form.status} onChange={(e) => set('status', e.target.value)} className={selectCls}>
+              {PROJECT_STATUSES.map((s) => <option key={s} value={s}>{s.replace('_', ' ')}</option>)}
+            </select>
+          </Field>
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <Field label="Start Date">
+            <input type="date" value={form.start_date} onChange={(e) => set('start_date', e.target.value)} className={inputCls} />
+          </Field>
+          <Field label="Delivery Date">
+            <input type="date" value={form.delivery_date} onChange={(e) => set('delivery_date', e.target.value)} className={inputCls} />
+          </Field>
+        </div>
+        <Field label="Cover Image">
+          <ImageUploadField value={form.cover_image} onChange={(v) => set('cover_image', v)} folder="projects" />
+        </Field>
+        <Field label="Description">
+          <textarea rows={3} value={form.description} onChange={(e) => set('description', e.target.value)} className={textareaCls} placeholder="Notes about this project…" />
+        </Field>
+        <div className="flex gap-3 pt-2">
+          <button onClick={onClose} className="btn-outline-dark flex-1 justify-center py-2.5 text-[11px]">Cancel</button>
+          <button onClick={submit} disabled={busy} className="btn-primary flex-1 justify-center disabled:opacity-50">
+            <Save size={12} /> {busy ? 'Saving…' : 'Save'}
+          </button>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
+/* ── Project Files Modal ────────────────────────────────────────────── */
+function ProjectFilesModal({
+  project, onClose,
+}: { project: Record<string, unknown>; onClose: () => void }) {
+  const sb = createClient();
+  const [files, setFiles] = useState<ProjectFile[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      const { data, error } = await sb
+        .from('mejasan_project_files')
+        .select('*')
+        .eq('project_id', project.id as string)
+        .order('created_at', { ascending: false });
+      if (error) { console.error('Failed to load project files:', error); toast.error(`Failed to load files: ${error.message}`); }
+      setFiles((data as ProjectFile[]) ?? []);
+      setLoading(false);
+    })();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return (
+    <Modal title={`Files — ${project.title as string}`} onClose={onClose} wide>
+      {loading ? (
+        <p className="text-[12px] text-white/25 font-display">Loading…</p>
+      ) : (
+        <ProjectMediaUploader projectId={project.id as string} files={files} onFilesChange={setFiles} />
+      )}
+    </Modal>
+  );
+}
+
 /* ── Event Document Modal ───────────────────────────────────────────── */
-type DocumentForm = { event_name: string; description: string; booking_id: string; doc: UploadedDoc | null };
+type DocumentForm = { event_name: string; description: string; booking_id: string; docs: UploadedDoc[] };
 
 function DocumentModal({
   bookings, onClose, onSave,
 }: { bookings: Record<string, unknown>[]; onClose: () => void; onSave: (data: DocumentForm) => Promise<void> }) {
   const [busy, setBusy] = useState(false);
-  const [form, setForm] = useState<DocumentForm>({ event_name: '', description: '', booking_id: '', doc: null });
+  const [form, setForm] = useState<DocumentForm>({ event_name: '', description: '', booking_id: '', docs: [] });
 
   const set = <K extends keyof DocumentForm>(k: K, v: DocumentForm[K]) => setForm((f) => ({ ...f, [k]: v }));
 
   const submit = async () => {
-    if (!form.event_name || !form.doc) { toast.error('Event name and a file are required'); return; }
+    if (!form.event_name || form.docs.length === 0) { toast.error('Event name and at least one file are required'); return; }
     setBusy(true);
     await onSave(form);
     setBusy(false);
   };
 
   return (
-    <Modal title="Share a Document" onClose={onClose}>
+    <Modal title="Share Document(s)" onClose={onClose}>
       <div className="space-y-4">
         <Field label="Event Name">
           <input value={form.event_name} onChange={(e) => set('event_name', e.target.value)} className={inputCls} placeholder="e.g. Jane Doe Memorial Service" />
@@ -424,8 +557,9 @@ function DocumentModal({
         <Field label="Description (optional)">
           <textarea rows={2} value={form.description} onChange={(e) => set('description', e.target.value)} className={textareaCls} placeholder="Shown to whoever opens the link" />
         </Field>
-        <Field label="Document">
-          <DocumentUploadField value={form.doc} onChange={(doc) => set('doc', doc)} />
+        <Field label="Document(s)">
+          <p className="text-[10px] text-white/25 font-display mb-2">Add one or more files (e.g. the eulogy and the program) — they'll all share the same link and QR code.</p>
+          <DocumentUploadField value={form.docs} onChange={(docs) => set('docs', docs)} />
         </Field>
         <div className="flex gap-3 pt-2">
           <button onClick={onClose} className="btn-outline-dark flex-1 justify-center py-2.5 text-[11px]">Cancel</button>
@@ -439,7 +573,7 @@ function DocumentModal({
 }
 
 /* ── Dashboard ─────────────────────────────────────────────────────── */
-type TabId = 'overview' | 'leads' | 'bookings' | 'clients' | 'projects' | 'portfolio' | 'blog' | 'testimonials' | 'pages' | 'documents' | 'invoices' | 'gallery' | 'settings';
+type TabId = 'overview' | 'leads' | 'bookings' | 'clients' | 'projects' | 'messages' | 'portfolio' | 'blog' | 'testimonials' | 'pages' | 'documents' | 'invoices' | 'gallery' | 'settings';
 
 function AdminDashboard({ user, onSignOut }: { user: User; onSignOut: () => void }) {
   const [tab, setTab] = useState<TabId>('overview');
@@ -449,12 +583,23 @@ function AdminDashboard({ user, onSignOut }: { user: User; onSignOut: () => void
   const [blog, setBlog] = useState<Record<string, unknown>[]>([]);
   const [testimonials, setTestimonials] = useState<Record<string, unknown>[]>([]);
   const [documents, setDocuments] = useState<Record<string, unknown>[]>([]);
+  const [clients, setClients] = useState<Record<string, unknown>[]>([]);
+  const [projects, setProjects] = useState<Record<string, unknown>[]>([]);
   const [openStatusId, setOpenStatusId] = useState<string | null>(null);
+
+  /* Messages */
+  const [messageProjectId, setMessageProjectId] = useState<string | null>(null);
+  const [threadMessages, setThreadMessages] = useState<Record<string, unknown>[]>([]);
+  const [messagesLoading, setMessagesLoading] = useState(false);
+  const [adminMsgText, setAdminMsgText] = useState('');
+  const [sendingMsg, setSendingMsg] = useState(false);
 
   /* Modals */
   const [portfolioModal, setPortfolioModal] = useState<{ item?: Record<string, unknown> | null } | null>(null);
   const [blogModal, setBlogModal] = useState<{ post?: Record<string, unknown> | null } | null>(null);
   const [testimonialModal, setTestimonialModal] = useState<{ item?: Record<string, unknown> | null } | null>(null);
+  const [projectModal, setProjectModal] = useState<{ item?: Record<string, unknown> | null } | null>(null);
+  const [projectFilesModal, setProjectFilesModal] = useState<Record<string, unknown> | null>(null);
   const [documentModal, setDocumentModal] = useState(false);
   const [deleteModal, setDeleteModal] = useState<{ label: string; onConfirm: () => Promise<void> } | null>(null);
   const [deleteBusy, setDeleteBusy] = useState(false);
@@ -478,13 +623,14 @@ function AdminDashboard({ user, onSignOut }: { user: User; onSignOut: () => void
 
   const fetchAll = async () => {
     try {
-      const [l, b, p, bl, t, d] = await Promise.all([
+      const [l, b, p, bl, t, d, pr] = await Promise.all([
         sb.from('mejasan_contact_submissions').select('*').order('created_at', { ascending: false }).limit(30),
         sb.from('mejasan_bookings').select('*').order('created_at', { ascending: false }).limit(30),
         sb.from('mejasan_portfolio').select('*').order('sort_order').limit(50),
         sb.from('mejasan_blog_posts').select('*').order('created_at', { ascending: false }).limit(20),
         sb.from('mejasan_testimonials').select('*').order('created_at', { ascending: false }).limit(30),
-        sb.from('mejasan_event_documents').select('*').order('created_at', { ascending: false }).limit(50),
+        sb.from('mejasan_event_documents').select('*, mejasan_event_document_files(count)').order('created_at', { ascending: false }).limit(50),
+        sb.from('mejasan_projects').select('*').order('created_at', { ascending: false }).limit(100),
       ]);
       if (l.data) setLeads(l.data as Record<string, unknown>[]);
       if (b.data) setBookings(b.data as Record<string, unknown>[]);
@@ -492,7 +638,21 @@ function AdminDashboard({ user, onSignOut }: { user: User; onSignOut: () => void
       if (bl.data) setBlog(bl.data as Record<string, unknown>[]);
       if (t.data) setTestimonials(t.data as Record<string, unknown>[]);
       if (d.data) setDocuments(d.data as Record<string, unknown>[]);
+      if (pr.error) { console.error('Failed to load projects:', pr.error); toast.error(`Failed to load projects: ${pr.error.message}`); }
+      if (pr.data) setProjects(pr.data as Record<string, unknown>[]);
     } catch { /* silent */ }
+  };
+
+  const fetchClients = async () => {
+    try {
+      const { data: { session } } = await sb.auth.getSession();
+      const res = await fetch('/api/admin/clients', {
+        headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {},
+      });
+      const json = await res.json();
+      if (!res.ok) { console.error('Failed to load clients:', json.error); toast.error(`Failed to load clients: ${json.error}`); return; }
+      setClients(json as Record<string, unknown>[]);
+    } catch (e: unknown) { console.error('Failed to load clients:', e); }
   };
 
   const fetchGallery = async () => {
@@ -524,7 +684,7 @@ function AdminDashboard({ user, onSignOut }: { user: User; onSignOut: () => void
     else toast.success('Page content saved');
   };
 
-  useEffect(() => { fetchAll(); fetchGallery(); fetchPageContent(pageSlug); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { fetchAll(); fetchGallery(); fetchClients(); fetchPageContent(pageSlug); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const updateBookingStatus = async (id: string, status: string) => {
     await sb.from('mejasan_bookings').update({ status }).eq('id', id);
@@ -633,20 +793,98 @@ function AdminDashboard({ user, onSignOut }: { user: User; onSignOut: () => void
     });
   };
 
+  /* Messages */
+  const fetchThread = async (projectId: string) => {
+    setMessagesLoading(true);
+    try {
+      const { data: { session } } = await sb.auth.getSession();
+      const headers: Record<string, string> = session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {};
+      const res = await fetch(`/api/admin/messages?project_id=${projectId}`, { headers });
+      if (res.ok) setThreadMessages(await res.json());
+    } catch { /* silent */ }
+    setMessagesLoading(false);
+  };
+
+  useEffect(() => {
+    if (tab !== 'messages' || !messageProjectId) return;
+    fetchThread(messageProjectId);
+    const interval = setInterval(() => fetchThread(messageProjectId), 15000);
+    return () => clearInterval(interval);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab, messageProjectId]);
+
+  const sendAdminMessage = async () => {
+    if (!adminMsgText.trim() || !messageProjectId || sendingMsg) return;
+    setSendingMsg(true);
+    try {
+      const { data: { session } } = await sb.auth.getSession();
+      const headers: Record<string, string> = { 'Content-Type': 'application/json', ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}) };
+      const res = await fetch('/api/admin/messages', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ project_id: messageProjectId, content: adminMsgText }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error ?? 'Failed to send message');
+      setThreadMessages((m) => [...m, json]);
+      setAdminMsgText('');
+    } catch (e: unknown) { console.error('Send message failed:', e); toast.error(e instanceof Error ? e.message : 'Failed to send message'); }
+    finally { setSendingMsg(false); }
+  };
+
+  /* Project CRUD */
+  const saveProject = async (data: ProjectForm, id?: string) => {
+    const payload = { ...data, stage_label: PROJECT_STAGES[data.stage] };
+    if (id) {
+      const { error } = await sb.from('mejasan_projects').update(payload).eq('id', id);
+      if (error) { console.error('Project update failed:', error); toast.error(`Update failed: ${error.message}`); return; }
+      setProjects((p) => p.map((x) => (x.id === id ? { ...x, ...payload } : x)));
+      toast.success('Project updated');
+    } else {
+      const { data: row, error } = await sb.from('mejasan_projects').insert(payload).select().single();
+      if (error) { console.error('Project insert failed:', error); toast.error(`Insert failed: ${error.message}`); return; }
+      setProjects((p) => [row as Record<string, unknown>, ...p]);
+      toast.success('Project created');
+    }
+    setProjectModal(null);
+  };
+
+  const deleteProject = async (id: string, title: string) => {
+    setDeleteModal({
+      label: title,
+      onConfirm: async () => {
+        setDeleteBusy(true);
+        const { error } = await sb.from('mejasan_projects').delete().eq('id', id);
+        setDeleteBusy(false);
+        if (error) { console.error('Project delete failed:', error); toast.error(`Delete failed: ${error.message}`); return; }
+        setProjects((p) => p.filter((x) => x.id !== id));
+        toast.success('Project deleted');
+        setDeleteModal(null);
+      },
+    });
+  };
+
   /* Event document CRUD */
   const saveDocument = async (data: DocumentForm) => {
-    if (!data.doc) return;
+    if (data.docs.length === 0) return;
+    const first = data.docs[0];
     const { data: row, error } = await sb.from('mejasan_event_documents').insert({
       event_name: data.event_name,
       description: data.description || null,
       booking_id: data.booking_id || null,
-      file_url: data.doc.url,
-      file_name: data.doc.name,
-      file_type: data.doc.type,
+      file_url: first.url,
+      file_name: first.name,
+      file_type: first.type,
     }).select().single();
-    if (error) { toast.error('Save failed — has the event_documents migration been run?'); return; }
-    setDocuments((d) => [row as Record<string, unknown>, ...d]);
-    toast.success('Document shared — link and QR code ready');
+    if (error) { console.error('Document save failed:', error); toast.error(`Save failed: ${error.message}`); return; }
+
+    const { error: filesError } = await sb.from('mejasan_event_document_files').insert(
+      data.docs.map((d, i) => ({ event_document_id: row.id as string, url: d.url, name: d.name, type: d.type, sort_order: i }))
+    );
+    if (filesError) { console.error('Document files save failed:', filesError); toast.error(`Files failed to save: ${filesError.message} — has the 0005 migration been run?`); }
+
+    setDocuments((d) => [{ ...row, mejasan_event_document_files: [{ count: data.docs.length }] } as Record<string, unknown>, ...d]);
+    toast.success('Document(s) shared — link and QR code ready');
     setDocumentModal(false);
   };
 
@@ -697,7 +935,7 @@ function AdminDashboard({ user, onSignOut }: { user: User; onSignOut: () => void
       files.map(async (file) => {
         const path = `gallery/${Date.now()}-${file.name}`;
         const { error } = await sb.storage.from('mejasan-media').upload(path, file, { upsert: false });
-        if (error) { toast.error(`Failed: ${file.name}`); return null; }
+        if (error) { console.error('Gallery upload failed:', error); toast.error(`${file.name}: ${error.message}`); return null; }
         const { data: { publicUrl } } = sb.storage.from('mejasan-media').getPublicUrl(path);
         return { name: file.name, url: publicUrl };
       })
@@ -739,6 +977,7 @@ function AdminDashboard({ user, onSignOut }: { user: User; onSignOut: () => void
     { id: 'bookings', label: 'Bookings', icon: Calendar },
     { id: 'clients', label: 'Clients', icon: Users },
     { id: 'projects', label: 'Projects', icon: TrendingUp },
+    { id: 'messages', label: 'Messages', icon: MessageCircle },
     { id: 'portfolio', label: 'Portfolio', icon: Camera },
     { id: 'blog', label: 'Blog', icon: FileText },
     { id: 'testimonials', label: 'Reviews', icon: Star },
@@ -871,43 +1110,111 @@ function AdminDashboard({ user, onSignOut }: { user: User; onSignOut: () => void
 
     clients: (
       <div>
-        <h2 className="text-2xl font-heading font-light text-white mb-6">Clients</h2>
-        <AdminTable heads={['Name', 'Email', 'Phone', 'Projects', 'Joined']}>
-          {[
-            { name: 'Sarah Kamau', email: 'sarah@example.com', phone: '+254711000001', projects: 2, joined: '2024-09-01' },
-            { name: 'James Mwangi', email: 'james@example.com', phone: '+254722000002', projects: 1, joined: '2024-10-15' },
-            { name: 'Grace Njoroge', email: 'grace@example.com', phone: '+254733000003', projects: 3, joined: '2024-07-20' },
-          ].map((c) => (
-            <tr key={c.email} className="hover:bg-white/[0.02]">
-              <TD className="text-white font-semibold">{c.name}</TD>
-              <TD>{c.email}</TD>
-              <TD>{c.phone}</TD>
-              <TD>{c.projects}</TD>
-              <TD>{new Date(c.joined).toLocaleDateString('en-KE')}</TD>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-heading font-light text-white">Clients</h2>
+          <span className="text-[11px] font-display text-white/30">{clients.length} total</span>
+        </div>
+        <AdminTable heads={['Name', 'Email', 'Phone', 'Projects', 'Joined']} onRefresh={fetchClients}>
+          {clients.map((c) => (
+            <tr key={c.id as string} className="hover:bg-white/[0.02]">
+              <TD className="text-white font-semibold">{c.name as string}</TD>
+              <TD>{c.email as string}</TD>
+              <TD>{(c.phone as string) || '—'}</TD>
+              <TD>{c.projects as number}</TD>
+              <TD>{c.joined ? new Date(c.joined as string).toLocaleDateString('en-KE') : '—'}</TD>
             </tr>
           ))}
+          {clients.length === 0 && <tr><td colSpan={5} className="px-5 py-12 text-center text-[12px] text-white/20">No clients have signed up via the client portal yet.</td></tr>}
         </AdminTable>
       </div>
     ),
 
     projects: (
       <div>
-        <h2 className="text-2xl font-heading font-light text-white mb-6">Projects</h2>
-        <AdminTable heads={['Project', 'Client', 'Type', 'Start Date', 'Stage', 'Status']}>
-          {[
-            { project: 'Sarah & James Wedding', client: 'Sarah Kamau', type: 'Wedding', date: '2025-03-15', stage: 'Post-Production', status: 'active' },
-            { project: 'Safaricom Summit 2025', client: 'Safaricom PLC', type: 'Corporate', date: '2025-02-10', stage: 'Delivered', status: 'completed' },
-          ].map((p) => (
-            <tr key={p.project} className="hover:bg-white/[0.02]">
-              <TD className="text-white font-semibold">{p.project}</TD>
-              <TD>{p.client}</TD>
-              <TD>{p.type}</TD>
-              <TD>{new Date(p.date).toLocaleDateString('en-KE')}</TD>
-              <TD>{p.stage}</TD>
-              <TD><Chip status={p.status} /></TD>
-            </tr>
-          ))}
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-heading font-light text-white">Projects</h2>
+          <button onClick={() => setProjectModal({ item: null })} className="btn-primary flex items-center gap-2 text-[10px]">
+            <Plus size={12} /> Add Project
+          </button>
+        </div>
+        <AdminTable heads={['Project', 'Client', 'Service', 'Stage', 'Status', 'Actions']} onRefresh={fetchAll}>
+          {projects.map((p) => {
+            const client = clients.find((c) => c.id === p.client_user_id);
+            return (
+              <tr key={p.id as string} className="hover:bg-white/[0.02]">
+                <TD className="text-white font-semibold">{p.title as string}</TD>
+                <TD>{(client?.name as string) ?? '—'}</TD>
+                <TD>{(p.service as string) || '—'}</TD>
+                <TD>{PROJECT_STAGES[(p.stage as number) ?? 0]}</TD>
+                <TD><Chip status={p.status as string} /></TD>
+                <TD>
+                  <div className="flex gap-2">
+                    <button onClick={() => setProjectFilesModal(p)} className="flex items-center gap-1 text-[9px] font-display text-white/40 hover:text-white transition-colors border border-white/[0.08] px-2 py-1">
+                      <Upload size={10} /> Files
+                    </button>
+                    <button onClick={() => setProjectModal({ item: p })} className="text-white/30 hover:text-white transition-colors"><Edit3 size={13} /></button>
+                    <button onClick={() => deleteProject(p.id as string, p.title as string)} className="text-white/30 hover:text-red-400 transition-colors"><Trash2 size={13} /></button>
+                  </div>
+                </TD>
+              </tr>
+            );
+          })}
+          {projects.length === 0 && <tr><td colSpan={6} className="px-5 py-12 text-center text-[12px] text-white/20">No projects yet. Add your first one.</td></tr>}
         </AdminTable>
+      </div>
+    ),
+
+    messages: (
+      <div className="space-y-4">
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <h2 className="text-2xl font-heading font-light text-white">Messages</h2>
+          <select
+            value={messageProjectId ?? ''}
+            onChange={(e) => setMessageProjectId(e.target.value || null)}
+            className={`${selectCls} w-auto`}
+          >
+            <option value="">— Select a project —</option>
+            {projects.map((p) => {
+              const client = clients.find((c) => c.id === p.client_user_id);
+              return <option key={p.id as string} value={p.id as string}>{p.title as string}{client ? ` — ${client.name as string}` : ''}</option>;
+            })}
+          </select>
+        </div>
+        {!messageProjectId ? (
+          <div className="bg-[#141414] border border-white/[0.06] p-10 text-center">
+            <MessageCircle className="w-8 h-8 text-white/20 mx-auto mb-3" />
+            <p className="text-[12px] text-white/25 font-display">Select a project above to view or send messages.</p>
+          </div>
+        ) : (
+          <div className="bg-[#141414] border border-white/[0.06] flex flex-col h-[480px]">
+            <div className="flex-1 overflow-y-auto p-5 space-y-4">
+              {messagesLoading && threadMessages.length === 0 && <p className="text-[12px] text-white/25 font-display">Loading…</p>}
+              {!messagesLoading && threadMessages.length === 0 && <p className="text-[12px] text-white/25 font-display">No messages yet.</p>}
+              {threadMessages.map((m) => (
+                <div key={m.id as string} className={`flex ${m.is_admin ? 'justify-end' : ''}`}>
+                  <div className={`max-w-[75%] px-4 py-3 text-[13px] font-display ${!m.is_admin ? 'bg-[#1C1C1C] text-white/70' : 'bg-[#E10600] text-white'}`}>
+                    {!m.is_admin && <div className="text-[9px] text-[#E10600] tracking-widest uppercase mb-1.5">{m.sender_name as string}</div>}
+                    <p>{m.content as string}</p>
+                    <div className="text-[9px] opacity-40 mt-1.5">{new Date(m.created_at as string).toLocaleTimeString('en-KE', { hour: '2-digit', minute: '2-digit' })}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="border-t border-white/[0.06] p-4 flex gap-3">
+              <input
+                value={adminMsgText}
+                onChange={(e) => setAdminMsgText(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendAdminMessage(); } }}
+                placeholder="Reply to client..."
+                disabled={sendingMsg}
+                className="flex-1 bg-[#0B0B0B] border border-white/[0.08] text-white/70 font-display text-sm px-4 py-2.5 focus:outline-none focus:border-[#E10600]/40 placeholder:text-white/20 disabled:opacity-50"
+              />
+              <button onClick={sendAdminMessage} disabled={sendingMsg} className="w-10 h-10 bg-[#E10600] flex items-center justify-center hover:bg-[#c00500] transition-colors disabled:opacity-50">
+                <Send size={15} className="text-white" />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     ),
 
@@ -1079,7 +1386,10 @@ function AdminDashboard({ user, onSignOut }: { user: User; onSignOut: () => void
                     <Chip status={doc.is_active ? 'published' : 'draft'} />
                   </div>
                   <div className="text-[11px] text-white/30 font-display truncate">
-                    {doc.file_name as string}{booking ? ` · Linked to ${(booking.client_name as string) ?? (booking.reference as string)}` : ''} · {(doc.view_count as number) ?? 0} view(s)
+                    {(() => {
+                      const fileCount = ((doc.mejasan_event_document_files as { count: number }[] | undefined)?.[0]?.count) ?? (doc.file_name ? 1 : 0);
+                      return `${fileCount} file${fileCount === 1 ? '' : 's'}`;
+                    })()}{booking ? ` · Linked to ${(booking.client_name as string) ?? (booking.reference as string)}` : ''} · {(doc.view_count as number) ?? 0} view(s)
                   </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
@@ -1276,6 +1586,12 @@ function AdminDashboard({ user, onSignOut }: { user: User; onSignOut: () => void
       )}
       {testimonialModal !== null && (
         <TestimonialModal item={testimonialModal.item} onClose={() => setTestimonialModal(null)} onSave={saveTestimonial} />
+      )}
+      {projectModal !== null && (
+        <ProjectModal item={projectModal.item} clients={clients} onClose={() => setProjectModal(null)} onSave={saveProject} />
+      )}
+      {projectFilesModal !== null && (
+        <ProjectFilesModal project={projectFilesModal} onClose={() => setProjectFilesModal(null)} />
       )}
       {documentModal && (
         <DocumentModal bookings={bookings} onClose={() => setDocumentModal(false)} onSave={saveDocument} />

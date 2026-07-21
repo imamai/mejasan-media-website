@@ -6,9 +6,14 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import toast from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LogOut, Camera, Image, FileText, MessageCircle, Settings, Download, X, ChevronRight, Eye, Send, Calendar, DollarSign, CheckCircle, Clock, AlertCircle } from 'lucide-react';
+import { LogOut, Camera, Image, FileText, MessageCircle, Settings, Download, X, ChevronRight, Eye, Send, Calendar, DollarSign, CheckCircle, Clock, AlertCircle, Film } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
+import { PROJECT_STAGES } from '@/lib/project-stages';
 import type { User, Session } from '@supabase/supabase-js';
+
+type ProjectFile = { id: string; name: string; url: string; type: string };
+type Project = Record<string, unknown> & { mejasan_project_files?: ProjectFile[] };
+type ClientMessage = { id: string; project_id: string; sender_id: string; sender_name: string; is_admin: boolean; content: string; created_at: string };
 
 /* ── Schemas ──────────────────────────────────────────────────────── */
 const loginSchema = z.object({ email: z.string().email(), password: z.string().min(6) });
@@ -106,39 +111,69 @@ function Dashboard({ user, session, onSignOut }: { user: User; session: Session;
   const [tab, setTab] = useState<'overview'|'projects'|'galleries'|'invoices'|'messages'|'settings'>('overview');
   const [bookings, setBookings]   = useState<Record<string,unknown>[]>([]);
   const [galleries, setGalleries] = useState<Record<string,unknown>[]>([]);
+  const [projects, setProjects]   = useState<Project[]>([]);
   const [lightbox, setLightbox]   = useState<string|null>(null);
   const [msgText, setMsgText]     = useState('');
-  const [messages, setMessages]   = useState<{id:string;text:string;from:'client'|'team';ts:string}[]>([
-    { id:'1', text:'Welcome to your Mejasan client portal! Your project files will appear here as we progress.', from:'team', ts:'2024-12-01T09:00:00' },
-  ]);
+  const [messages, setMessages]   = useState<ClientMessage[]>([]);
+  const [messagesLoading, setMessagesLoading] = useState(false);
+  const [messageProjectId, setMessageProjectId] = useState<string | null>(null);
+  const [sending, setSending] = useState(false);
 
   const h: Record<string,string> = session.access_token ? { Authorization: `Bearer ${session.access_token}` } : {};
 
   useEffect(() => {
     (async () => {
       try {
-        const [bRes, gRes] = await Promise.all([
+        const [bRes, gRes, pRes] = await Promise.all([
           fetch('/api/client/bookings', { headers: h }),
           fetch('/api/client/galleries', { headers: h }),
+          fetch('/api/client/projects', { headers: h }),
         ]);
         if (bRes.ok) setBookings(await bRes.json());
         if (gRes.ok) setGalleries(await gRes.json());
+        if (pRes.ok) {
+          const proj = await pRes.json() as Project[];
+          setProjects(proj);
+          if (proj.length > 0) setMessageProjectId(proj[0].id as string);
+        }
       } catch { /* silent */ }
     })();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const sendMessage = () => {
-    if (!msgText.trim()) return;
-    setMessages(m => [...m, { id: Date.now().toString(), text: msgText, from:'client', ts: new Date().toISOString() }]);
-    setMsgText('');
-    setTimeout(() => {
-      setMessages(m => [...m, { id: (Date.now()+1).toString(), text: 'Thank you for your message! Our team will respond within 2 hours.', from:'team', ts: new Date().toISOString() }]);
-    }, 1500);
+  const fetchMessages = async (projectId: string) => {
+    setMessagesLoading(true);
+    try {
+      const res = await fetch(`/api/client/messages?project_id=${projectId}`, { headers: h });
+      if (res.ok) setMessages(await res.json());
+    } catch { /* silent */ }
+    setMessagesLoading(false);
   };
 
-  const MILESTONES = ['Booking Confirmed','Contract Signed','Pre-Production','Production Day','Post-Production','Files Delivered'];
-  const projectStage = 3; // demo: in post-production
+  useEffect(() => {
+    if (tab !== 'messages' || !messageProjectId) return;
+    fetchMessages(messageProjectId);
+    const interval = setInterval(() => fetchMessages(messageProjectId), 15000);
+    return () => clearInterval(interval);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab, messageProjectId]);
+
+  const sendMessage = async () => {
+    if (!msgText.trim() || !messageProjectId || sending) return;
+    setSending(true);
+    try {
+      const res = await fetch('/api/client/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...h },
+        body: JSON.stringify({ project_id: messageProjectId, content: msgText }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error ?? 'Failed to send message');
+      setMessages((m) => [...m, json]);
+      setMsgText('');
+    } catch (e: unknown) { toast.error(e instanceof Error ? e.message : 'Failed to send message'); }
+    finally { setSending(false); }
+  };
 
   const TABS = [
     { id:'overview',  label:'Overview',  icon:Eye },
@@ -196,9 +231,9 @@ function Dashboard({ user, session, onSignOut }: { user: User; session: Session;
               <h2 className="text-2xl font-heading font-light text-white">Welcome back</h2>
               <div className="grid sm:grid-cols-3 gap-4">
                 {[
-                  { label:'Active Projects', value: bookings.length || '1', icon:Camera, color:'text-[#E10600]' },
-                  { label:'Galleries Ready', value: galleries.length || '0', icon:Image, color:'text-blue-400' },
-                  { label:'Unread Messages', value:'1', icon:MessageCircle, color:'text-green-400' },
+                  { label:'Active Projects', value: projects.filter((p) => p.status === 'active').length, icon:Camera, color:'text-[#E10600]' },
+                  { label:'Galleries Ready', value: galleries.length, icon:Image, color:'text-blue-400' },
+                  { label:'Total Bookings', value: bookings.length, icon:MessageCircle, color:'text-green-400' },
                 ].map(({ label, value, icon: Icon, color }) => (
                   <div key={label} className="bg-[#141414] border border-white/[0.06] p-5">
                     <Icon size={18} className={`${color} mb-3`} />
@@ -225,49 +260,94 @@ function Dashboard({ user, session, onSignOut }: { user: User; session: Session;
             <div className="space-y-6">
               <h2 className="text-2xl font-heading font-light text-white">My Projects</h2>
 
-              {/* Timeline demo */}
-              <div className="bg-[#141414] border border-white/[0.06] p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <div>
-                    <div className="text-[10px] font-display tracking-widest text-[#E10600] uppercase mb-1">Active Project</div>
-                    <h3 className="text-lg font-heading font-light text-white">Wedding Photography Package</h3>
-                    <div className="text-[12px] text-white/35 font-display mt-0.5">Ref: MJB-ABC123 · Saturday, March 15, 2025</div>
-                  </div>
-                  <StatusBadge status="active" />
+              {projects.length === 0 && (
+                <div className="bg-[#141414] border border-white/[0.06] p-10 text-center">
+                  <Calendar className="w-8 h-8 text-white/35 mx-auto mb-3" />
+                  <p className="text-[13px] text-white/55 font-display">Your projects will appear here once we've set one up for you.</p>
                 </div>
-                <div className="relative">
-                  <div className="absolute left-4 top-4 bottom-4 w-px bg-white/[0.06]" />
-                  <div className="space-y-4">
-                    {MILESTONES.map((m, i) => (
-                      <div key={m} className="flex items-center gap-4 pl-2">
-                        <div className={`w-8 h-8 flex items-center justify-center shrink-0 z-10 relative transition-colors ${i<projectStage?'bg-[#E10600]':i===projectStage?'bg-[#E10600]':'bg-[#141414] border border-white/[0.08]'}`}>
-                          {i < projectStage ? <CheckCircle size={14} className="text-white" /> : i === projectStage ? <Clock size={14} className="text-white" /> : <span className="text-[10px] text-white/30 font-display">{i+1}</span>}
-                        </div>
-                        <div>
-                          <div className={`text-[12px] font-display font-semibold ${i<=projectStage?'text-white':'text-white/45'}`}>{m}</div>
-                          {i === projectStage && <div className="text-[10px] text-[#E10600] font-display">In Progress</div>}
-                          {i < projectStage && <div className="text-[10px] text-white/45 font-display">Completed</div>}
+              )}
+
+              {projects.map((project) => {
+                const stage = (project.stage as number) ?? 0;
+                const files = project.mejasan_project_files ?? [];
+                const startDate = project.start_date as string | null | undefined;
+                const deliveryDate = project.delivery_date as string | null | undefined;
+                return (
+                  <div key={project.id as string} className="bg-[#141414] border border-white/[0.06] p-6 space-y-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="text-[10px] font-display tracking-widest text-[#E10600] uppercase mb-1">{(project.service as string) || 'Project'}</div>
+                        <h3 className="text-lg font-heading font-light text-white">{project.title as string}</h3>
+                        {(startDate || deliveryDate) && (
+                          <div className="text-[12px] text-white/35 font-display mt-0.5">
+                            {startDate ? new Date(startDate).toLocaleDateString('en-KE') : 'TBD'}
+                            {deliveryDate ? ` – ${new Date(deliveryDate).toLocaleDateString('en-KE')}` : ''}
+                          </div>
+                        )}
+                      </div>
+                      <StatusBadge status={(project.status as string) ?? 'active'} />
+                    </div>
+
+                    <div className="relative">
+                      <div className="absolute left-4 top-4 bottom-4 w-px bg-white/[0.06]" />
+                      <div className="space-y-4">
+                        {PROJECT_STAGES.map((m, i) => (
+                          <div key={m} className="flex items-center gap-4 pl-2">
+                            <div className={`w-8 h-8 flex items-center justify-center shrink-0 z-10 relative transition-colors ${i<=stage?'bg-[#E10600]':'bg-[#141414] border border-white/[0.08]'}`}>
+                              {i < stage ? <CheckCircle size={14} className="text-white" /> : i === stage ? <Clock size={14} className="text-white" /> : <span className="text-[10px] text-white/30 font-display">{i+1}</span>}
+                            </div>
+                            <div>
+                              <div className={`text-[12px] font-display font-semibold ${i<=stage?'text-white':'text-white/45'}`}>{m}</div>
+                              {i === stage && <div className="text-[10px] text-[#E10600] font-display">In Progress</div>}
+                              {i < stage && <div className="text-[10px] text-white/45 font-display">Completed</div>}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {files.length > 0 && (
+                      <div>
+                        <div className="text-[10px] font-display tracking-widest text-[#E10600] uppercase mb-3">Files ({files.length})</div>
+                        <div className="grid grid-cols-3 sm:grid-cols-4 gap-1">
+                          {files.map((f) => (
+                            f.type === 'image' ? (
+                              <button key={f.id} onClick={() => setLightbox(f.url)} className="relative aspect-square overflow-hidden">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img src={f.url} alt={f.name} className="w-full h-full object-cover hover:scale-105 transition-transform" />
+                              </button>
+                            ) : f.type === 'video' ? (
+                              <a key={f.id} href={f.url} target="_blank" rel="noreferrer" className="relative aspect-square bg-[#0B0B0B] flex items-center justify-center hover:bg-white/[0.04] transition-colors">
+                                <Film size={20} className="text-white/30" />
+                              </a>
+                            ) : (
+                              <a key={f.id} href={f.url} target="_blank" rel="noreferrer" className="relative aspect-square bg-[#0B0B0B] flex items-center justify-center hover:bg-white/[0.04] transition-colors">
+                                <FileText size={20} className="text-white/30" />
+                              </a>
+                            )
+                          ))}
                         </div>
                       </div>
-                    ))}
+                    )}
                   </div>
-                </div>
-              </div>
+                );
+              })}
 
               {/* Booked sessions */}
-              {bookings.length > 0 ? (
-                bookings.map((b: Record<string,unknown>) => (
-                  <div key={b.id as string} className="bg-[#141414] border border-white/[0.06] p-5 flex items-center justify-between">
-                    <div>
-                      <div className="text-[10px] font-display text-[#E10600] uppercase tracking-widest mb-1">{b.service_type as string}</div>
-                      <div className="text-sm font-display text-white">{b.booking_ref as string} · {b.event_date ? new Date(b.event_date as string).toLocaleDateString('en-KE') : 'TBD'}</div>
-                      <div className="text-[11px] text-white/30 font-display mt-0.5">{b.event_location as string}</div>
+              {bookings.length > 0 && (
+                <div className="space-y-2">
+                  <div className="text-[10px] font-display tracking-widest text-[#E10600] uppercase">Bookings</div>
+                  {bookings.map((b: Record<string,unknown>) => (
+                    <div key={b.id as string} className="bg-[#141414] border border-white/[0.06] p-5 flex items-center justify-between">
+                      <div>
+                        <div className="text-[10px] font-display text-[#E10600] uppercase tracking-widest mb-1">{b.service_type as string}</div>
+                        <div className="text-sm font-display text-white">{b.booking_ref as string} · {b.event_date ? new Date(b.event_date as string).toLocaleDateString('en-KE') : 'TBD'}</div>
+                        <div className="text-[11px] text-white/30 font-display mt-0.5">{b.event_location as string}</div>
+                      </div>
+                      <StatusBadge status={b.status as string} />
                     </div>
-                    <StatusBadge status={b.status as string} />
-                  </div>
-                ))
-              ) : (
-                <p className="text-[13px] text-white/50 font-display">No additional bookings found.</p>
+                  ))}
+                </div>
               )}
             </div>
           )}
@@ -278,7 +358,7 @@ function Dashboard({ user, session, onSignOut }: { user: User; session: Session;
               <h2 className="text-2xl font-heading font-light text-white">My Galleries</h2>
               {galleries.length > 0 ? (
                 galleries.map((g: Record<string,unknown>) => {
-                  const imgs = (g.gallery_images as {url:string}[]) ?? [];
+                  const imgs = (g.mejasan_gallery_images as {url:string}[]) ?? [];
                   return (
                     <div key={g.id as string} className="bg-[#141414] border border-white/[0.06] p-5">
                       <div className="flex items-center justify-between mb-4">
@@ -376,32 +456,53 @@ function Dashboard({ user, session, onSignOut }: { user: User; session: Session;
           {/* MESSAGES */}
           {tab === 'messages' && (
             <div className="space-y-4">
-              <h2 className="text-2xl font-heading font-light text-white">Messages</h2>
-              <div className="bg-[#141414] border border-white/[0.06] flex flex-col h-[480px]">
-                <div className="flex-1 overflow-y-auto p-5 space-y-4">
-                  {messages.map((m) => (
-                    <div key={m.id} className={`flex ${m.from==='client'?'justify-end':''}`}>
-                      <div className={`max-w-[75%] px-4 py-3 text-[13px] font-display ${m.from==='team'?'bg-[#1C1C1C] text-white/70':'bg-[#E10600] text-white'}`}>
-                        {m.from==='team' && <div className="text-[9px] text-[#E10600] tracking-widest uppercase mb-1.5">Mejasan Team</div>}
-                        <p>{m.text}</p>
-                        <div className="text-[9px] opacity-40 mt-1.5">{new Date(m.ts).toLocaleTimeString('en-KE',{hour:'2-digit',minute:'2-digit'})}</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <div className="border-t border-white/[0.06] p-4 flex gap-3">
-                  <input
-                    value={msgText}
-                    onChange={(e) => setMsgText(e.target.value)}
-                    onKeyDown={(e) => { if (e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); sendMessage(); } }}
-                    placeholder="Type your message..."
-                    className="flex-1 bg-[#0B0B0B] border border-white/[0.08] text-white/70 font-display text-sm px-4 py-2.5 focus:outline-none focus:border-[#E10600]/40 placeholder:text-white/20"
-                  />
-                  <button onClick={sendMessage} className="w-10 h-10 bg-[#E10600] flex items-center justify-center hover:bg-[#c00500] transition-colors">
-                    <Send size={15} className="text-white" />
-                  </button>
-                </div>
+              <div className="flex items-center justify-between flex-wrap gap-3">
+                <h2 className="text-2xl font-heading font-light text-white">Messages</h2>
+                {projects.length > 1 && (
+                  <select
+                    value={messageProjectId ?? ''}
+                    onChange={(e) => setMessageProjectId(e.target.value)}
+                    className="bg-[#141414] border border-white/[0.08] text-white/70 font-display text-[12px] px-3 py-2 focus:outline-none focus:border-[#E10600]/40"
+                  >
+                    {projects.map((p) => <option key={p.id as string} value={p.id as string}>{p.title as string}</option>)}
+                  </select>
+                )}
               </div>
+              {!messageProjectId ? (
+                <div className="bg-[#141414] border border-white/[0.06] p-10 text-center">
+                  <MessageCircle className="w-8 h-8 text-white/35 mx-auto mb-3" />
+                  <p className="text-[13px] text-white/55 font-display">Messaging becomes available once you have an active project.</p>
+                </div>
+              ) : (
+                <div className="bg-[#141414] border border-white/[0.06] flex flex-col h-[480px]">
+                  <div className="flex-1 overflow-y-auto p-5 space-y-4">
+                    {messagesLoading && messages.length === 0 && <p className="text-[12px] text-white/25 font-display">Loading…</p>}
+                    {!messagesLoading && messages.length === 0 && <p className="text-[12px] text-white/25 font-display">No messages yet — say hello!</p>}
+                    {messages.map((m) => (
+                      <div key={m.id} className={`flex ${!m.is_admin?'justify-end':''}`}>
+                        <div className={`max-w-[75%] px-4 py-3 text-[13px] font-display ${m.is_admin?'bg-[#1C1C1C] text-white/70':'bg-[#E10600] text-white'}`}>
+                          {m.is_admin && <div className="text-[9px] text-[#E10600] tracking-widest uppercase mb-1.5">{m.sender_name}</div>}
+                          <p>{m.content}</p>
+                          <div className="text-[9px] opacity-40 mt-1.5">{new Date(m.created_at).toLocaleTimeString('en-KE',{hour:'2-digit',minute:'2-digit'})}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="border-t border-white/[0.06] p-4 flex gap-3">
+                    <input
+                      value={msgText}
+                      onChange={(e) => setMsgText(e.target.value)}
+                      onKeyDown={(e) => { if (e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); sendMessage(); } }}
+                      placeholder="Type your message..."
+                      disabled={sending}
+                      className="flex-1 bg-[#0B0B0B] border border-white/[0.08] text-white/70 font-display text-sm px-4 py-2.5 focus:outline-none focus:border-[#E10600]/40 placeholder:text-white/20 disabled:opacity-50"
+                    />
+                    <button onClick={sendMessage} disabled={sending} className="w-10 h-10 bg-[#E10600] flex items-center justify-center hover:bg-[#c00500] transition-colors disabled:opacity-50">
+                      <Send size={15} className="text-white" />
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

@@ -1,8 +1,7 @@
 import type { Metadata } from 'next';
 import { headers } from 'next/headers';
-import { Download } from 'lucide-react';
 import { createAdminClient } from '@/lib/supabase/server';
-import EventDocumentViewer from '@/components/EventDocumentViewer';
+import EventDocumentFilesViewer, { type EventDocFile } from '@/components/EventDocumentFilesViewer';
 
 /** iOS Safari (including the mini-browser the Camera app opens for QR links)
  *  has excellent native inline PDF support and handles large embedded images
@@ -21,13 +20,24 @@ async function loadDocument(token: string) {
   const sb = await createAdminClient();
   const { data: row } = await sb
     .from('mejasan_event_documents')
-    .select('*')
+    .select('*, mejasan_event_document_files(*)')
     .eq('access_token', token)
     .eq('is_active', true)
+    .order('sort_order', { referencedTable: 'mejasan_event_document_files' })
     .maybeSingle();
   if (!row) return null;
   await sb.from('mejasan_event_documents').update({ view_count: (row.view_count as number ?? 0) + 1 }).eq('id', row.id as string);
-  return row as { event_name: string; description: string | null; file_url: string; file_name: string | null; file_type: string | null };
+
+  const childFiles = (row.mejasan_event_document_files as { url: string; name: string; type: string | null }[] | null) ?? [];
+  const files: EventDocFile[] = childFiles.length > 0
+    ? childFiles.map((f) => ({ url: f.url, name: f.name, type: f.type }))
+    : (row.file_url ? [{ url: row.file_url as string, name: (row.file_name as string) ?? 'document', type: row.file_type as string | null }] : []);
+
+  return {
+    event_name: row.event_name as string,
+    description: row.description as string | null,
+    files,
+  };
 }
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
@@ -40,7 +50,7 @@ export default async function EventDocumentPage({ params }: Params) {
   const { token } = await params;
   const doc = await loadDocument(token);
 
-  if (!doc) {
+  if (!doc || doc.files.length === 0) {
     return (
       <div className="min-h-screen bg-[#0B0B0B] flex items-center justify-center px-4 text-center pt-[var(--navbar-height)]">
         <div>
@@ -51,8 +61,6 @@ export default async function EventDocumentPage({ params }: Params) {
     );
   }
 
-  const isImage = (doc.file_type ?? '').startsWith('image/');
-  const isPdf = (doc.file_type ?? '') === 'application/pdf';
   const isIOS = await isIOSRequest();
 
   return (
@@ -62,33 +70,10 @@ export default async function EventDocumentPage({ params }: Params) {
           <div className="text-[13px] sm:text-[15px] font-heading font-light text-white truncate">{doc.event_name}</div>
           {doc.description && <div className="text-[10px] sm:text-[11px] text-white/40 font-display truncate">{doc.description}</div>}
         </div>
-        <a
-          href={doc.file_url}
-          download={doc.file_name ?? undefined}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-1.5 text-[9px] sm:text-[10px] font-display tracking-widest uppercase text-white/60 hover:text-white border border-white/[0.12] px-2.5 sm:px-3 py-1.5 sm:py-2 shrink-0 transition-colors"
-        >
-          <Download size={11} className="shrink-0" /> <span className="hidden sm:inline">Download</span>
-        </a>
       </div>
 
       <div className="flex-1 min-h-0">
-        {isImage ? (
-          /* eslint-disable-next-line @next/next/no-img-element */
-          <img src={doc.file_url} alt={doc.event_name} className="w-full h-full object-contain bg-[#0B0B0B]" />
-        ) : isPdf && isIOS ? (
-          <iframe src={doc.file_url} title={doc.event_name} className="w-full h-full border-0 bg-white" />
-        ) : isPdf ? (
-          <EventDocumentViewer fileUrl={doc.file_url} fileName={doc.file_name} />
-        ) : (
-          <div className="flex items-center justify-center h-full px-4 text-center">
-            <p className="text-white/60 text-sm font-display">
-              This file type can&apos;t be previewed here.{' '}
-              <a href={doc.file_url} download={doc.file_name ?? undefined} className="text-[#E10600] hover:underline">Download it instead</a>.
-            </p>
-          </div>
-        )}
+        <EventDocumentFilesViewer files={doc.files} isIOS={isIOS} />
       </div>
     </div>
   );
