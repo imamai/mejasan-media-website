@@ -4,10 +4,14 @@ import { useRef, useEffect, useState } from 'react';
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { ArrowRight, Play, ChevronDown, Volume2, VolumeX, X } from 'lucide-react';
+import type { HomeContent } from '@/lib/page-content-schema';
 
-const SUB = ['Photography.', 'Videography.', 'Weddings.', 'Corporate Productions.'];
+export default function HeroSection({ content }: { content: HomeContent['hero'] }) {
+  const {
+    eyebrow, headlineLine1, headlineLine2Plain, headlineLine2Em, subLines,
+    posterImage, posterImagePosition, videoUrl, ctaPrimaryLabel, ctaSecondaryLabel, stats,
+  } = content;
 
-export default function HeroSection() {
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef     = useRef<HTMLVideoElement>(null);
   const [subIdx,      setSubIdx]      = useState(0);
@@ -22,9 +26,9 @@ export default function HeroSection() {
 
   useEffect(() => {
     setMounted(true);
-    const id = setInterval(() => setSubIdx((p) => (p + 1) % SUB.length), 3000);
+    const id = setInterval(() => setSubIdx((p) => (p + 1) % subLines.length), 3000);
     return () => clearInterval(id);
-  }, []);
+  }, [subLines.length]);
 
   /* Close showreel on Escape */
   useEffect(() => {
@@ -54,12 +58,12 @@ export default function HeroSection() {
               muted
               loop
               playsInline
-              poster="https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=1920&q=80"
+              poster={posterImage}
               onError={() => setVideoErr(true)}
               className="absolute inset-0 w-full h-full object-cover opacity-55"
+              style={{ objectPosition: posterImagePosition }}
             >
-              {/* Replace with your actual showreel: /videos/hero-showreel.mp4 */}
-              <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4" />
+              <source src={videoUrl} type="video/mp4" />
             </video>
           ) : null}
 
@@ -75,11 +79,11 @@ export default function HeroSection() {
           />
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=1920&q=80"
+            src={posterImage}
             alt=""
             aria-hidden
             className="absolute inset-0 w-full h-full object-cover opacity-35"
-            style={{ objectPosition: 'center 30%' }}
+            style={{ objectPosition: posterImagePosition }}
           />
         </motion.div>
 
@@ -118,13 +122,13 @@ export default function HeroSection() {
           >
             <div className="w-8 h-px bg-[#E10600]" />
             <span className="text-[11px] font-display font-semibold tracking-[0.35em] text-[#E10600] uppercase">
-              Mejasan Media Production
+              {eyebrow}
             </span>
           </motion.div>
 
           {/* Headline */}
           <div className="overflow-hidden mb-7">
-            {['Stories That', 'Move People.'].map((line, i) => (
+            {[headlineLine1, `${headlineLine2Plain}${headlineLine2Em}`].map((line, i) => (
               <div key={line} className="overflow-hidden">
                 <motion.div
                   initial={{ y: '110%' }}
@@ -133,7 +137,7 @@ export default function HeroSection() {
                   className="text-[clamp(3.2rem,8.5vw,8.5rem)] font-heading font-light leading-[0.9] tracking-tight text-white"
                 >
                   {i === 1 ? (
-                    <>Move <em className="text-[#E10600] not-italic">People.</em></>
+                    <>{headlineLine2Plain}<em className="text-[#E10600] not-italic">{headlineLine2Em}</em></>
                   ) : line}
                 </motion.div>
               </div>
@@ -152,7 +156,7 @@ export default function HeroSection() {
                   transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
                   className="text-lg sm:text-xl font-display font-light text-white/55 tracking-wide"
                 >
-                  {SUB[subIdx]}
+                  {subLines[subIdx]}
                 </motion.p>
               </AnimatePresence>
             )}
@@ -166,11 +170,11 @@ export default function HeroSection() {
             className="flex flex-wrap items-center gap-3 mb-14 sm:mb-16"
           >
             <Link href="/booking" className="btn-primary group">
-              Book a Consultation
+              {ctaPrimaryLabel}
               <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
             </Link>
             <Link href="/portfolio" className="btn-outline">
-              View Our Work
+              {ctaSecondaryLabel}
             </Link>
             {/* Showreel button — opens video modal */}
             <button
@@ -192,12 +196,7 @@ export default function HeroSection() {
             transition={{ duration: 0.9, delay: 1.3, ease: [0.16, 1, 0.3, 1] }}
             className="grid grid-cols-2 sm:grid-cols-4 gap-5 pt-7 border-t border-white/[0.1]"
           >
-            {[
-              { num: '500+', label: 'Projects' },
-              { num: '200+', label: 'Weddings' },
-              { num: '8+',   label: 'Years' },
-              { num: '50+',  label: 'Corporate Clients' },
-            ].map(({ num, label }) => (
+            {stats.map(({ num, label }) => (
               <div key={label} className="text-center">
                 <div className="text-2xl sm:text-3xl font-heading font-light text-white mb-1">{num}</div>
                 <div className="text-[11px] font-display text-white/40 tracking-widest uppercase">{label}</div>
@@ -261,10 +260,8 @@ export default function HeroSection() {
                   autoPlay
                   controls
                   className="w-full h-full object-cover"
-                  src="https://www.w3schools.com/html/mov_bbb.mp4"
-                >
-                  {/* Replace with /videos/showreel.mp4 */}
-                </video>
+                  src={videoUrl}
+                />
               </div>
               <button
                 onClick={() => setShowReel(false)}

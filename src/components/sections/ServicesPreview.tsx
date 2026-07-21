@@ -3,47 +3,20 @@
 import Link from 'next/link';
 import { motion, useInView } from 'framer-motion';
 import { useRef } from 'react';
-import { Camera, Video, Aperture, Wind, Layers, ArrowRight } from 'lucide-react';
+import { Camera, Video, Aperture, Wind, Layers, ArrowRight, type LucideIcon } from 'lucide-react';
+import type { HomeContent } from '@/lib/page-content-schema';
 
-const SERVICES = [
-  {
-    icon: Camera,
-    label: 'Photography',
-    href: '/services/photography',
-    desc: 'Wedding, corporate, product & studio photography that tells your story with technical mastery.',
-    img: 'https://images.unsplash.com/photo-1554048612-b6a482bc67e5?w=600&q=80',
-  },
-  {
-    icon: Video,
-    label: 'Videography',
-    href: '/services/videography',
-    desc: 'Wedding films, corporate videos, documentaries & commercial production with cinematic precision.',
-    img: 'https://images.unsplash.com/photo-1585647347384-2593bc35786b?w=600&q=80',
-  },
-  {
-    icon: Aperture,
-    label: 'Event Coverage',
-    href: '/services/events',
-    desc: 'Conferences, launches, awards & concerts — live documentation at the highest professional standard.',
-    img: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=600&q=80',
-  },
-  {
-    icon: Wind,
-    label: 'Drone Services',
-    href: '/services/drone',
-    desc: 'KCAA-licensed aerial photography, videography, mapping & site documentation across East Africa.',
-    img: 'https://images.unsplash.com/photo-1473968512647-3e447244af8f?w=600&q=80',
-  },
-  {
-    icon: Layers,
-    label: 'Brand & Content',
-    href: '/services/branding',
-    desc: 'Social media content, brand storytelling & campaign production that builds lasting presence.',
-    img: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=600&q=80',
-  },
-];
+function iconFor(label: string): LucideIcon {
+  const t = label.toLowerCase();
+  if (t.includes('photo')) return Camera;
+  if (t.includes('video')) return Video;
+  if (t.includes('event')) return Aperture;
+  if (t.includes('drone') || t.includes('aerial')) return Wind;
+  return Layers;
+}
 
-export default function ServicesPreview() {
+export default function ServicesPreview({ content }: { content: HomeContent['servicesPreview'] }) {
+  const { eyebrow, headingLine1, headingLine2, items } = content;
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: '-80px' });
 
@@ -60,10 +33,10 @@ export default function ServicesPreview() {
           <div>
             <div className="flex items-center gap-3 mb-4">
               <div className="w-8 h-px bg-[#E10600]" />
-              <span className="text-[11px] font-display font-semibold tracking-[0.3em] text-[#E10600] uppercase">What We Do</span>
+              <span className="text-[11px] font-display font-semibold tracking-[0.3em] text-[#E10600] uppercase">{eyebrow}</span>
             </div>
             <h2 className="text-[clamp(2rem,4.5vw,4.5rem)] font-heading font-light text-[#0F0F0F] leading-[1.0]">
-              Full-Service<br />Media Production
+              {headingLine1}<br />{headingLine2}
             </h2>
           </div>
           <Link href="/services" className="btn-outline-dark shrink-0 group">
@@ -72,7 +45,9 @@ export default function ServicesPreview() {
         </motion.div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-0.5">
-          {SERVICES.map(({ icon: Icon, label, href, desc, img }, i) => (
+          {items.map(({ label, href, desc, img, imgPosition }, i) => {
+            const Icon = iconFor(label);
+            return (
             <motion.div
               key={label}
               initial={{ opacity: 0, y: 30 }}
@@ -87,6 +62,7 @@ export default function ServicesPreview() {
                     src={img}
                     alt={label}
                     className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                    style={{ objectPosition: imgPosition }}
                   />
                 </div>
                 {/* Light content area */}
@@ -102,7 +78,8 @@ export default function ServicesPreview() {
                 </div>
               </Link>
             </motion.div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>

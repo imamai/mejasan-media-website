@@ -326,7 +326,7 @@ function BlogModal({
 }
 
 /* ── Testimonial Modal ──────────────────────────────────────────────── */
-type TestimonialForm = { client_name: string; role: string; rating: number; content: string; is_published: boolean };
+type TestimonialForm = { client_name: string; client_role: string; client_avatar: string; rating: number; content: string; is_published: boolean };
 
 function TestimonialModal({
   item, onClose, onSave,
@@ -334,7 +334,8 @@ function TestimonialModal({
   const [busy, setBusy] = useState(false);
   const [form, setForm] = useState<TestimonialForm>({
     client_name: (item?.client_name as string) ?? '',
-    role: (item?.role as string) ?? '',
+    client_role: (item?.client_role as string) ?? '',
+    client_avatar: (item?.client_avatar as string) ?? '',
     rating: (item?.rating as number) ?? 5,
     content: (item?.content as string) ?? '',
     is_published: (item?.is_published as boolean) ?? true,
@@ -356,7 +357,10 @@ function TestimonialModal({
           <input value={form.client_name} onChange={(e) => set('client_name', e.target.value)} className={inputCls} placeholder="Full name" />
         </Field>
         <Field label="Role / Title">
-          <input value={form.role} onChange={(e) => set('role', e.target.value)} className={inputCls} placeholder="e.g. Bride, Marketing Director" />
+          <input value={form.client_role} onChange={(e) => set('client_role', e.target.value)} className={inputCls} placeholder="e.g. Bride, Marketing Director" />
+        </Field>
+        <Field label="Photo">
+          <ImageUploadField value={form.client_avatar} onChange={(v) => set('client_avatar', v)} folder="testimonials" />
         </Field>
         <Field label="Rating">
           <div className="flex gap-2 mt-1">
@@ -1003,7 +1007,7 @@ function AdminDashboard({ user, onSignOut }: { user: User; onSignOut: () => void
           {testimonials.map((t) => (
             <tr key={t.id as string} className="hover:bg-white/[0.02]">
               <TD className="text-white font-semibold">{t.client_name as string}</TD>
-              <TD>{t.role as string}</TD>
+              <TD>{t.client_role as string}</TD>
               <TD>
                 <div className="flex gap-0.5">
                   {[...Array(t.rating as number)].map((_, i) => <Star key={i} size={10} fill="#E10600" className="text-[#E10600]" />)}

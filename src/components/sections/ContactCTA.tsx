@@ -4,13 +4,15 @@ import { useRef } from 'react';
 import Link from 'next/link';
 import { motion, useInView } from 'framer-motion';
 import { ArrowRight, MessageCircle } from 'lucide-react';
+import type { HomeContent } from '@/lib/page-content-schema';
 
-const WA_MSG = encodeURIComponent("Hi, I would like to enquire about your media production services.");
 const WA_NUM = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? '254700864849';
 
-export default function ContactCTA() {
+export default function ContactCTA({ content }: { content: HomeContent['contactCta'] }) {
+  const { eyebrow, headingPlain, headingEm, text, ctaPrimaryLabel, whatsappLabel, whatsappMessage } = content;
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: '-80px' });
+  const waMsg = encodeURIComponent(whatsappMessage);
 
   return (
     <section ref={ref} className="bg-[#141414] py-24 md:py-32 relative overflow-hidden">
@@ -29,31 +31,31 @@ export default function ContactCTA() {
         >
           <div className="flex items-center justify-center gap-3 mb-6">
             <div className="w-8 h-px bg-[#E10600]" />
-            <span className="text-[11px] font-display font-semibold tracking-[0.3em] text-[#E10600] uppercase">Let&apos;s Create Together</span>
+            <span className="text-[11px] font-display font-semibold tracking-[0.3em] text-[#E10600] uppercase">{eyebrow}</span>
             <div className="w-8 h-px bg-[#E10600]" />
           </div>
 
           <h2 className="text-[clamp(2.5rem,6vw,7rem)] font-heading font-light text-white leading-[0.95] mb-8 max-w-4xl mx-auto">
-            Your Story Deserves to Be <em className="text-[#E10600] not-italic">Told.</em>
+            {headingPlain}<em className="text-[#E10600] not-italic">{headingEm}</em>
           </h2>
 
           <p className="text-base sm:text-lg text-white/55 mb-12 max-w-xl mx-auto leading-relaxed">
-            Every great project starts with a conversation. Tell us your vision — we&apos;ll bring the expertise, equipment, and artistry to make it real.
+            {text}
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link href="/booking" className="btn-primary group">
-              Book a Consultation
+              {ctaPrimaryLabel}
               <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
             </Link>
             <a
-              href={`https://wa.me/${WA_NUM}?text=${WA_MSG}`}
+              href={`https://wa.me/${WA_NUM}?text=${waMsg}`}
               target="_blank"
               rel="noopener noreferrer"
               className="btn-outline group flex items-center gap-2"
             >
               <MessageCircle size={14} />
-              WhatsApp Us
+              {whatsappLabel}
             </a>
           </div>
         </motion.div>

@@ -650,9 +650,145 @@ const brandingSchema: SchemaField[] = [
   { type: 'group', key: 'cta', label: 'Bottom CTA', fields: ctaFields },
 ];
 
+/* ── Home ──────────────────────────────────────────────────────────── */
+
+export const homeDefaults = {
+  hero: {
+    eyebrow: 'Mejasan Media Production',
+    headlineLine1: 'Stories That',
+    headlineLine2Plain: 'Move ',
+    headlineLine2Em: 'People.',
+    subLines: ['Photography.', 'Videography.', 'Weddings.', 'Corporate Productions.'],
+    posterImage: 'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=1920&q=80',
+    posterImagePosition: 'center',
+    videoUrl: 'https://www.w3schools.com/html/mov_bbb.mp4',
+    ctaPrimaryLabel: 'Book a Consultation',
+    ctaSecondaryLabel: 'View Our Work',
+    stats: [
+      { num: '500+', label: 'Projects' },
+      { num: '200+', label: 'Weddings' },
+      { num: '8+', label: 'Years' },
+      { num: '50+', label: 'Corporate Clients' },
+    ],
+  },
+  servicesPreview: {
+    eyebrow: 'What We Do',
+    headingLine1: 'Full-Service',
+    headingLine2: 'Media Production',
+    items: [
+      { label: 'Photography', href: '/services/photography', desc: 'Wedding, corporate, product & studio photography that tells your story with technical mastery.', img: 'https://images.unsplash.com/photo-1554048612-b6a482bc67e5?w=600&q=80', imgPosition: 'center' },
+      { label: 'Videography', href: '/services/videography', desc: 'Wedding films, corporate videos, documentaries & commercial production with cinematic precision.', img: 'https://images.unsplash.com/photo-1585647347384-2593bc35786b?w=600&q=80', imgPosition: 'center' },
+      { label: 'Event Coverage', href: '/services/events', desc: 'Conferences, launches, awards & concerts — live documentation at the highest professional standard.', img: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=600&q=80', imgPosition: 'center' },
+      { label: 'Drone Services', href: '/services/drone', desc: 'KCAA-licensed aerial photography, videography, mapping & site documentation across East Africa.', img: 'https://images.unsplash.com/photo-1473968512647-3e447244af8f?w=600&q=80', imgPosition: 'center' },
+      { label: 'Brand & Content', href: '/services/branding', desc: 'Social media content, brand storytelling & campaign production that builds lasting presence.', img: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=600&q=80', imgPosition: 'center' },
+    ],
+  },
+  featuredWork: {
+    eyebrow: 'Selected Work',
+    heading: "Stories We've Told",
+    items: [
+      { category: 'Weddings', title: 'Sarah & James', location: 'Nairobi', img: 'https://images.unsplash.com/photo-1519741497674-611481863552?w=800&q=80', imgPosition: 'center', slug: 'sarah-james-wedding' },
+      { category: 'Corporate', title: 'Safaricom Summit', location: 'Nairobi', img: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=600&q=80', imgPosition: 'center', slug: 'safaricom-summit-2024' },
+      { category: 'Drone', title: 'Nairobi Skyline', location: 'Nairobi', img: 'https://images.unsplash.com/photo-1508444845599-5c89863b1c44?w=600&q=80', imgPosition: 'center', slug: 'nairobi-skyline-aerial' },
+      { category: 'Events', title: 'UN Climate Summit', location: 'Nairobi', img: 'https://images.unsplash.com/photo-1587825140708-dfaf72ae4b04?w=600&q=80', imgPosition: 'center', slug: 'un-climate-summit' },
+      { category: 'Branding', title: 'Equity Bank', location: 'Nairobi', img: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=600&q=80', imgPosition: 'center', slug: 'equity-bank-gala' },
+    ],
+  },
+  statsSection: {
+    items: [
+      { value: '500', suffix: '+', label: 'Projects Completed', desc: 'Delivered across Kenya and East Africa' },
+      { value: '200', suffix: '+', label: 'Weddings Documented', desc: 'Love stories told with cinematic artistry' },
+      { value: '50', suffix: '+', label: 'Corporate Clients', desc: 'From startups to multinationals' },
+      { value: '8', suffix: '+', label: 'Years of Excellence', desc: 'Continually pushing creative boundaries' },
+    ],
+  },
+  contactCta: {
+    eyebrow: "Let's Create Together",
+    headingPlain: 'Your Story Deserves to Be ',
+    headingEm: 'Told.',
+    text: "Every great project starts with a conversation. Tell us your vision — we'll bring the expertise, equipment, and artistry to make it real.",
+    ctaPrimaryLabel: 'Book a Consultation',
+    whatsappLabel: 'WhatsApp Us',
+    whatsappMessage: 'Hi, I would like to enquire about your media production services.',
+  },
+};
+
+const homeStatFields: SchemaField[] = [
+  { type: 'text', key: 'num', label: 'Number' },
+  { type: 'text', key: 'label', label: 'Label' },
+];
+
+const servicesPreviewItemFields: SchemaField[] = [
+  { type: 'text', key: 'label', label: 'Title' },
+  { type: 'text', key: 'href', label: 'Link (e.g. /services/photography)' },
+  { type: 'textarea', key: 'desc', label: 'Description' },
+  { type: 'image', key: 'img', label: 'Image' },
+  { type: 'imagePosition', key: 'imgPosition', label: 'Focal point' },
+];
+
+const featuredWorkItemFields: SchemaField[] = [
+  { type: 'text', key: 'category', label: 'Category' },
+  { type: 'text', key: 'title', label: 'Title' },
+  { type: 'text', key: 'location', label: 'Location' },
+  { type: 'image', key: 'img', label: 'Image' },
+  { type: 'imagePosition', key: 'imgPosition', label: 'Focal point' },
+  { type: 'text', key: 'slug', label: 'Portfolio slug (links to /portfolio/[slug])' },
+];
+
+const homeStatsSectionItemFields: SchemaField[] = [
+  { type: 'text', key: 'value', label: 'Number' },
+  { type: 'text', key: 'suffix', label: 'Suffix' },
+  { type: 'text', key: 'label', label: 'Label' },
+  { type: 'textarea', key: 'desc', label: 'Description' },
+];
+
+const homeSchema: SchemaField[] = [
+  { type: 'group', key: 'hero', label: 'Hero', fields: [
+    { type: 'text', key: 'eyebrow', label: 'Eyebrow label' },
+    { type: 'text', key: 'headlineLine1', label: 'Headline — line 1' },
+    { type: 'text', key: 'headlineLine2Plain', label: 'Headline — line 2 (plain part)' },
+    { type: 'text', key: 'headlineLine2Em', label: 'Headline — line 2 (highlighted part)' },
+    { type: 'stringlist', key: 'subLines', label: 'Rotating taglines (one per line)' },
+    { type: 'image', key: 'posterImage', label: 'Background / video poster image' },
+    { type: 'imagePosition', key: 'posterImagePosition', label: 'Focal point' },
+    { type: 'text', key: 'videoUrl', label: 'Background showreel video URL' },
+    { type: 'text', key: 'ctaPrimaryLabel', label: 'Primary button label' },
+    { type: 'text', key: 'ctaSecondaryLabel', label: 'Secondary button label' },
+    { type: 'list', key: 'stats', label: 'Stats bar', itemLabelKey: 'label', itemFields: homeStatFields,
+      newItem: { num: '0+', label: 'New Stat' } },
+  ] },
+  { type: 'group', key: 'servicesPreview', label: 'Services Preview section', fields: [
+    { type: 'text', key: 'eyebrow', label: 'Eyebrow label' },
+    { type: 'text', key: 'headingLine1', label: 'Heading — line 1' },
+    { type: 'text', key: 'headingLine2', label: 'Heading — line 2' },
+    { type: 'list', key: 'items', label: 'Service cards', itemLabelKey: 'label', itemFields: servicesPreviewItemFields,
+      newItem: { label: 'New Service', href: '/services', desc: '', img: '', imgPosition: 'center' } },
+  ] },
+  { type: 'group', key: 'featuredWork', label: 'Featured Work section', fields: [
+    { type: 'text', key: 'eyebrow', label: 'Eyebrow label' },
+    { type: 'text', key: 'heading', label: 'Heading' },
+    { type: 'list', key: 'items', label: 'Work items', itemLabelKey: 'title', itemFields: featuredWorkItemFields,
+      newItem: { category: 'New Category', title: 'New Project', location: '', img: '', imgPosition: 'center', slug: '' } },
+  ] },
+  { type: 'group', key: 'statsSection', label: 'Stats Band section', fields: [
+    { type: 'list', key: 'items', label: 'Stats', itemLabelKey: 'label', itemFields: homeStatsSectionItemFields,
+      newItem: { value: '0', suffix: '+', label: 'New Stat', desc: '' } },
+  ] },
+  { type: 'group', key: 'contactCta', label: 'Bottom Contact CTA', fields: [
+    { type: 'text', key: 'eyebrow', label: 'Eyebrow label' },
+    { type: 'text', key: 'headingPlain', label: 'Heading (plain part)' },
+    { type: 'text', key: 'headingEm', label: 'Heading (highlighted part)' },
+    { type: 'textarea', key: 'text', label: 'Text' },
+    { type: 'text', key: 'ctaPrimaryLabel', label: 'Primary button label' },
+    { type: 'text', key: 'whatsappLabel', label: 'WhatsApp button label' },
+    { type: 'textarea', key: 'whatsappMessage', label: 'Pre-filled WhatsApp message' },
+  ] },
+];
+
 /* ── Registry ──────────────────────────────────────────────────────── */
 
 export const PAGE_CONTENT: Record<string, PageContentDef> = {
+  'home': { slug: 'home', label: 'Home', schema: homeSchema, defaults: homeDefaults },
   'about': { slug: 'about', label: 'About', schema: aboutSchema, defaults: aboutDefaults },
   'services': { slug: 'services', label: 'Services (hub)', schema: servicesSchema, defaults: servicesDefaults },
   'services-photography': { slug: 'services-photography', label: 'Services — Photography', schema: photographySchema, defaults: photographyDefaults },
@@ -672,6 +808,7 @@ export function getPageContent(slug: string, dbContent: unknown): Record<string,
 
 /* ── Typed shapes for frontend rendering ──────────────────────────── */
 
+export type HomeContent = typeof homeDefaults;
 export type AboutContent = typeof aboutDefaults;
 export type ServicesContent = typeof servicesDefaults;
 export type PhotographyContent = typeof photographyDefaults;

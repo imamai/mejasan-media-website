@@ -717,6 +717,7 @@ on conflict (key) do nothing;
 -- ============================================================
 
 insert into mejasan_page_content (page_slug, content) values
+  ('home',                  '{}'),
   ('about',                 '{}'),
   ('services',              '{}'),
   ('services-photography',  '{}'),
@@ -725,3 +726,17 @@ insert into mejasan_page_content (page_slug, content) values
   ('services-drone',        '{}'),
   ('services-branding',     '{}')
 on conflict (page_slug) do nothing;
+
+-- ============================================================
+-- SEED: Homepage testimonials (only if the table is empty — the
+-- homepage testimonials section reads from this table)
+-- ============================================================
+
+insert into mejasan_testimonials (client_name, client_role, client_avatar, content, rating, is_published, is_featured, sort_order)
+select * from (values
+  ('Sarah Kamau', 'Bride, Karen Wedding 2024', 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&q=80', 'Mejasan captured every moment of our wedding day with such artistry. The photos are beyond anything we imagined — they''re not just pictures, they''re memories that will live forever.', 5, true, true, 1),
+  ('James Mwangi', 'Marketing Director, Safaricom PLC', 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&q=80', 'We hired Mejasan for our annual corporate summit and the results were phenomenal. The team was professional, the quality was world-class, and the deliverable exceeded every expectation.', 5, true, true, 2),
+  ('Grace Njoroge', 'Executive Director, UN Environment Programme', 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=150&q=80', 'The drone footage Mejasan produced for our climate summit documentation was absolutely breathtaking. Their KCAA licensing gave us complete confidence throughout the project.', 5, true, true, 3),
+  ('Michael Oloo', 'Brand Manager, Equity Bank Kenya', 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&q=80', 'Outstanding content production team. They understood our brand voice instantly and delivered a social media campaign that drove measurable results. We won''t use anyone else.', 5, true, true, 4)
+) as v(client_name, client_role, client_avatar, content, rating, is_published, is_featured, sort_order)
+where not exists (select 1 from mejasan_testimonials);
