@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Download } from 'lucide-react';
 import { createAdminClient } from '@/lib/supabase/server';
+import EventDocumentViewer from '@/components/EventDocumentViewer';
 
 interface Params { params: Promise<{ token: string }> }
 
@@ -29,7 +30,7 @@ export default async function EventDocumentPage({ params }: Params) {
 
   if (!doc) {
     return (
-      <div className="min-h-screen bg-[#0B0B0B] flex items-center justify-center px-4 text-center">
+      <div className="min-h-screen bg-[#0B0B0B] flex items-center justify-center px-4 text-center pt-[var(--navbar-height)]">
         <div>
           <h1 className="text-2xl font-heading font-light text-white mb-2">Document Unavailable</h1>
           <p className="text-white/40 text-sm font-display">This link is invalid or is no longer active. Please contact Mejasan Media Production for assistance.</p>
@@ -39,37 +40,39 @@ export default async function EventDocumentPage({ params }: Params) {
   }
 
   const isImage = (doc.file_type ?? '').startsWith('image/');
-  // Google's viewer renders the document itself (as scaled, auto-fit pages)
-  // inside our iframe, instead of relying on each browser's own native PDF
-  // plugin — which is what failed inline on mobile before. This is the same
-  // page whether reached via the copied link or by scanning the QR code,
-  // since both just open this exact URL.
-  const viewerSrc = `https://docs.google.com/viewer?url=${encodeURIComponent(doc.file_url)}&embedded=true`;
+  const isPdf = (doc.file_type ?? '') === 'application/pdf';
 
   return (
-    <div className="h-screen bg-[#0B0B0B] flex flex-col overflow-hidden">
-      <div className="flex items-center justify-between gap-4 px-4 sm:px-6 py-3 border-b border-white/[0.08] shrink-0">
-        <div className="min-w-0">
-          <div className="text-[15px] font-heading font-light text-white truncate">{doc.event_name}</div>
-          {doc.description && <div className="text-[11px] text-white/40 font-display truncate">{doc.description}</div>}
+    <div className="h-[calc(100vh-var(--navbar-height))] mt-[var(--navbar-height)] bg-[#0B0B0B] flex flex-col overflow-hidden">
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-3 sm:px-6 py-2.5 sm:py-3 border-b border-white/[0.08] shrink-0">
+        <div className="min-w-0 max-w-full">
+          <div className="text-[13px] sm:text-[15px] font-heading font-light text-white truncate">{doc.event_name}</div>
+          {doc.description && <div className="text-[10px] sm:text-[11px] text-white/40 font-display truncate">{doc.description}</div>}
         </div>
         <a
           href={doc.file_url}
           download={doc.file_name ?? undefined}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-1.5 text-[10px] font-display tracking-widest uppercase text-white/60 hover:text-white border border-white/[0.12] px-3 py-2 shrink-0 transition-colors"
+          className="flex items-center gap-1.5 text-[9px] sm:text-[10px] font-display tracking-widest uppercase text-white/60 hover:text-white border border-white/[0.12] px-2.5 sm:px-3 py-1.5 sm:py-2 shrink-0 transition-colors"
         >
-          <Download size={12} /> Download
+          <Download size={11} className="shrink-0" /> <span className="hidden sm:inline">Download</span>
         </a>
       </div>
 
-      <div className="flex-1 min-h-0 bg-white">
+      <div className="flex-1 min-h-0">
         {isImage ? (
           /* eslint-disable-next-line @next/next/no-img-element */
           <img src={doc.file_url} alt={doc.event_name} className="w-full h-full object-contain bg-[#0B0B0B]" />
+        ) : isPdf ? (
+          <EventDocumentViewer fileUrl={doc.file_url} fileName={doc.file_name} />
         ) : (
-          <iframe src={viewerSrc} title={doc.event_name} className="w-full h-full border-0" />
+          <div className="flex items-center justify-center h-full px-4 text-center">
+            <p className="text-white/60 text-sm font-display">
+              This file type can&apos;t be previewed here.{' '}
+              <a href={doc.file_url} download={doc.file_name ?? undefined} className="text-[#E10600] hover:underline">Download it instead</a>.
+            </p>
+          </div>
         )}
       </div>
     </div>
