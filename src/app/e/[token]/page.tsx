@@ -39,9 +39,15 @@ export default async function EventDocumentPage({ params }: Params) {
   }
 
   const isImage = (doc.file_type ?? '').startsWith('image/');
+  // Google's viewer renders the document itself (as scaled, auto-fit pages)
+  // inside our iframe, instead of relying on each browser's own native PDF
+  // plugin — which is what failed inline on mobile before. This is the same
+  // page whether reached via the copied link or by scanning the QR code,
+  // since both just open this exact URL.
+  const viewerSrc = `https://docs.google.com/viewer?url=${encodeURIComponent(doc.file_url)}&embedded=true`;
 
   return (
-    <div className="min-h-screen bg-[#0B0B0B] flex flex-col">
+    <div className="h-screen bg-[#0B0B0B] flex flex-col overflow-hidden">
       <div className="flex items-center justify-between gap-4 px-4 sm:px-6 py-3 border-b border-white/[0.08] shrink-0">
         <div className="min-w-0">
           <div className="text-[15px] font-heading font-light text-white truncate">{doc.event_name}</div>
@@ -58,19 +64,12 @@ export default async function EventDocumentPage({ params }: Params) {
         </a>
       </div>
 
-      <div className="flex-1 min-h-0">
+      <div className="flex-1 min-h-0 bg-white">
         {isImage ? (
           /* eslint-disable-next-line @next/next/no-img-element */
           <img src={doc.file_url} alt={doc.event_name} className="w-full h-full object-contain bg-[#0B0B0B]" />
         ) : (
-          <object data={doc.file_url} type="application/pdf" className="w-full h-full">
-            <div className="flex items-center justify-center h-full px-4 text-center">
-              <p className="text-white/50 text-sm font-display">
-                Your browser can&apos;t preview this file inline.{' '}
-                <a href={doc.file_url} className="text-[#E10600] hover:underline" target="_blank" rel="noopener noreferrer">Open it directly</a>.
-              </p>
-            </div>
-          </object>
+          <iframe src={viewerSrc} title={doc.event_name} className="w-full h-full border-0" />
         )}
       </div>
     </div>
