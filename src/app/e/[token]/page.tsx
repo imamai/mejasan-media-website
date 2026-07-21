@@ -1,7 +1,19 @@
 import type { Metadata } from 'next';
+import { headers } from 'next/headers';
 import { Download } from 'lucide-react';
 import { createAdminClient } from '@/lib/supabase/server';
 import EventDocumentViewer from '@/components/EventDocumentViewer';
+
+/** iOS Safari (including the mini-browser the Camera app opens for QR links)
+ *  has excellent native inline PDF support and handles large embedded images
+ *  fine. The pdf.js/canvas renderer below exists for browsers that DON'T
+ *  (Android Chrome), but forcing it on iOS too was causing embedded images
+ *  to render partially — so iOS gets the native path instead. */
+async function isIOSRequest(): Promise<boolean> {
+  const h = await headers();
+  const ua = h.get('user-agent') ?? '';
+  return /iPhone|iPad|iPod/i.test(ua);
+}
 
 interface Params { params: Promise<{ token: string }> }
 
@@ -41,6 +53,7 @@ export default async function EventDocumentPage({ params }: Params) {
 
   const isImage = (doc.file_type ?? '').startsWith('image/');
   const isPdf = (doc.file_type ?? '') === 'application/pdf';
+  const isIOS = await isIOSRequest();
 
   return (
     <div className="h-[calc(100vh-var(--navbar-height))] mt-[var(--navbar-height)] bg-[#0B0B0B] flex flex-col overflow-hidden">
@@ -64,6 +77,8 @@ export default async function EventDocumentPage({ params }: Params) {
         {isImage ? (
           /* eslint-disable-next-line @next/next/no-img-element */
           <img src={doc.file_url} alt={doc.event_name} className="w-full h-full object-contain bg-[#0B0B0B]" />
+        ) : isPdf && isIOS ? (
+          <iframe src={doc.file_url} title={doc.event_name} className="w-full h-full border-0 bg-white" />
         ) : isPdf ? (
           <EventDocumentViewer fileUrl={doc.file_url} fileName={doc.file_name} />
         ) : (
