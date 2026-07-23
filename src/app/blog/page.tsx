@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { ArrowRight, Calendar, Clock } from 'lucide-react';
@@ -27,8 +27,6 @@ const FALLBACK: Post[] = [
   { id:'6', slug:'behind-the-lens-nairobi-documentary', title:'Behind the Lens: Documenting Life in Nairobi', excerpt:"Our team spent 6 months documenting Nairobi's incredible transformation. Here's what we learned about urban storytelling.", category:'Documentary', cover_image:'https://images.unsplash.com/photo-1508444845599-5c89863b1c44?w=800&q=80', author_name:'Jason Mejia', read_time:12, created_at:'2024-08-18' },
 ];
 
-const CATS = ['All','Weddings','Corporate','Events','Drone','Branding','Documentary'];
-
 export default function BlogPage() {
   const [cat, setCat] = useState('All');
   const [posts, setPosts] = useState<Post[]>(FALLBACK);
@@ -46,6 +44,11 @@ export default function BlogPage() {
       } catch { /* use fallback */ }
     })();
   }, []);
+
+  /* Category chips are derived from whatever categories actually exist in the
+   * data, rather than a separately maintained hardcoded list — so the filter
+   * can never drift out of sync with real posts. */
+  const CATS = useMemo(() => ['All', ...Array.from(new Set(posts.map(p => p.category))).sort()], [posts]);
 
   const filtered = cat === 'All' ? posts : posts.filter(p => p.category === cat);
   const [featured, ...rest] = filtered;

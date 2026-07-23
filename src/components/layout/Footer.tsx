@@ -1,6 +1,8 @@
 import Link from 'next/link';
-import { MapPin, Phone, Mail, ArrowUpRight, Instagram, Youtube, Globe } from 'lucide-react';
+import { MapPin, Phone, Mail, ArrowUpRight, Instagram, Youtube, Facebook, Linkedin, Twitter, Music2, Globe } from 'lucide-react';
 import Logo from '@/components/ui/Logo';
+import { createClient } from '@/lib/supabase/server';
+import { getPageContent, type SiteContent } from '@/lib/page-content-schema';
 
 const LINKS = {
   Services: [
@@ -23,13 +25,27 @@ const LINKS = {
   ],
 };
 
-const SOCIALS = [
-  { icon: Instagram, label: 'Instagram', href: 'https://instagram.com/mejasanmedia' },
-  { icon: Youtube,   label: 'YouTube',   href: 'https://youtube.com/@mejasanmedia' },
-  { icon: Globe,     label: 'Website',   href: 'https://mejasanmedia.com' },
-];
+const SOCIAL_ICONS: Record<string, typeof Instagram> = {
+  instagram: Instagram,
+  youtube: Youtube,
+  facebook: Facebook,
+  linkedin: Linkedin,
+  twitter: Twitter,
+  x: Twitter,
+  tiktok: Music2,
+  website: Globe,
+};
 
-export default function Footer() {
+function iconFor(platform: string) {
+  return SOCIAL_ICONS[platform.trim().toLowerCase()] ?? Globe;
+}
+
+export default async function Footer() {
+  const sb = await createClient();
+  const { data } = await sb.from('mejasan_page_content').select('content').eq('page_slug', 'site').maybeSingle();
+  const content = getPageContent('site', data?.content) as SiteContent;
+  const { footer } = content;
+
   return (
     <footer className="bg-[#0B0B0B] border-t border-white/[0.06]">
       <div className="max-w-[1400px] mx-auto px-4 sm:px-8 lg:px-16 pt-16 pb-8">
@@ -40,17 +56,17 @@ export default function Footer() {
           <div className="lg:col-span-2">
             <Logo className="mb-6" />
             <p className="text-[14px] text-white/55 leading-relaxed mb-6 max-w-xs">
-              Kenya&apos;s premier media production studio — photography, videography, drone, and brand storytelling that moves people.
+              {footer.tagline}
             </p>
             <div className="space-y-3">
-              <a href="tel:+254700864849" className="flex items-center gap-2.5 text-[13px] text-white/55 hover:text-white transition-colors">
-                <Phone size={13} className="text-[#E10600]" /> +254 700 864 849
+              <a href={footer.phoneHref} className="flex items-center gap-2.5 text-[13px] text-white/55 hover:text-white transition-colors">
+                <Phone size={13} className="text-[#E10600]" /> {footer.phone}
               </a>
-              <a href="mailto:info@mejasanmedia.com" className="flex items-center gap-2.5 text-[13px] text-white/55 hover:text-white transition-colors">
-                <Mail size={13} className="text-[#E10600]" /> info@mejasanmedia.com
+              <a href={`mailto:${footer.email}`} className="flex items-center gap-2.5 text-[13px] text-white/55 hover:text-white transition-colors">
+                <Mail size={13} className="text-[#E10600]" /> {footer.email}
               </a>
               <span className="flex items-center gap-2.5 text-[13px] text-white/55">
-                <MapPin size={13} className="text-[#E10600]" /> Kisumu, Kenya
+                <MapPin size={13} className="text-[#E10600]" /> {footer.location}
               </span>
             </div>
           </div>
@@ -79,18 +95,21 @@ export default function Footer() {
             © {new Date().getFullYear()} Mejasan Media Production. All rights reserved.
           </p>
           <div className="flex items-center gap-4">
-            {SOCIALS.map(({ icon: Icon, label, href }) => (
-              <a
-                key={label}
-                href={href}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={`Follow us on ${label}`}
-                className="w-8 h-8 border border-white/[0.1] flex items-center justify-center text-white/40 hover:text-white hover:border-[#E10600] transition-all"
-              >
-                <Icon size={14} />
-              </a>
-            ))}
+            {footer.socials.map(({ platform, href }) => {
+              const Icon = iconFor(platform);
+              return (
+                <a
+                  key={platform}
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={`Follow us on ${platform}`}
+                  className="w-8 h-8 border border-white/[0.1] flex items-center justify-center text-white/40 hover:text-white hover:border-[#E10600] transition-all"
+                >
+                  <Icon size={14} />
+                </a>
+              );
+            })}
           </div>
         </div>
       </div>

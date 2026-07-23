@@ -785,6 +785,74 @@ const homeSchema: SchemaField[] = [
   ] },
 ];
 
+/* ── Contact ───────────────────────────────────────────────────────── */
+
+export const contactDefaults = {
+  hero: { label: 'Get In Touch', titleStart: "Let's", titleEm: 'Talk.' },
+  intro: "Ready to start a project? Have a question? We'd love to hear from you. Our team responds to every enquiry within 24 hours.",
+  info: [
+    { label: 'Phone / WhatsApp', value: '+254 700 864 849', href: 'tel:+254700864849' },
+    { label: 'WhatsApp', value: 'Message us on WhatsApp', href: 'https://wa.me/254700864849' },
+    { label: 'Email', value: 'info@mejasanmedia.com', href: 'mailto:info@mejasanmedia.com' },
+    { label: 'Location', value: 'Kisumu, Kenya', href: '' },
+  ],
+  whatsappMessage: 'Hi, I would like to enquire about your services.',
+  mapEmbedUrl: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d127672.62793449588!2d34.69373655!3d-0.10221435!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x182aa453eb77fb47%3A0x91c3e8c05a2fdc35!2sKisumu%2C%20Kenya!5e0!3m2!1sen!2sus!4v1735000000000!5m2!1sen!2sus',
+};
+
+const contactInfoFields: SchemaField[] = [
+  { type: 'text', key: 'label', label: 'Label (e.g. Phone / WhatsApp)' },
+  { type: 'text', key: 'value', label: 'Displayed value' },
+  { type: 'text', key: 'href', label: 'Link (tel:/mailto:/https:/ — leave blank for plain text)' },
+];
+
+const contactSchema: SchemaField[] = [
+  { type: 'group', key: 'hero', label: 'Hero', fields: [
+    { type: 'text', key: 'label', label: 'Eyebrow label' },
+    { type: 'text', key: 'titleStart', label: 'Title (plain part)' },
+    { type: 'text', key: 'titleEm', label: 'Title (highlighted part)' },
+  ] },
+  { type: 'textarea', key: 'intro', label: 'Intro paragraph' },
+  { type: 'list', key: 'info', label: 'Contact info rows', itemLabelKey: 'label', itemFields: contactInfoFields,
+    newItem: { label: 'New Row', value: '', href: '' } },
+  { type: 'text', key: 'whatsappMessage', label: 'Pre-filled WhatsApp message' },
+  { type: 'text', key: 'mapEmbedUrl', label: 'Google Maps embed URL' },
+];
+
+/* ── Site (global — footer) ───────────────────────────────────────── */
+
+export const siteDefaults = {
+  footer: {
+    tagline: "Kenya's premier media production studio — photography, videography, drone, and brand storytelling that moves people.",
+    phone: '+254 700 864 849',
+    phoneHref: 'tel:+254700864849',
+    email: 'info@mejasanmedia.com',
+    location: 'Kisumu, Kenya',
+    socials: [
+      { platform: 'Instagram', href: 'https://instagram.com/mejasanmedia' },
+      { platform: 'YouTube', href: 'https://youtube.com/@mejasanmedia' },
+      { platform: 'Website', href: 'https://mejasanmedia.com' },
+    ],
+  },
+};
+
+const socialFields: SchemaField[] = [
+  { type: 'text', key: 'platform', label: 'Platform (Instagram / YouTube / Facebook / TikTok / LinkedIn / Twitter / Website)' },
+  { type: 'text', key: 'href', label: 'Profile URL' },
+];
+
+const siteSchema: SchemaField[] = [
+  { type: 'group', key: 'footer', label: 'Footer', fields: [
+    { type: 'textarea', key: 'tagline', label: 'Brand tagline' },
+    { type: 'text', key: 'phone', label: 'Phone (displayed)' },
+    { type: 'text', key: 'phoneHref', label: 'Phone link (tel:...)' },
+    { type: 'text', key: 'email', label: 'Email' },
+    { type: 'text', key: 'location', label: 'Location' },
+    { type: 'list', key: 'socials', label: 'Social links', itemLabelKey: 'platform', itemFields: socialFields,
+      newItem: { platform: 'New Platform', href: '' } },
+  ] },
+];
+
 /* ── Registry ──────────────────────────────────────────────────────── */
 
 export const PAGE_CONTENT: Record<string, PageContentDef> = {
@@ -796,6 +864,8 @@ export const PAGE_CONTENT: Record<string, PageContentDef> = {
   'services-events': { slug: 'services-events', label: 'Services — Events', schema: eventsSchema, defaults: eventsDefaults },
   'services-drone': { slug: 'services-drone', label: 'Services — Drone', schema: droneSchema, defaults: droneDefaults },
   'services-branding': { slug: 'services-branding', label: 'Services — Branding', schema: brandingSchema, defaults: brandingDefaults },
+  'contact': { slug: 'contact', label: 'Contact', schema: contactSchema, defaults: contactDefaults },
+  'site': { slug: 'site', label: 'Site — Footer & Global', schema: siteSchema, defaults: siteDefaults },
 };
 
 export const PAGE_SLUGS = Object.keys(PAGE_CONTENT);
@@ -816,3 +886,5 @@ export type VideographyContent = typeof videographyDefaults;
 export type EventsContent = typeof eventsDefaults;
 export type DroneContent = typeof droneDefaults;
 export type BrandingContent = typeof brandingDefaults;
+export type ContactContent = typeof contactDefaults;
+export type SiteContent = typeof siteDefaults;

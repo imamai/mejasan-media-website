@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence, useInView } from 'framer-motion';
 import { X, ZoomIn, Download, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -26,7 +26,6 @@ const FALLBACK: Item[] = [
   { id:'15', category:'Events',    title:'Nairobi Fashion Week', location:'Nairobi', image:'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=600&q=80', slug:'nairobi-fashion-week', imagePosition:'center' },
 ];
 
-const CATS = ['All','Weddings','Corporate','Events','Drone','Branding'];
 const PAGE_SIZE = 9;
 
 /* Vary aspect ratios for masonry-like appearance */
@@ -154,6 +153,11 @@ export default function PortfolioPage() {
       } catch { /* use fallback */ }
     })();
   }, []);
+
+  /* Category chips are derived from whatever categories actually exist in the
+   * data, rather than a separately maintained hardcoded list — so the filter
+   * can never drift out of sync with real portfolio items. */
+  const CATS = useMemo(() => ['All', ...Array.from(new Set(items.map(i => i.category))).sort()], [items]);
 
   const filtered = cat === 'All' ? items : items.filter(i => i.category === cat);
   const visible  = filtered.slice(0, page * PAGE_SIZE);
