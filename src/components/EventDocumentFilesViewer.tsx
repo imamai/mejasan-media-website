@@ -46,7 +46,25 @@ export default function EventDocumentFilesViewer({ files, isIOS }: { files: Even
           // eslint-disable-next-line @next/next/no-img-element
           <img src={active.url} alt={active.name} className="w-full h-full object-contain bg-[#0B0B0B]" />
         ) : isPdf && isIOS ? (
-          <iframe src={active.url} title={active.name} className="w-full h-full border-0 bg-white" />
+          <div className="relative w-full h-full">
+            {/* absolute positioning gives the iframe a height resolved directly
+                against this box, rather than through a flex percentage chain —
+                iOS Safari's inline PDF viewer can otherwise init against a
+                stale/zero height and get stuck rendering only page 1. */}
+            <iframe
+              src={active.url}
+              title={active.name}
+              scrolling="yes"
+              className="absolute inset-0 w-full h-full border-0 bg-white"
+              style={{ WebkitOverflowScrolling: 'touch' }}
+            />
+            <a
+              href={active.url}
+              className="absolute bottom-3 right-3 z-10 bg-[#E10600] text-white text-[10px] font-display tracking-widest uppercase px-3 py-2 shadow-lg"
+            >
+              Open Full Document
+            </a>
+          </div>
         ) : isPdf ? (
           <EventDocumentViewer fileUrl={active.url} fileName={active.name} />
         ) : (

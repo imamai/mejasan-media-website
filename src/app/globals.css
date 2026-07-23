@@ -15,6 +15,19 @@
   --navbar-height: 72px;
 }
 
+.event-doc-viewport {
+  /* iOS Safari resizes the visual viewport as its chrome collapses/expands;
+     a plain 100vh computed before that settles can leave the embedded PDF
+     iframe with a stale height and stuck showing only the first page.
+     100dvh tracks the real, settled viewport and avoids that. */
+  height: calc(100vh - var(--navbar-height));
+}
+@supports (height: 100dvh) {
+  .event-doc-viewport {
+    height: calc(100dvh - var(--navbar-height));
+  }
+}
+
 @layer base {
   *, *::before, *::after { box-sizing: border-box; }
 

@@ -64,7 +64,7 @@ export default async function EventDocumentPage({ params }: Params) {
   const isIOS = await isIOSRequest();
 
   return (
-    <div className="h-[calc(100vh-var(--navbar-height))] mt-[var(--navbar-height)] bg-[#0B0B0B] flex flex-col overflow-hidden">
+    <div className="event-doc-viewport mt-[var(--navbar-height)] bg-[#0B0B0B] flex flex-col overflow-hidden">
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-3 sm:px-6 py-2.5 sm:py-3 border-b border-white/[0.08] shrink-0">
         <div className="min-w-0 max-w-full">
           <div className="text-[13px] sm:text-[15px] font-heading font-light text-white truncate">{doc.event_name}</div>
