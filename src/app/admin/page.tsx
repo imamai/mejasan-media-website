@@ -290,7 +290,7 @@ function BlogModal({
         <Field label="Title">
           <input value={form.title} onChange={(e) => handleTitle(e.target.value)} className={inputCls} placeholder="Post title" />
         </Field>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Field label="Slug">
             <input value={form.slug} onChange={(e) => set('slug', e.target.value)} className={inputCls} placeholder="auto-generated" />
           </Field>
@@ -298,7 +298,7 @@ function BlogModal({
             <input value={form.category} onChange={(e) => set('category', e.target.value)} className={inputCls} placeholder="e.g. Wedding Tips" />
           </Field>
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Field label="Author">
             <input value={form.author_name} onChange={(e) => set('author_name', e.target.value)} className={inputCls} placeholder="Author name" />
           </Field>
@@ -452,7 +452,7 @@ function ProjectModal({
         <Field label="Service">
           <input value={form.service} onChange={(e) => set('service', e.target.value)} className={inputCls} placeholder="e.g. Wedding Photography" />
         </Field>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Field label="Stage">
             <select value={form.stage} onChange={(e) => set('stage', Number(e.target.value))} className={selectCls}>
               {PROJECT_STAGES.map((label, i) => <option key={label} value={i}>{label}</option>)}
@@ -464,7 +464,7 @@ function ProjectModal({
             </select>
           </Field>
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Field label="Start Date">
             <input type="date" value={form.start_date} onChange={(e) => set('start_date', e.target.value)} className={inputCls} />
           </Field>
@@ -1142,10 +1142,10 @@ function AdminDashboard({ user, onSignOut }: { user: User; onSignOut: () => void
             <div className="text-[10px] font-display tracking-widest text-[#E10600] uppercase mb-4">Recent Leads</div>
             <div className="space-y-2">
               {leads.slice(0, 5).map((l) => (
-                <div key={l.id as string} className="flex items-center justify-between py-2 border-b border-white/[0.04] last:border-0">
-                  <div>
-                    <div className="text-[12px] font-display text-white">{l.name as string}</div>
-                    <div className="text-[10px] text-white/30">{l.email as string}</div>
+                <div key={l.id as string} className="flex items-center justify-between gap-3 py-2 border-b border-white/[0.04] last:border-0">
+                  <div className="min-w-0">
+                    <div className="text-[12px] font-display text-white truncate">{l.name as string}</div>
+                    <div className="text-[10px] text-white/30 truncate">{l.email as string}</div>
                   </div>
                   <Chip status={(l.status as string) ?? 'new'} />
                 </div>
@@ -1157,10 +1157,10 @@ function AdminDashboard({ user, onSignOut }: { user: User; onSignOut: () => void
             <div className="text-[10px] font-display tracking-widest text-[#E10600] uppercase mb-4">Upcoming Bookings</div>
             <div className="space-y-2">
               {bookings.filter((b) => b.status !== 'cancelled').slice(0, 5).map((b) => (
-                <div key={b.id as string} className="flex items-center justify-between py-2 border-b border-white/[0.04] last:border-0">
-                  <div>
-                    <div className="text-[12px] font-display text-white">{b.booking_ref as string}</div>
-                    <div className="text-[10px] text-white/30">{b.service_type as string} · {b.event_date ? new Date(b.event_date as string).toLocaleDateString('en-KE') : 'TBD'}</div>
+                <div key={b.id as string} className="flex items-center justify-between gap-3 py-2 border-b border-white/[0.04] last:border-0">
+                  <div className="min-w-0">
+                    <div className="text-[12px] font-display text-white truncate">{b.booking_ref as string}</div>
+                    <div className="text-[10px] text-white/30 truncate">{b.service_type as string} · {b.event_date ? new Date(b.event_date as string).toLocaleDateString('en-KE') : 'TBD'}</div>
                   </div>
                   <Chip status={b.status as string} />
                 </div>
@@ -1174,7 +1174,7 @@ function AdminDashboard({ user, onSignOut }: { user: User; onSignOut: () => void
 
     leads: (
       <div>
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
           <h2 className="text-2xl font-heading font-light text-white">Leads</h2>
           <span className="text-[11px] font-display text-white/30">{leads.length} total</span>
         </div>
@@ -1196,7 +1196,7 @@ function AdminDashboard({ user, onSignOut }: { user: User; onSignOut: () => void
 
     bookings: (
       <div>
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
           <h2 className="text-2xl font-heading font-light text-white">Bookings</h2>
           <span className="text-[11px] font-display text-white/30">{bookings.length} total</span>
         </div>
@@ -1239,7 +1239,7 @@ function AdminDashboard({ user, onSignOut }: { user: User; onSignOut: () => void
 
     weddingForms: (
       <div>
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
           <h2 className="text-2xl font-heading font-light text-white">Wedding Forms</h2>
           <span className="text-[11px] font-display text-white/30">{weddingForms.length} total</span>
         </div>
@@ -1265,7 +1265,7 @@ function AdminDashboard({ user, onSignOut }: { user: User; onSignOut: () => void
 
     clients: (
       <div>
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
           <h2 className="text-2xl font-heading font-light text-white">Clients</h2>
           <span className="text-[11px] font-display text-white/30">{clients.length} total</span>
         </div>
@@ -1286,7 +1286,7 @@ function AdminDashboard({ user, onSignOut }: { user: User; onSignOut: () => void
 
     projects: (
       <div>
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
           <h2 className="text-2xl font-heading font-light text-white">Projects</h2>
           <button onClick={() => setProjectModal({ item: null })} className="btn-primary flex items-center gap-2 text-[10px]">
             <Plus size={12} /> Add Project
@@ -1375,7 +1375,7 @@ function AdminDashboard({ user, onSignOut }: { user: User; onSignOut: () => void
 
     portfolio: (
       <div>
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
           <h2 className="text-2xl font-heading font-light text-white">Portfolio</h2>
           <button onClick={() => setPortfolioModal({ item: null })} className="btn-primary flex items-center gap-2 text-[10px]">
             <Plus size={12} /> Add Item
@@ -1429,7 +1429,7 @@ function AdminDashboard({ user, onSignOut }: { user: User; onSignOut: () => void
 
     blog: (
       <div>
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
           <h2 className="text-2xl font-heading font-light text-white">Blog</h2>
           <button onClick={() => setBlogModal({ post: null })} className="btn-primary flex items-center gap-2 text-[10px]">
             <Plus size={12} /> New Post
@@ -1459,7 +1459,7 @@ function AdminDashboard({ user, onSignOut }: { user: User; onSignOut: () => void
 
     testimonials: (
       <div>
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
           <h2 className="text-2xl font-heading font-light text-white">Testimonials</h2>
           <button onClick={() => setTestimonialModal({ item: null })} className="btn-primary flex items-center gap-2 text-[10px]">
             <Plus size={12} /> Add Review
@@ -1520,7 +1520,7 @@ function AdminDashboard({ user, onSignOut }: { user: User; onSignOut: () => void
 
     documents: (
       <div>
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
           <h2 className="text-2xl font-heading font-light text-white">Shared Documents</h2>
           <button onClick={() => setDocumentModal(true)} className="btn-primary flex items-center gap-2 text-[10px]">
             <Plus size={12} /> Share a Document
@@ -1576,7 +1576,7 @@ function AdminDashboard({ user, onSignOut }: { user: User; onSignOut: () => void
 
     invoices: (
       <div>
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
           <h2 className="text-2xl font-heading font-light text-white">Invoices</h2>
           <button className="btn-primary flex items-center gap-2 text-[10px]"><Plus size={12} /> New Invoice</button>
         </div>
@@ -1691,12 +1691,12 @@ function AdminDashboard({ user, onSignOut }: { user: User; onSignOut: () => void
   return (
     <>
       <div className="min-h-screen bg-[#0B0B0B] pt-20">
-        <div className="bg-[#141414] border-b border-white/[0.06] px-4 sm:px-8 py-4 flex items-center justify-between">
-          <div>
+        <div className="bg-[#141414] border-b border-white/[0.06] px-4 sm:px-8 py-4 flex items-center justify-between gap-3">
+          <div className="min-w-0">
             <div className="text-[10px] font-display tracking-widest text-[#E10600] uppercase">Admin Dashboard</div>
-            <div className="text-[12px] font-display text-white/40">{user.email}</div>
+            <div className="text-[12px] font-display text-white/40 truncate">{user.email}</div>
           </div>
-          <button onClick={onSignOut} className="flex items-center gap-1.5 text-[10px] font-display text-white/30 hover:text-white transition-colors uppercase tracking-widest">
+          <button onClick={onSignOut} className="flex items-center gap-1.5 text-[10px] font-display text-white/30 hover:text-white transition-colors uppercase tracking-widest shrink-0">
             <LogOut size={13} /> Exit
           </button>
         </div>
