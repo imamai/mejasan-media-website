@@ -9,7 +9,7 @@ import {
   BarChart3, Users, Calendar, Camera, FileText, MessageSquare, Settings, LogOut,
   ChevronDown, Check, Upload, RefreshCw, Eye, Trash2, Edit3, Plus, TrendingUp,
   DollarSign, Star, X, Image as ImageIcon, Save, AlertTriangle, Layout,
-  QrCode, Copy, Download as DownloadIcon, MessageCircle, Send,
+  QrCode, Copy, Download as DownloadIcon, MessageCircle, Send, Heart,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import type { User } from '@supabase/supabase-js';
@@ -572,13 +572,131 @@ function DocumentModal({
   );
 }
 
+/* ── Wedding Form Modal ────────────────────────────────────────────── */
+const WF_STATUSES = ['submitted', 'reviewed'];
+
+const QUESTIONNAIRE_LABELS: [string, string][] = [
+  ['theme_colors', 'Theme Colour(s)'], ['wedding_theme', 'Theme / Concept'],
+  ['bride_prep_location', 'Bride Prep Location'], ['groom_prep_location', 'Groom Prep Location'],
+  ['ceremony_venue', 'Ceremony Venue'], ['reception_venue', 'Reception Venue'],
+  ['bride_prep_time', 'Bride Prep Time'], ['groom_prep_time', 'Groom Prep Time'],
+  ['ceremony_time', 'Ceremony Time'], ['reception_time', 'Reception Time'], ['end_time', 'Expected End Time'],
+  ['photo_style', 'Photography Style'], ['video_style', 'Video Style'],
+  ['style_references', 'Reference Photos/Videos'], ['style_avoid', 'Styles/Shots to Avoid'],
+  ['bride_parents', "Bride's Parents"], ['groom_parents', "Groom's Parents"],
+  ['best_man', 'Best Man'], ['maid_of_honour', 'Maid of Honour'], ['vip_guests', 'VIP Guests'],
+  ['family_groupings', 'Family Groupings'],
+  ['highlight_length', 'Highlight Length'], ['documentary_edit', 'Documentary Edit'],
+  ['pa_system', 'PA System'], ['sound_contact', 'Sound Contact'], ['live_performances', 'Live Performances'],
+  ['planner_name', 'Planner'], ['planner_contact', 'Planner Contact'],
+  ['mc_name', 'MC'], ['mc_contact', 'MC Contact'],
+  ['church_coord_name', 'Church Coordinator'], ['church_coord_contact', 'Church Coordinator Contact'],
+  ['venue_manager_name', 'Venue Manager'], ['venue_manager_contact', 'Venue Manager Contact'],
+  ['how_you_met', 'How They Met'], ['proposal_story', 'Proposal Story'],
+  ['special_songs', 'Special Songs/Quotes'], ['surprises', 'Surprises Planned'],
+  ['selected_package', 'Selected Package'], ['additional_services', 'Additional Services'],
+  ['delivery_timeline', 'Delivery Timeline'],
+];
+
+const CONTRACT_LABELS: [string, string][] = [
+  ['event_type', 'Event Type'], ['event_date', 'Event Date'], ['location', 'Location'], ['cost', 'Total Cost (KES)'],
+  ['client_name', 'Client Name'], ['client_phone', 'Client Phone'], ['media_consent', 'Media Consent'],
+  ['sig_client_name', 'Client Signer'], ['sig_client_date', 'Client Signed'],
+  ['sig_witness_name', 'Witness (Client)'], ['sig_witness_date', 'Witness Signed'],
+  ['sig_company_name', 'Company Rep'], ['sig_company_date', 'Company Signed'],
+  ['sig_compwit_name', 'Witness (Company)'], ['sig_compwit_date', 'Witness Signed'],
+];
+
+function DL({ pairs }: { pairs: [string, unknown][] }) {
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
+      {pairs.map(([label, val]) => (
+        <div key={label}>
+          <div className="text-[9px] font-display tracking-widest uppercase text-white/25 mb-0.5">{label}</div>
+          <div className="text-[12px] font-display text-white/70 whitespace-pre-wrap break-words">{(val as string) || '—'}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function WeddingFormModal({
+  item, onClose, onStatusChange,
+}: { item: Record<string, unknown>; onClose: () => void; onStatusChange: (id: string, status: string) => Promise<void> }) {
+  const q = (item.questionnaire as Record<string, unknown>) ?? {};
+  const c = (item.contract as Record<string, unknown>) ?? {};
+  const sigs = [
+    ['Client', item.signature_client_url as string | null],
+    ['Witness (Client)', item.signature_witness_url as string | null],
+    ['Company Rep', item.signature_company_url as string | null],
+    ['Witness (Company)', item.signature_company_witness_url as string | null],
+  ] as [string, string | null][];
+
+  return (
+    <Modal title={`${item.bride_name as string} & ${item.groom_name as string}`} onClose={onClose} wide>
+      <div className="space-y-8">
+        <div className="flex flex-wrap items-center gap-3">
+          <select
+            value={item.status as string}
+            onChange={(e) => onStatusChange(item.id as string, e.target.value)}
+            className={`${selectCls} w-auto`}
+          >
+            {WF_STATUSES.map((s) => <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>)}
+          </select>
+          {!!item.questionnaire_pdf_url && (
+            <a href={item.questionnaire_pdf_url as string} target="_blank" rel="noreferrer" className="btn-outline-dark px-4 py-2 text-[10px] flex items-center gap-1.5">
+              <DownloadIcon size={12} /> Questionnaire PDF
+            </a>
+          )}
+          {!!item.contract_pdf_url && (
+            <a href={item.contract_pdf_url as string} target="_blank" rel="noreferrer" className="btn-outline-dark px-4 py-2 text-[10px] flex items-center gap-1.5">
+              <DownloadIcon size={12} /> Contract PDF
+            </a>
+          )}
+          {item.is_correction ? <Chip status="corrected" /> : null}
+        </div>
+
+        <div>
+          <h3 className="text-[11px] font-display tracking-widest uppercase text-white/40 mb-3 pb-2 border-b border-white/[0.06]">Questionnaire</h3>
+          <DL pairs={[['Wedding Date', item.wedding_date], ['Client Email', item.client_email], ['Client Phone', item.client_phone],
+            ...QUESTIONNAIRE_LABELS.map(([k, label]) => [label, q[k]] as [string, unknown])]} />
+        </div>
+
+        <div>
+          <h3 className="text-[11px] font-display tracking-widest uppercase text-white/40 mb-3 pb-2 border-b border-white/[0.06]">Contract</h3>
+          <DL pairs={CONTRACT_LABELS.map(([k, label]) => [label, c[k]] as [string, unknown])} />
+        </div>
+
+        <div>
+          <h3 className="text-[11px] font-display tracking-widest uppercase text-white/40 mb-3 pb-2 border-b border-white/[0.06]">Signatures</h3>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            {sigs.map(([label, url]) => (
+              <div key={label}>
+                <div className="text-[9px] font-display tracking-widest uppercase text-white/25 mb-1.5">{label}</div>
+                {url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={url} alt={label} className="bg-white rounded p-1 w-full h-16 object-contain" />
+                ) : (
+                  <div className="h-16 border border-dashed border-white/10 rounded flex items-center justify-center text-white/15 text-[10px]">Not signed</div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
 /* ── Dashboard ─────────────────────────────────────────────────────── */
-type TabId = 'overview' | 'leads' | 'bookings' | 'clients' | 'projects' | 'messages' | 'portfolio' | 'blog' | 'testimonials' | 'pages' | 'documents' | 'invoices' | 'gallery' | 'settings';
+type TabId = 'overview' | 'leads' | 'bookings' | 'weddingForms' | 'clients' | 'projects' | 'messages' | 'portfolio' | 'blog' | 'testimonials' | 'pages' | 'documents' | 'invoices' | 'gallery' | 'settings';
 
 function AdminDashboard({ user, onSignOut }: { user: User; onSignOut: () => void }) {
   const [tab, setTab] = useState<TabId>('overview');
   const [leads, setLeads] = useState<Record<string, unknown>[]>([]);
   const [bookings, setBookings] = useState<Record<string, unknown>[]>([]);
+  const [weddingForms, setWeddingForms] = useState<Record<string, unknown>[]>([]);
+  const [weddingFormModal, setWeddingFormModal] = useState<Record<string, unknown> | null>(null);
   const [portfolio, setPortfolio] = useState<Record<string, unknown>[]>([]);
   const [blog, setBlog] = useState<Record<string, unknown>[]>([]);
   const [testimonials, setTestimonials] = useState<Record<string, unknown>[]>([]);
@@ -623,7 +741,7 @@ function AdminDashboard({ user, onSignOut }: { user: User; onSignOut: () => void
 
   const fetchAll = async () => {
     try {
-      const [l, b, p, bl, t, d, pr] = await Promise.all([
+      const [l, b, p, bl, t, d, pr, wf] = await Promise.all([
         sb.from('mejasan_contact_submissions').select('*').order('created_at', { ascending: false }).limit(30),
         sb.from('mejasan_bookings').select('*').order('created_at', { ascending: false }).limit(30),
         sb.from('mejasan_portfolio').select('*').order('sort_order').limit(50),
@@ -631,6 +749,7 @@ function AdminDashboard({ user, onSignOut }: { user: User; onSignOut: () => void
         sb.from('mejasan_testimonials').select('*').order('created_at', { ascending: false }).limit(30),
         sb.from('mejasan_event_documents').select('*, mejasan_event_document_files(count)').order('created_at', { ascending: false }).limit(50),
         sb.from('mejasan_projects').select('*').order('created_at', { ascending: false }).limit(100),
+        sb.from('mejasan_wedding_intake').select('*').order('created_at', { ascending: false }).limit(50),
       ]);
       if (l.data) setLeads(l.data as Record<string, unknown>[]);
       if (b.data) setBookings(b.data as Record<string, unknown>[]);
@@ -640,6 +759,8 @@ function AdminDashboard({ user, onSignOut }: { user: User; onSignOut: () => void
       if (d.data) setDocuments(d.data as Record<string, unknown>[]);
       if (pr.error) { console.error('Failed to load projects:', pr.error); toast.error(`Failed to load projects: ${pr.error.message}`); }
       if (pr.data) setProjects(pr.data as Record<string, unknown>[]);
+      if (wf.error) { console.error('Failed to load wedding forms:', wf.error); toast.error(`Failed to load wedding forms: ${wf.error.message}`); }
+      if (wf.data) setWeddingForms(wf.data as Record<string, unknown>[]);
     } catch { /* silent */ }
   };
 
@@ -689,6 +810,13 @@ function AdminDashboard({ user, onSignOut }: { user: User; onSignOut: () => void
   const updateBookingStatus = async (id: string, status: string) => {
     await sb.from('mejasan_bookings').update({ status }).eq('id', id);
     setBookings((b) => b.map((x) => (x.id === id ? { ...x, status } : x)));
+    toast.success('Status updated');
+  };
+
+  const updateWeddingFormStatus = async (id: string, status: string) => {
+    await sb.from('mejasan_wedding_intake').update({ status }).eq('id', id);
+    setWeddingForms((f) => f.map((x) => (x.id === id ? { ...x, status } : x)));
+    setWeddingFormModal((m) => (m && m.id === id ? { ...m, status } : m));
     toast.success('Status updated');
   };
 
@@ -975,6 +1103,7 @@ function AdminDashboard({ user, onSignOut }: { user: User; onSignOut: () => void
     { id: 'overview', label: 'Overview', icon: BarChart3 },
     { id: 'leads', label: 'Leads', icon: MessageSquare },
     { id: 'bookings', label: 'Bookings', icon: Calendar },
+    { id: 'weddingForms', label: 'Wedding Forms', icon: Heart },
     { id: 'clients', label: 'Clients', icon: Users },
     { id: 'projects', label: 'Projects', icon: TrendingUp },
     { id: 'messages', label: 'Messages', icon: MessageCircle },
@@ -1104,6 +1233,32 @@ function AdminDashboard({ user, onSignOut }: { user: User; onSignOut: () => void
             </tr>
           ))}
           {bookings.length === 0 && <tr><td colSpan={7} className="px-5 py-12 text-center text-[12px] text-white/20">No bookings yet.</td></tr>}
+        </AdminTable>
+      </div>
+    ),
+
+    weddingForms: (
+      <div>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-heading font-light text-white">Wedding Forms</h2>
+          <span className="text-[11px] font-display text-white/30">{weddingForms.length} total</span>
+        </div>
+        <AdminTable heads={['Couple', 'Wedding Date', 'Client Email', 'Status', 'Submitted', '']} onRefresh={fetchAll}>
+          {weddingForms.map((f) => (
+            <tr key={f.id as string} className="hover:bg-white/[0.02]">
+              <TD className="text-white font-semibold">{f.bride_name as string} &amp; {f.groom_name as string}</TD>
+              <TD>{f.wedding_date ? new Date(f.wedding_date as string).toLocaleDateString('en-KE') : '—'}</TD>
+              <TD>{f.client_email as string}</TD>
+              <TD><Chip status={f.status as string} /></TD>
+              <TD>{f.created_at ? new Date(f.created_at as string).toLocaleDateString('en-KE') : '—'}</TD>
+              <TD>
+                <button onClick={() => setWeddingFormModal(f)} className="flex items-center gap-1 text-[10px] font-display text-white/30 hover:text-white border border-white/[0.08] px-2 py-1">
+                  <Eye size={11} /> View
+                </button>
+              </TD>
+            </tr>
+          ))}
+          {weddingForms.length === 0 && <tr><td colSpan={6} className="px-5 py-12 text-center text-[12px] text-white/20">No wedding intake submissions yet.</td></tr>}
         </AdminTable>
       </div>
     ),
@@ -1595,6 +1750,9 @@ function AdminDashboard({ user, onSignOut }: { user: User; onSignOut: () => void
       )}
       {documentModal && (
         <DocumentModal bookings={bookings} onClose={() => setDocumentModal(false)} onSave={saveDocument} />
+      )}
+      {weddingFormModal && (
+        <WeddingFormModal item={weddingFormModal} onClose={() => setWeddingFormModal(null)} onStatusChange={updateWeddingFormStatus} />
       )}
       {deleteModal && (
         <DeleteConfirm label={deleteModal.label} onConfirm={deleteModal.onConfirm} onClose={() => setDeleteModal(null)} busy={deleteBusy} />

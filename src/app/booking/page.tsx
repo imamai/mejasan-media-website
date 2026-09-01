@@ -84,7 +84,11 @@ export default function BookingPage() {
         <h1 className="text-4xl sm:text-5xl font-heading font-light text-[#0F0F0F] mb-4">Enquiry Received</h1>
         <p className="text-[#0F0F0F]/60 mb-3 leading-relaxed">Thank you! We&apos;ve received your booking enquiry and will respond within 24 hours.</p>
         {ref && <div className="text-[12px] font-display text-[#E10600] tracking-widest uppercase mb-8">Reference: {ref}</div>}
-        <a href="/" className="btn-primary inline-flex">Back to Home</a>
+        <div className="flex flex-wrap items-center justify-center gap-4">
+          <a href="/" className="btn-primary inline-flex">Back to Home</a>
+          <a href="/wedding-form" className="btn-outline-dark inline-flex">Wedding Questionnaire &amp; Contract</a>
+        </div>
+        <p className="text-[#0F0F0F]/40 text-[12px] mt-4">Already confirmed your wedding date with us? Fill in your questionnaire and contract above.</p>
       </div>
     </div>
   );

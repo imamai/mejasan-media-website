@@ -18,6 +18,7 @@ const LINKS = {
     { label: 'Blog',         href: '/blog' },
     { label: 'Contact',      href: '/contact' },
     { label: 'Client Portal', href: '/client-portal' },
+    { label: 'Wedding Questionnaire', href: '/wedding-form' },
   ],
   Legal: [
     { label: 'Privacy Policy',   href: '/privacy' },
