@@ -537,7 +537,7 @@ const videoTypeFields: SchemaField[] = [
   { type: 'image', key: 'img', label: 'Thumbnail image' },
   { type: 'imagePosition', key: 'imgPosition', label: 'Focal point' },
   { type: 'textarea', key: 'desc', label: 'Description' },
-  { type: 'text', key: 'videoSrc', label: 'Sample reel embed URL' },
+  { type: 'text', key: 'videoSrc', label: 'Sample reel URL (paste a YouTube, Vimeo, or Google Drive link)' },
 ];
 
 const videographyPackageFields: SchemaField[] = [

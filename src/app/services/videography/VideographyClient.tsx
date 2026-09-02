@@ -8,6 +8,44 @@ import type { VideographyContent, PhotographyContent } from '@/lib/page-content-
 
 const WA_MSG = encodeURIComponent('Hi, I would like to enquire about your videography services and see demo reels.');
 
+/**
+ * Admins paste whatever link YouTube/Vimeo/Drive's own "Share" button gives them,
+ * which is never the iframe-embeddable form. Normalise the common share-link
+ * shapes into embeddable ones so any link an admin pastes actually plays.
+ */
+function toEmbedUrl(url: string): string {
+  if (!url) return url;
+  try {
+    const u = new URL(url);
+    const host = u.hostname.replace(/^www\./, '');
+
+    if (host === 'youtu.be') {
+      const id = u.pathname.slice(1);
+      return id ? `https://www.youtube.com/embed/${id}?autoplay=1&rel=0` : url;
+    }
+    if (host === 'youtube.com' || host === 'm.youtube.com') {
+      if (u.pathname === '/watch') {
+        const id = u.searchParams.get('v');
+        return id ? `https://www.youtube.com/embed/${id}?autoplay=1&rel=0` : url;
+      }
+      const shortsMatch = u.pathname.match(/^\/shorts\/([^/]+)/);
+      if (shortsMatch) return `https://www.youtube.com/embed/${shortsMatch[1]}?autoplay=1&rel=0`;
+      return url; // already /embed/... or another valid form
+    }
+    if (host === 'vimeo.com') {
+      const id = u.pathname.split('/').filter(Boolean).pop();
+      return id ? `https://player.vimeo.com/video/${id}?autoplay=1` : url;
+    }
+    if (host === 'drive.google.com') {
+      const match = u.pathname.match(/^\/file\/d\/([^/]+)/);
+      return match ? `https://drive.google.com/file/d/${match[1]}/preview` : url;
+    }
+    return url;
+  } catch {
+    return url; // not a valid absolute URL — leave untouched
+  }
+}
+
 export default function VideographyClient({
   content, traditionalWeddingPackages, weddingQuotation,
 }: {
@@ -42,7 +80,7 @@ export default function VideographyClient({
             {types.map(({ title, img, imgPosition, desc, videoSrc }) => (
               <button
                 key={title}
-                onClick={() => setActiveVideo(videoSrc)}
+                onClick={() => setActiveVideo(toEmbedUrl(videoSrc))}
                 className="group relative overflow-hidden h-72 sm:h-96 text-left w-full"
                 aria-label={`Watch ${title} sample reel`}
               >
