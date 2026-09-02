@@ -46,6 +46,8 @@ export async function GET(req: Request) {
           email: u.email ?? '',
           phone: (profile?.phone as string) ?? '',
           company: (profile?.company as string) ?? '',
+          notes: (profile?.notes as string) ?? '',
+          tags: (profile?.tags as string[]) ?? [],
           projects: projectCounts.get(u.id) ?? 0,
           joined: u.created_at,
         };

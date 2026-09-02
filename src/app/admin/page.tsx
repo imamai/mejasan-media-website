@@ -9,7 +9,7 @@ import {
   BarChart3, Users, Calendar, Camera, FileText, MessageSquare, Settings, LogOut,
   ChevronDown, Check, Upload, RefreshCw, Eye, Trash2, Edit3, Plus, TrendingUp,
   DollarSign, Star, X, Image as ImageIcon, Save, AlertTriangle, Layout,
-  QrCode, Copy, Download as DownloadIcon, MessageCircle, Send, Heart,
+  QrCode, Copy, Download as DownloadIcon, MessageCircle, Send, Heart, Bell,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import type { User } from '@supabase/supabase-js';
@@ -171,11 +171,15 @@ function DeleteConfirm({ label, onConfirm, onClose, busy }: { label: string; onC
 }
 
 /* ── Portfolio Modal ────────────────────────────────────────────────── */
+type PortfolioRelated = { title: string; slug: string; img: string };
 type PortfolioForm = {
   title: string;
+  slug: string;
   category: string;
   cover_image: string;
   description: string;
+  client_name: string;
+  images: string[];
   is_published: boolean;
   metadata: Record<string, unknown>;
 };
@@ -185,38 +189,78 @@ function PortfolioModal({
 }: { item?: Record<string, unknown> | null; onClose: () => void; onSave: (data: PortfolioForm, id?: string) => Promise<void> }) {
   const [busy, setBusy] = useState(false);
   const existingMetadata = (item?.metadata as Record<string, unknown>) ?? {};
+  const existingTestimonial = (existingMetadata.testimonial as Record<string, string>) ?? { text: '', name: '', role: '' };
   const [form, setForm] = useState<PortfolioForm>({
     title: (item?.title as string) ?? '',
+    slug: (item?.slug as string) ?? '',
     category: (item?.category as string) ?? 'photography',
     cover_image: (item?.cover_image as string) ?? '',
     description: (item?.description as string) ?? '',
+    client_name: (item?.client_name as string) ?? '',
+    images: Array.isArray(item?.images) ? (item!.images as string[]) : [],
     is_published: (item?.is_published as boolean) ?? false,
     metadata: existingMetadata,
   });
   const [coverImagePosition, setCoverImagePosition] = useState<string>((existingMetadata.cover_image_position as string) ?? 'center');
+  const [location, setLocation] = useState<string>((existingMetadata.location as string) ?? '');
+  const [year, setYear] = useState<string>((existingMetadata.year as string) ?? '');
+  const [challenge, setChallenge] = useState<string>((existingMetadata.challenge as string) ?? '');
+  const [solution, setSolution] = useState<string>((existingMetadata.solution as string) ?? '');
+  const [resultsText, setResultsText] = useState<string>(Array.isArray(existingMetadata.results) ? (existingMetadata.results as string[]).join('\n') : '');
+  const [testimonial, setTestimonial] = useState(existingTestimonial);
+  const [related, setRelated] = useState<PortfolioRelated[]>(Array.isArray(existingMetadata.related) ? (existingMetadata.related as PortfolioRelated[]) : []);
 
-  const set = (k: keyof PortfolioForm, v: string | boolean) => setForm((f) => ({ ...f, [k]: v }));
+  const set = (k: keyof PortfolioForm, v: string | boolean | string[]) => setForm((f) => ({ ...f, [k]: v }));
+
+  const handleTitle = (v: string) => setForm((f) => ({ ...f, title: v, slug: item ? f.slug : slugify(v) }));
+
+  const addGalleryImage = () => set('images', [...form.images, '']);
+  const setGalleryImage = (i: number, url: string) => set('images', form.images.map((u, idx) => (idx === i ? url : u)));
+  const removeGalleryImage = (i: number) => set('images', form.images.filter((_, idx) => idx !== i));
+
+  const addRelated = () => setRelated((r) => [...r, { title: '', slug: '', img: '' }]);
+  const setRelatedField = (i: number, k: keyof PortfolioRelated, v: string) => setRelated((r) => r.map((row, idx) => (idx === i ? { ...row, [k]: v } : row)));
+  const removeRelated = (i: number) => setRelated((r) => r.filter((_, idx) => idx !== i));
 
   const submit = async () => {
     if (!form.title || !form.cover_image) { toast.error('Title and cover image are required'); return; }
     setBusy(true);
-    await onSave({ ...form, metadata: { ...existingMetadata, cover_image_position: coverImagePosition } }, item?.id as string | undefined);
+    const metadata: Record<string, unknown> = {
+      ...existingMetadata,
+      cover_image_position: coverImagePosition,
+      location, year, challenge, solution,
+      results: resultsText.split('\n').map((s) => s.trim()).filter(Boolean),
+      related: related.filter((r) => r.title),
+    };
+    if (testimonial.text || testimonial.name) metadata.testimonial = testimonial;
+    else delete metadata.testimonial;
+    await onSave({ ...form, slug: form.slug || slugify(form.title), metadata }, item?.id as string | undefined);
     setBusy(false);
   };
 
   return (
-    <Modal title={item ? 'Edit Portfolio Item' : 'Add Portfolio Item'} onClose={onClose}>
+    <Modal title={item ? 'Edit Portfolio Item' : 'Add Portfolio Item'} onClose={onClose} wide>
       <div className="space-y-4">
-        <Field label="Title">
-          <input value={form.title} onChange={(e) => set('title', e.target.value)} className={inputCls} placeholder="e.g. Sarah & James Wedding" />
-        </Field>
-        <Field label="Category">
-          <select value={form.category} onChange={(e) => set('category', e.target.value)} className={selectCls}>
-            {['photography', 'videography', 'events', 'drone', 'branding'].map((c) => (
-              <option key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1)}</option>
-            ))}
-          </select>
-        </Field>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <Field label="Title">
+            <input value={form.title} onChange={(e) => handleTitle(e.target.value)} className={inputCls} placeholder="e.g. Sarah & James Wedding" />
+          </Field>
+          <Field label="URL slug">
+            <input value={form.slug} onChange={(e) => set('slug', slugify(e.target.value))} className={inputCls} placeholder="auto-generated" />
+          </Field>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <Field label="Category">
+            <select value={form.category} onChange={(e) => set('category', e.target.value)} className={selectCls}>
+              {['photography', 'videography', 'events', 'drone', 'branding'].map((c) => (
+                <option key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1)}</option>
+              ))}
+            </select>
+          </Field>
+          <Field label="Client name">
+            <input value={form.client_name} onChange={(e) => set('client_name', e.target.value)} className={inputCls} placeholder="e.g. Private Wedding, Safaricom PLC" />
+          </Field>
+        </div>
         <Field label="Cover Image">
           <ImageUploadField value={form.cover_image} onChange={(v) => set('cover_image', v)} folder="portfolio" />
         </Field>
@@ -227,6 +271,57 @@ function PortfolioModal({
         <Field label="Description">
           <textarea rows={3} value={form.description} onChange={(e) => set('description', e.target.value)} className={textareaCls} placeholder="Short description…" />
         </Field>
+
+        <div className="pt-2 border-t border-white/[0.06]">
+          <div className="text-[10px] font-display tracking-widest text-[#E10600] uppercase mb-3 mt-4">Project Detail Page</div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+            <Field label="Location"><input value={location} onChange={(e) => setLocation(e.target.value)} className={inputCls} placeholder="e.g. Nairobi" /></Field>
+            <Field label="Year"><input value={year} onChange={(e) => setYear(e.target.value)} className={inputCls} placeholder="e.g. 2026" /></Field>
+          </div>
+          <Field label="The Challenge"><textarea rows={2} value={challenge} onChange={(e) => setChallenge(e.target.value)} className={textareaCls} /></Field>
+          <Field label="Our Solution"><div className="mt-3"><textarea rows={2} value={solution} onChange={(e) => setSolution(e.target.value)} className={textareaCls} /></div></Field>
+          <Field label="Results (one per line)"><div className="mt-3"><textarea rows={3} value={resultsText} onChange={(e) => setResultsText(e.target.value)} className={textareaCls} placeholder={'650+ edited images delivered\n12-minute cinematic wedding film'} /></div></Field>
+
+          <div className="mt-4">
+            <label className="block text-[10px] font-display tracking-widest uppercase text-white/30 mb-2">Gallery images</label>
+            <div className="space-y-3">
+              {form.images.map((url, i) => (
+                <div key={i} className="flex gap-2 items-start">
+                  <div className="flex-1"><ImageUploadField value={url} onChange={(v) => setGalleryImage(i, v)} folder="portfolio" /></div>
+                  <button type="button" onClick={() => removeGalleryImage(i)} className="text-white/30 hover:text-red-400 border border-white/[0.08] p-2 shrink-0"><X size={12} /></button>
+                </div>
+              ))}
+            </div>
+            <button type="button" onClick={addGalleryImage} className="mt-2 text-[10px] font-display tracking-widest uppercase text-white/40 hover:text-white border border-dashed border-white/15 px-3 py-2 w-full">+ Add gallery image</button>
+          </div>
+
+          <div className="mt-4">
+            <label className="block text-[10px] font-display tracking-widest uppercase text-white/30 mb-2">Client testimonial (optional)</label>
+            <div className="space-y-2">
+              <textarea rows={2} value={testimonial.text} onChange={(e) => setTestimonial((t) => ({ ...t, text: e.target.value }))} className={textareaCls} placeholder="Quote…" />
+              <div className="grid grid-cols-2 gap-2">
+                <input value={testimonial.name} onChange={(e) => setTestimonial((t) => ({ ...t, name: e.target.value }))} className={inputCls} placeholder="Name" />
+                <input value={testimonial.role} onChange={(e) => setTestimonial((t) => ({ ...t, role: e.target.value }))} className={inputCls} placeholder="Role, e.g. Bride" />
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-4">
+            <label className="block text-[10px] font-display tracking-widest uppercase text-white/30 mb-2">Related projects</label>
+            <div className="space-y-3">
+              {related.map((r, i) => (
+                <div key={i} className="flex gap-2 items-start">
+                  <input value={r.title} onChange={(e) => setRelatedField(i, 'title', e.target.value)} className={inputCls} placeholder="Title" />
+                  <input value={r.slug} onChange={(e) => setRelatedField(i, 'slug', e.target.value)} className={inputCls} placeholder="Portfolio slug" />
+                  <input value={r.img} onChange={(e) => setRelatedField(i, 'img', e.target.value)} className={inputCls} placeholder="Thumbnail URL" />
+                  <button type="button" onClick={() => removeRelated(i)} className="text-white/30 hover:text-red-400 border border-white/[0.08] p-2 shrink-0"><X size={12} /></button>
+                </div>
+              ))}
+            </div>
+            <button type="button" onClick={addRelated} className="mt-2 text-[10px] font-display tracking-widest uppercase text-white/40 hover:text-white border border-dashed border-white/15 px-3 py-2 w-full">+ Add related project</button>
+          </div>
+        </div>
+
         <label className="flex items-center gap-2.5 cursor-pointer">
           <input type="checkbox" checked={form.is_published} onChange={(e) => set('is_published', e.target.checked)} className="accent-[#E10600]" />
           <span className="text-[12px] font-display text-white/50">Publish immediately</span>
@@ -688,6 +783,240 @@ function WeddingFormModal({
   );
 }
 
+/* ── Lead Modal ────────────────────────────────────────────────────── */
+function LeadModal({
+  item, onClose, onStatusChange, onSaveNotes,
+}: { item: Record<string, unknown>; onClose: () => void; onStatusChange: (id: string, status: string) => Promise<void>; onSaveNotes: (id: string, notes: string, tags: string[]) => Promise<void> }) {
+  const metadata = (item.metadata as Record<string, unknown>) ?? {};
+  const [notes, setNotes] = useState((metadata.admin_notes as string) ?? '');
+  const [tagsText, setTagsText] = useState(Array.isArray(metadata.tags) ? (metadata.tags as string[]).join(', ') : '');
+  const [busy, setBusy] = useState(false);
+  const LEAD_STATUSES = ['new', 'read', 'replied', 'archived'];
+
+  const submit = async () => {
+    setBusy(true);
+    await onSaveNotes(item.id as string, notes, tagsText.split(',').map((t) => t.trim()).filter(Boolean));
+    setBusy(false);
+  };
+
+  return (
+    <Modal title={item.name as string} onClose={onClose}>
+      <div className="space-y-4">
+        <div className="flex items-center gap-3">
+          <select value={item.status as string} onChange={(e) => onStatusChange(item.id as string, e.target.value)} className={`${selectCls} w-auto`}>
+            {LEAD_STATUSES.map((s) => <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>)}
+          </select>
+        </div>
+        <DL pairs={[
+          ['Email', item.email], ['Phone', item.phone], ['Service', item.service_type ?? item.subject],
+          ['Event Date', item.event_date], ['Budget', item.budget_range], ['Message', item.message],
+        ]} />
+        <Field label="Notes"><textarea rows={4} value={notes} onChange={(e) => setNotes(e.target.value)} className={textareaCls} placeholder="Internal notes about this lead…" /></Field>
+        <Field label="Tags (comma-separated)"><input value={tagsText} onChange={(e) => setTagsText(e.target.value)} className={inputCls} placeholder="e.g. wedding, high-budget, referral" /></Field>
+        <div className="flex gap-3 pt-2">
+          <button onClick={onClose} className="btn-outline-dark flex-1 justify-center py-2.5 text-[11px]">Close</button>
+          <button onClick={submit} disabled={busy} className="btn-primary flex-1 justify-center disabled:opacity-50"><Save size={12} /> {busy ? 'Saving…' : 'Save Notes'}</button>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
+/* ── Client Modal ──────────────────────────────────────────────────── */
+function ClientModal({
+  item, onClose, onSaveNotes,
+}: { item: Record<string, unknown>; onClose: () => void; onSaveNotes: (userId: string, notes: string, tags: string[]) => Promise<void> }) {
+  const [notes, setNotes] = useState((item.notes as string) ?? '');
+  const [tagsText, setTagsText] = useState(Array.isArray(item.tags) ? (item.tags as string[]).join(', ') : '');
+  const [busy, setBusy] = useState(false);
+  const [detail, setDetail] = useState<Record<string, unknown> | null>(null);
+  const [loading, setLoading] = useState(true);
+  const sb = createClient();
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data: { session } } = await sb.auth.getSession();
+        const res = await fetch(`/api/admin/clients/${item.id}`, {
+          headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {},
+        });
+        const json = await res.json();
+        if (res.ok) setDetail(json);
+      } finally { setLoading(false); }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [item.id]);
+
+  const submit = async () => {
+    setBusy(true);
+    await onSaveNotes(item.id as string, notes, tagsText.split(',').map((t) => t.trim()).filter(Boolean));
+    setBusy(false);
+  };
+
+  return (
+    <Modal title={item.name as string} onClose={onClose} wide>
+      <div className="space-y-8">
+        <DL pairs={[['Email', item.email], ['Phone', item.phone], ['Joined', item.joined ? new Date(item.joined as string).toLocaleDateString('en-KE') : '—']]} />
+
+        <div>
+          <Field label="Notes"><textarea rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} className={textareaCls} placeholder="Internal notes about this client…" /></Field>
+          <div className="mt-3"><Field label="Tags (comma-separated)"><input value={tagsText} onChange={(e) => setTagsText(e.target.value)} className={inputCls} placeholder="e.g. VIP, repeat client" /></Field></div>
+          <button onClick={submit} disabled={busy} className="btn-primary mt-3 text-[11px] disabled:opacity-50"><Save size={12} /> {busy ? 'Saving…' : 'Save Notes'}</button>
+        </div>
+
+        {loading && <p className="text-white/20 text-[12px] font-display">Loading history…</p>}
+        {!loading && detail && (
+          <>
+            {(['bookings', 'projects', 'invoices', 'weddingIntake'] as const).map((key) => {
+              const rows = (detail[key] as Record<string, unknown>[]) ?? [];
+              const labels: Record<string, string> = { bookings: 'Bookings', projects: 'Projects', invoices: 'Invoices', weddingIntake: 'Wedding Intake' };
+              return (
+                <div key={key}>
+                  <h3 className="text-[11px] font-display tracking-widest uppercase text-white/40 mb-3 pb-2 border-b border-white/[0.06]">{labels[key]} ({rows.length})</h3>
+                  {rows.length === 0 ? (
+                    <p className="text-white/20 text-[12px] font-display">None yet.</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {rows.map((r) => (
+                        <div key={r.id as string} className="flex items-center justify-between text-[12px] font-display text-white/60 py-1.5 border-b border-white/[0.04] last:border-0">
+                          <span>{(r.title ?? r.booking_ref ?? r.invoice_number ?? `${r.bride_name ?? ''} & ${r.groom_name ?? ''}`) as string}</span>
+                          {r.status ? <Chip status={r.status as string} /> : null}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </>
+        )}
+      </div>
+    </Modal>
+  );
+}
+
+/* ── Invoice Modal ─────────────────────────────────────────────────── */
+type InvoiceLineItem = { description: string; quantity: number; unit_price: number };
+const INVOICE_STATUSES = ['draft', 'sent', 'viewed', 'paid', 'overdue', 'cancelled'];
+
+function InvoiceModal({
+  item, clients, bookings, projects, onClose, onSave,
+}: {
+  item?: Record<string, unknown> | null;
+  clients: Record<string, unknown>[];
+  bookings: Record<string, unknown>[];
+  projects: Record<string, unknown>[];
+  onClose: () => void;
+  onSave: (data: Record<string, unknown>, id?: string) => Promise<void>;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [clientUserId, setClientUserId] = useState((item?.client_user_id as string) ?? '');
+  const [bookingId, setBookingId] = useState((item?.booking_id as string) ?? '');
+  const [projectId, setProjectId] = useState((item?.project_id as string) ?? '');
+  const [lineItems, setLineItems] = useState<InvoiceLineItem[]>(
+    Array.isArray(item?.line_items) && (item!.line_items as InvoiceLineItem[]).length
+      ? (item!.line_items as InvoiceLineItem[])
+      : [{ description: '', quantity: 1, unit_price: 0 }]
+  );
+  const [taxRate, setTaxRate] = useState(String((item?.tax_rate as number) ?? 0));
+  const [dueDate, setDueDate] = useState((item?.due_date as string) ?? '');
+  const [notes, setNotes] = useState((item?.notes as string) ?? '');
+  const [status, setStatus] = useState((item?.status as string) ?? 'draft');
+
+  const subtotal = lineItems.reduce((sum, li) => sum + (Number(li.quantity) || 0) * (Number(li.unit_price) || 0), 0);
+  const taxAmount = subtotal * (Number(taxRate) || 0) / 100;
+  const total = subtotal + taxAmount;
+
+  const setLine = (i: number, k: keyof InvoiceLineItem, v: string) =>
+    setLineItems((li) => li.map((row, idx) => (idx === i ? { ...row, [k]: k === 'description' ? v : Number(v) || 0 } : row)));
+  const addLine = () => setLineItems((li) => [...li, { description: '', quantity: 1, unit_price: 0 }]);
+  const removeLine = (i: number) => setLineItems((li) => (li.length > 1 ? li.filter((_, idx) => idx !== i) : li));
+
+  const submit = async () => {
+    const client = clients.find((c) => c.id === clientUserId);
+    if (!client) { toast.error('Select a client'); return; }
+    if (!lineItems.some((li) => li.description.trim())) { toast.error('Add at least one line item'); return; }
+    setBusy(true);
+    await onSave({
+      client_user_id: clientUserId,
+      client_name: client.name as string,
+      client_email: client.email as string,
+      booking_id: bookingId || null,
+      project_id: projectId || null,
+      line_items: lineItems.filter((li) => li.description.trim()),
+      subtotal, tax_rate: Number(taxRate) || 0, tax_amount: taxAmount, total_amount: total,
+      currency: 'KES', status, due_date: dueDate || null, notes: notes || null,
+    }, item?.id as string | undefined);
+    setBusy(false);
+  };
+
+  return (
+    <Modal title={item ? 'Edit Invoice' : 'New Invoice'} onClose={onClose} wide>
+      <div className="space-y-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <Field label="Client">
+            <select value={clientUserId} onChange={(e) => setClientUserId(e.target.value)} className={selectCls}>
+              <option value="">— Select a client —</option>
+              {clients.map((c) => <option key={c.id as string} value={c.id as string}>{c.name as string} · {c.email as string}</option>)}
+            </select>
+          </Field>
+          <Field label="Status">
+            <select value={status} onChange={(e) => setStatus(e.target.value)} className={selectCls}>
+              {INVOICE_STATUSES.map((s) => <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>)}
+            </select>
+          </Field>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <Field label="Linked Booking (optional)">
+            <select value={bookingId} onChange={(e) => setBookingId(e.target.value)} className={selectCls}>
+              <option value="">— None —</option>
+              {bookings.map((b) => <option key={b.id as string} value={b.id as string}>{b.booking_ref as string}</option>)}
+            </select>
+          </Field>
+          <Field label="Linked Project (optional)">
+            <select value={projectId} onChange={(e) => setProjectId(e.target.value)} className={selectCls}>
+              <option value="">— None —</option>
+              {projects.map((p) => <option key={p.id as string} value={p.id as string}>{p.title as string}</option>)}
+            </select>
+          </Field>
+        </div>
+
+        <div>
+          <label className="block text-[10px] font-display tracking-widest uppercase text-white/30 mb-2">Line Items</label>
+          <div className="space-y-2">
+            {lineItems.map((li, i) => (
+              <div key={i} className="flex gap-2 items-start">
+                <input value={li.description} onChange={(e) => setLine(i, 'description', e.target.value)} className={`${inputCls} flex-1`} placeholder="Description" />
+                <input type="number" min={1} value={li.quantity} onChange={(e) => setLine(i, 'quantity', e.target.value)} className={`${inputCls} w-20`} placeholder="Qty" />
+                <input type="number" min={0} value={li.unit_price} onChange={(e) => setLine(i, 'unit_price', e.target.value)} className={`${inputCls} w-32`} placeholder="Unit price" />
+                <button type="button" onClick={() => removeLine(i)} className="text-white/30 hover:text-red-400 border border-white/[0.08] p-2 shrink-0"><X size={12} /></button>
+              </div>
+            ))}
+          </div>
+          <button type="button" onClick={addLine} className="mt-2 text-[10px] font-display tracking-widest uppercase text-white/40 hover:text-white border border-dashed border-white/15 px-3 py-2 w-full">+ Add line item</button>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <Field label="Tax Rate (%)"><input type="number" min={0} value={taxRate} onChange={(e) => setTaxRate(e.target.value)} className={inputCls} /></Field>
+          <Field label="Due Date"><input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className={inputCls} /></Field>
+        </div>
+        <Field label="Notes"><textarea rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} className={textareaCls} /></Field>
+
+        <div className="bg-[#0B0B0B] border border-white/[0.08] p-4 space-y-1.5 text-[13px] font-display">
+          <div className="flex justify-between text-white/50"><span>Subtotal</span><span>KES {subtotal.toLocaleString('en-KE', { minimumFractionDigits: 2 })}</span></div>
+          <div className="flex justify-between text-white/50"><span>Tax</span><span>KES {taxAmount.toLocaleString('en-KE', { minimumFractionDigits: 2 })}</span></div>
+          <div className="flex justify-between text-white font-semibold pt-1.5 border-t border-white/[0.08]"><span>Total</span><span>KES {total.toLocaleString('en-KE', { minimumFractionDigits: 2 })}</span></div>
+        </div>
+
+        <div className="flex gap-3 pt-2">
+          <button onClick={onClose} className="btn-outline-dark flex-1 justify-center py-2.5 text-[11px]">Cancel</button>
+          <button onClick={submit} disabled={busy} className="btn-primary flex-1 justify-center disabled:opacity-50"><Save size={12} /> {busy ? 'Saving…' : 'Save Invoice'}</button>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
 /* ── Dashboard ─────────────────────────────────────────────────────── */
 type TabId = 'overview' | 'leads' | 'bookings' | 'weddingForms' | 'clients' | 'projects' | 'messages' | 'portfolio' | 'blog' | 'testimonials' | 'pages' | 'documents' | 'invoices' | 'gallery' | 'settings';
 
@@ -697,6 +1026,16 @@ function AdminDashboard({ user, onSignOut }: { user: User; onSignOut: () => void
   const [bookings, setBookings] = useState<Record<string, unknown>[]>([]);
   const [weddingForms, setWeddingForms] = useState<Record<string, unknown>[]>([]);
   const [weddingFormModal, setWeddingFormModal] = useState<Record<string, unknown> | null>(null);
+  const [leadModal, setLeadModal] = useState<Record<string, unknown> | null>(null);
+  const [clientModal, setClientModal] = useState<Record<string, unknown> | null>(null);
+  const [invoiceModal, setInvoiceModal] = useState<{ item?: Record<string, unknown> | null } | null>(null);
+  const [invoices, setInvoices] = useState<Record<string, unknown>[]>([]);
+  const [activity, setActivity] = useState<Record<string, unknown>[]>([]);
+  const [notifications, setNotifications] = useState<Record<string, unknown>[]>([]);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [leadsQuery, setLeadsQuery] = useState('');
+  const [bookingsQuery, setBookingsQuery] = useState('');
+  const [clientsQuery, setClientsQuery] = useState('');
   const [portfolio, setPortfolio] = useState<Record<string, unknown>[]>([]);
   const [blog, setBlog] = useState<Record<string, unknown>[]>([]);
   const [testimonials, setTestimonials] = useState<Record<string, unknown>[]>([]);
@@ -741,15 +1080,17 @@ function AdminDashboard({ user, onSignOut }: { user: User; onSignOut: () => void
 
   const fetchAll = async () => {
     try {
-      const [l, b, p, bl, t, d, pr, wf] = await Promise.all([
-        sb.from('mejasan_contact_submissions').select('*').order('created_at', { ascending: false }).limit(30),
-        sb.from('mejasan_bookings').select('*').order('created_at', { ascending: false }).limit(30),
+      const [l, b, p, bl, t, d, pr, wf, inv, act] = await Promise.all([
+        sb.from('mejasan_contact_submissions').select('*').order('created_at', { ascending: false }).limit(150),
+        sb.from('mejasan_bookings').select('*').order('created_at', { ascending: false }).limit(150),
         sb.from('mejasan_portfolio').select('*').order('sort_order').limit(50),
         sb.from('mejasan_blog_posts').select('*').order('created_at', { ascending: false }).limit(20),
         sb.from('mejasan_testimonials').select('*').order('created_at', { ascending: false }).limit(30),
         sb.from('mejasan_event_documents').select('*, mejasan_event_document_files(count)').order('created_at', { ascending: false }).limit(50),
         sb.from('mejasan_projects').select('*').order('created_at', { ascending: false }).limit(100),
         sb.from('mejasan_wedding_intake').select('*').order('created_at', { ascending: false }).limit(50),
+        sb.from('mejasan_invoices').select('*').order('created_at', { ascending: false }).limit(100),
+        sb.from('mejasan_activity_logs').select('*').order('created_at', { ascending: false }).limit(10),
       ]);
       if (l.data) setLeads(l.data as Record<string, unknown>[]);
       if (b.data) setBookings(b.data as Record<string, unknown>[]);
@@ -761,7 +1102,20 @@ function AdminDashboard({ user, onSignOut }: { user: User; onSignOut: () => void
       if (pr.data) setProjects(pr.data as Record<string, unknown>[]);
       if (wf.error) { console.error('Failed to load wedding forms:', wf.error); toast.error(`Failed to load wedding forms: ${wf.error.message}`); }
       if (wf.data) setWeddingForms(wf.data as Record<string, unknown>[]);
+      if (inv.error) console.error('Failed to load invoices:', inv.error);
+      if (inv.data) setInvoices(inv.data as Record<string, unknown>[]);
+      if (act.data) setActivity(act.data as Record<string, unknown>[]);
     } catch { /* silent */ }
+  };
+
+  const fetchNotifications = async () => {
+    const { data } = await sb.from('mejasan_notifications').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(20);
+    if (data) setNotifications(data as Record<string, unknown>[]);
+  };
+
+  const logActivity = async (action: string, entity_type: string, entity_id: string, details: Record<string, unknown> = {}) => {
+    const { data } = await sb.from('mejasan_activity_logs').insert({ user_id: user.id, action, entity_type, entity_id, details }).select().single();
+    if (data) setActivity((a) => [data as Record<string, unknown>, ...a].slice(0, 10));
   };
 
   const fetchClients = async () => {
@@ -805,12 +1159,13 @@ function AdminDashboard({ user, onSignOut }: { user: User; onSignOut: () => void
     else toast.success('Page content saved');
   };
 
-  useEffect(() => { fetchAll(); fetchGallery(); fetchClients(); fetchPageContent(pageSlug); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { fetchAll(); fetchGallery(); fetchClients(); fetchPageContent(pageSlug); fetchNotifications(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const updateBookingStatus = async (id: string, status: string) => {
     await sb.from('mejasan_bookings').update({ status }).eq('id', id);
     setBookings((b) => b.map((x) => (x.id === id ? { ...x, status } : x)));
     toast.success('Status updated');
+    logActivity('status_change', 'booking', id, { status });
   };
 
   const updateWeddingFormStatus = async (id: string, status: string) => {
@@ -818,6 +1173,59 @@ function AdminDashboard({ user, onSignOut }: { user: User; onSignOut: () => void
     setWeddingForms((f) => f.map((x) => (x.id === id ? { ...x, status } : x)));
     setWeddingFormModal((m) => (m && m.id === id ? { ...m, status } : m));
     toast.success('Status updated');
+    logActivity('status_change', 'wedding_intake', id, { status });
+  };
+
+  const LEAD_STATUSES = ['new', 'read', 'replied', 'archived'];
+
+  const updateLeadStatus = async (id: string, status: string) => {
+    await sb.from('mejasan_contact_submissions').update({ status }).eq('id', id);
+    setLeads((l) => l.map((x) => (x.id === id ? { ...x, status } : x)));
+    setLeadModal((m) => (m && m.id === id ? { ...m, status } : m));
+    toast.success('Status updated');
+    logActivity('status_change', 'lead', id, { status });
+  };
+
+  const saveLeadNotes = async (id: string, notes: string, tags: string[]) => {
+    const lead = leads.find((x) => x.id === id) ?? leadModal;
+    const metadata = { ...((lead?.metadata as Record<string, unknown>) ?? {}), admin_notes: notes, tags };
+    const { error } = await sb.from('mejasan_contact_submissions').update({ metadata }).eq('id', id);
+    if (error) { toast.error('Failed to save notes'); return; }
+    setLeads((l) => l.map((x) => (x.id === id ? { ...x, metadata } : x)));
+    setLeadModal((m) => (m && m.id === id ? { ...m, metadata } : m));
+    toast.success('Notes saved');
+  };
+
+  const saveClientNotes = async (userId: string, notes: string, tags: string[]) => {
+    const { error } = await sb.from('mejasan_client_profiles').upsert({ user_id: userId, notes, tags }, { onConflict: 'user_id' });
+    if (error) { toast.error('Failed to save notes'); return; }
+    setClients((c) => c.map((x) => (x.id === userId ? { ...x, notes, tags } : x)));
+    setClientModal((m) => (m && m.id === userId ? { ...m, notes, tags } : m));
+    toast.success('Notes saved');
+  };
+
+  const saveInvoice = async (data: Record<string, unknown>, id?: string) => {
+    if (id) {
+      const { error } = await sb.from('mejasan_invoices').update(data).eq('id', id);
+      if (error) { toast.error(`Update failed: ${error.message}`); return; }
+      setInvoices((inv) => inv.map((x) => (x.id === id ? { ...x, ...data } : x)));
+      toast.success('Invoice updated');
+      logActivity('update', 'invoice', id, {});
+    } else {
+      const { data: row, error } = await sb.from('mejasan_invoices').insert(data).select().single();
+      if (error) { toast.error(`Create failed: ${error.message}`); return; }
+      setInvoices((inv) => [row as Record<string, unknown>, ...inv]);
+      toast.success('Invoice created');
+      logActivity('create', 'invoice', (row as Record<string, unknown>).id as string, {});
+    }
+    setInvoiceModal(null);
+  };
+
+  const updateInvoiceStatus = async (id: string, status: string) => {
+    await sb.from('mejasan_invoices').update({ status }).eq('id', id);
+    setInvoices((inv) => inv.map((x) => (x.id === id ? { ...x, status } : x)));
+    toast.success('Status updated');
+    logActivity('status_change', 'invoice', id, { status });
   };
 
   const togglePublish = async (id: string, table: string, current: boolean) => {
@@ -835,11 +1243,13 @@ function AdminDashboard({ user, onSignOut }: { user: User; onSignOut: () => void
       if (error) { toast.error('Update failed'); return; }
       setPortfolio((p) => p.map((x) => (x.id === id ? { ...x, ...data } : x)));
       toast.success('Portfolio item updated');
+      logActivity('update', 'portfolio', id, { title: data.title });
     } else {
       const { data: row, error } = await sb.from('mejasan_portfolio').insert(data).select().single();
       if (error) { toast.error('Insert failed'); return; }
       setPortfolio((p) => [row as Record<string, unknown>, ...p]);
       toast.success('Item added to portfolio');
+      logActivity('create', 'portfolio', (row as Record<string, unknown>).id as string, { title: data.title });
     }
     setPortfolioModal(null);
   };
@@ -854,6 +1264,7 @@ function AdminDashboard({ user, onSignOut }: { user: User; onSignOut: () => void
         if (error) { toast.error('Delete failed'); return; }
         setPortfolio((p) => p.filter((x) => x.id !== id));
         toast.success('Item deleted');
+        logActivity('delete', 'portfolio', id, { title });
         setDeleteModal(null);
       },
     });
@@ -866,11 +1277,13 @@ function AdminDashboard({ user, onSignOut }: { user: User; onSignOut: () => void
       if (error) { toast.error('Update failed'); return; }
       setBlog((p) => p.map((x) => (x.id === id ? { ...x, ...data } : x)));
       toast.success('Post updated');
+      logActivity('update', 'blog_post', id, { title: data.title });
     } else {
       const { data: row, error } = await sb.from('mejasan_blog_posts').insert(data).select().single();
       if (error) { toast.error('Insert failed'); return; }
       setBlog((p) => [row as Record<string, unknown>, ...p]);
       toast.success('Post created');
+      logActivity('create', 'blog_post', (row as Record<string, unknown>).id as string, { title: data.title });
     }
     setBlogModal(null);
   };
@@ -885,6 +1298,7 @@ function AdminDashboard({ user, onSignOut }: { user: User; onSignOut: () => void
         if (error) { toast.error('Delete failed'); return; }
         setBlog((p) => p.filter((x) => x.id !== id));
         toast.success('Post deleted');
+        logActivity('delete', 'blog_post', id, { title });
         setDeleteModal(null);
       },
     });
@@ -968,11 +1382,13 @@ function AdminDashboard({ user, onSignOut }: { user: User; onSignOut: () => void
       if (error) { console.error('Project update failed:', error); toast.error(`Update failed: ${error.message}`); return; }
       setProjects((p) => p.map((x) => (x.id === id ? { ...x, ...payload } : x)));
       toast.success('Project updated');
+      logActivity('update', 'project', id, { title: data.title });
     } else {
       const { data: row, error } = await sb.from('mejasan_projects').insert(payload).select().single();
       if (error) { console.error('Project insert failed:', error); toast.error(`Insert failed: ${error.message}`); return; }
       setProjects((p) => [row as Record<string, unknown>, ...p]);
       toast.success('Project created');
+      logActivity('create', 'project', (row as Record<string, unknown>).id as string, { title: data.title });
     }
     setProjectModal(null);
   };
@@ -987,6 +1403,7 @@ function AdminDashboard({ user, onSignOut }: { user: User; onSignOut: () => void
         if (error) { console.error('Project delete failed:', error); toast.error(`Delete failed: ${error.message}`); return; }
         setProjects((p) => p.filter((x) => x.id !== id));
         toast.success('Project deleted');
+        logActivity('delete', 'project', id, { title });
         setDeleteModal(null);
       },
     });
@@ -1168,6 +1585,22 @@ function AdminDashboard({ user, onSignOut }: { user: User; onSignOut: () => void
               {bookings.length === 0 && <p className="text-[12px] text-white/25">No bookings yet.</p>}
             </div>
           </div>
+          <div className="bg-[#141414] border border-white/[0.06] p-5 lg:col-span-2">
+            <div className="text-[10px] font-display tracking-widest text-[#E10600] uppercase mb-4">Recent Activity</div>
+            <div className="space-y-2">
+              {activity.slice(0, 10).map((a) => (
+                <div key={a.id as string} className="flex items-center justify-between gap-3 py-2 border-b border-white/[0.04] last:border-0">
+                  <span className="text-[12px] font-display text-white/60">
+                    <span className="text-white/90 capitalize">{(a.action as string).replace('_', ' ')}</span>
+                    {' — '}
+                    <span className="capitalize">{(a.entity_type as string).replace('_', ' ')}</span>
+                  </span>
+                  <span className="text-[10px] text-white/25 shrink-0">{new Date(a.created_at as string).toLocaleString('en-KE', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                </div>
+              ))}
+              {activity.length === 0 && <p className="text-[12px] text-white/25">No recent activity.</p>}
+            </div>
+          </div>
         </div>
       </div>
     ),
@@ -1178,15 +1611,24 @@ function AdminDashboard({ user, onSignOut }: { user: User; onSignOut: () => void
           <h2 className="text-2xl font-heading font-light text-white">Leads</h2>
           <span className="text-[11px] font-display text-white/30">{leads.length} total</span>
         </div>
+        <input
+          value={leadsQuery} onChange={(e) => setLeadsQuery(e.target.value)} placeholder="Search by name or email…"
+          className={`${inputCls} mb-4 max-w-sm`}
+        />
         <AdminTable heads={['Name', 'Email', 'Service', 'Date', 'Status', 'Action']} onRefresh={fetchAll}>
-          {leads.map((l) => (
+          {leads.filter((l) => !leadsQuery || `${l.name} ${l.email}`.toLowerCase().includes(leadsQuery.toLowerCase())).map((l) => (
             <tr key={l.id as string} className="hover:bg-white/[0.02] transition-colors">
               <TD className="font-semibold text-white">{l.name as string}</TD>
               <TD>{l.email as string}</TD>
               <TD>{(l.service_type as string) ?? (l.subject as string) ?? '—'}</TD>
               <TD>{l.event_date ? new Date(l.event_date as string).toLocaleDateString('en-KE') : '—'}</TD>
               <TD><Chip status={(l.status as string) ?? 'new'} /></TD>
-              <TD><a href={`mailto:${l.email}`} className="text-[#E10600] hover:underline text-[10px] tracking-widest uppercase">Reply</a></TD>
+              <TD>
+                <div className="flex items-center gap-3">
+                  <button onClick={() => setLeadModal(l)} className="text-white/40 hover:text-white text-[10px] tracking-widest uppercase">View</button>
+                  <a href={`mailto:${l.email}`} className="text-[#E10600] hover:underline text-[10px] tracking-widest uppercase">Reply</a>
+                </div>
+              </TD>
             </tr>
           ))}
           {leads.length === 0 && <tr><TD className="text-center text-white/20 py-12">No leads yet.</TD></tr>}
@@ -1200,8 +1642,12 @@ function AdminDashboard({ user, onSignOut }: { user: User; onSignOut: () => void
           <h2 className="text-2xl font-heading font-light text-white">Bookings</h2>
           <span className="text-[11px] font-display text-white/30">{bookings.length} total</span>
         </div>
+        <input
+          value={bookingsQuery} onChange={(e) => setBookingsQuery(e.target.value)} placeholder="Search by client name or email…"
+          className={`${inputCls} mb-4 max-w-sm`}
+        />
         <AdminTable heads={['Ref', 'Client', 'Service', 'Date', 'Location', 'Status', 'Update']} onRefresh={fetchAll}>
-          {bookings.map((b) => (
+          {bookings.filter((b) => !bookingsQuery || `${b.client_name} ${b.client_email}`.toLowerCase().includes(bookingsQuery.toLowerCase())).map((b) => (
             <tr key={b.id as string} className="hover:bg-white/[0.02]">
               <TD className="text-white font-semibold">{b.booking_ref as string}</TD>
               <TD>{(b.client_name as string) ?? (b.client_email as string) ?? '—'}</TD>
@@ -1269,17 +1715,22 @@ function AdminDashboard({ user, onSignOut }: { user: User; onSignOut: () => void
           <h2 className="text-2xl font-heading font-light text-white">Clients</h2>
           <span className="text-[11px] font-display text-white/30">{clients.length} total</span>
         </div>
-        <AdminTable heads={['Name', 'Email', 'Phone', 'Projects', 'Joined']} onRefresh={fetchClients}>
-          {clients.map((c) => (
+        <input
+          value={clientsQuery} onChange={(e) => setClientsQuery(e.target.value)} placeholder="Search by name or email…"
+          className={`${inputCls} mb-4 max-w-sm`}
+        />
+        <AdminTable heads={['Name', 'Email', 'Phone', 'Projects', 'Joined', '']} onRefresh={fetchClients}>
+          {clients.filter((c) => !clientsQuery || `${c.name} ${c.email}`.toLowerCase().includes(clientsQuery.toLowerCase())).map((c) => (
             <tr key={c.id as string} className="hover:bg-white/[0.02]">
               <TD className="text-white font-semibold">{c.name as string}</TD>
               <TD>{c.email as string}</TD>
               <TD>{(c.phone as string) || '—'}</TD>
               <TD>{c.projects as number}</TD>
               <TD>{c.joined ? new Date(c.joined as string).toLocaleDateString('en-KE') : '—'}</TD>
+              <TD><button onClick={() => setClientModal(c)} className="text-white/40 hover:text-white text-[10px] tracking-widest uppercase">View</button></TD>
             </tr>
           ))}
-          {clients.length === 0 && <tr><td colSpan={5} className="px-5 py-12 text-center text-[12px] text-white/20">No clients have signed up via the client portal yet.</td></tr>}
+          {clients.length === 0 && <tr><td colSpan={6} className="px-5 py-12 text-center text-[12px] text-white/20">No clients have signed up via the client portal yet.</td></tr>}
         </AdminTable>
       </div>
     ),
@@ -1578,23 +2029,45 @@ function AdminDashboard({ user, onSignOut }: { user: User; onSignOut: () => void
       <div>
         <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
           <h2 className="text-2xl font-heading font-light text-white">Invoices</h2>
-          <button className="btn-primary flex items-center gap-2 text-[10px]"><Plus size={12} /> New Invoice</button>
+          <button onClick={() => setInvoiceModal({ item: null })} className="btn-primary flex items-center gap-2 text-[10px]"><Plus size={12} /> New Invoice</button>
         </div>
-        <AdminTable heads={['Invoice', 'Client', 'Amount', 'Due Date', 'Status', 'Action']}>
-          {[
-            { id: 'INV-001', client: 'Sarah Kamau', amount: 'KES 85,000', due: '2025-01-15', status: 'paid' },
-            { id: 'INV-002', client: 'James Mwangi', amount: 'KES 45,000', due: '2025-02-01', status: 'pending' },
-            { id: 'INV-003', client: 'Grace Njoroge', amount: 'KES 120,000', due: '2025-01-20', status: 'overdue' },
-          ].map((inv) => (
-            <tr key={inv.id} className="hover:bg-white/[0.02]">
-              <TD className="text-white font-semibold">{inv.id}</TD>
-              <TD>{inv.client}</TD>
-              <TD>{inv.amount}</TD>
-              <TD>{new Date(inv.due).toLocaleDateString('en-KE')}</TD>
-              <TD><Chip status={inv.status} /></TD>
-              <TD><button className="text-[10px] font-display text-[#E10600] hover:underline">Send Reminder</button></TD>
+        <AdminTable heads={['Invoice', 'Client', 'Amount', 'Due Date', 'Status', 'Action']} onRefresh={fetchAll}>
+          {invoices.map((inv) => (
+            <tr key={inv.id as string} className="hover:bg-white/[0.02]">
+              <TD className="text-white font-semibold">{inv.invoice_number as string}</TD>
+              <TD>{inv.client_name as string}</TD>
+              <TD>{inv.currency as string} {(inv.total_amount as number).toLocaleString('en-KE', { minimumFractionDigits: 2 })}</TD>
+              <TD>{inv.due_date ? new Date(inv.due_date as string).toLocaleDateString('en-KE') : '—'}</TD>
+              <TD>
+                <div className="relative">
+                  <button
+                    onClick={() => setOpenStatusId(openStatusId === (inv.id as string) ? null : (inv.id as string))}
+                    className="flex items-center gap-1"
+                  >
+                    <Chip status={inv.status as string} />
+                  </button>
+                  {openStatusId === (inv.id as string) && (
+                    <div className="absolute top-full left-0 z-20 bg-[#1C1C1C] border border-white/[0.08] py-1 min-w-[130px] shadow-xl">
+                      {INVOICE_STATUSES.map((s) => (
+                        <button key={s} onClick={() => { updateInvoiceStatus(inv.id as string, s); setOpenStatusId(null); }}
+                          className="w-full flex items-center gap-2 px-3 py-2 text-[10px] font-display text-white/50 hover:text-white hover:bg-white/[0.04]">
+                          {inv.status === s && <Check size={10} className="text-[#E10600]" />}
+                          <span className="capitalize">{s}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </TD>
+              <TD>
+                <div className="flex items-center gap-3">
+                  <button onClick={() => setInvoiceModal({ item: inv })} className="text-[10px] font-display text-white/40 hover:text-white uppercase tracking-widest">Edit</button>
+                  <a href={`/api/admin/invoices/${inv.id}/pdf`} target="_blank" rel="noreferrer" className="text-[10px] font-display text-[#E10600] hover:underline">PDF</a>
+                </div>
+              </TD>
             </tr>
           ))}
+          {invoices.length === 0 && <tr><td colSpan={6} className="px-5 py-12 text-center text-[12px] text-white/20">No invoices yet.</td></tr>}
         </AdminTable>
       </div>
     ),
@@ -1696,9 +2169,34 @@ function AdminDashboard({ user, onSignOut }: { user: User; onSignOut: () => void
             <div className="text-[10px] font-display tracking-widest text-[#E10600] uppercase">Admin Dashboard</div>
             <div className="text-[12px] font-display text-white/40 truncate">{user.email}</div>
           </div>
-          <button onClick={onSignOut} className="flex items-center gap-1.5 text-[10px] font-display text-white/30 hover:text-white transition-colors uppercase tracking-widest shrink-0">
-            <LogOut size={13} /> Exit
-          </button>
+          <div className="flex items-center gap-4 shrink-0">
+            <div className="relative">
+              <button onClick={() => setNotifOpen((o) => !o)} className="relative text-white/40 hover:text-white transition-colors">
+                <Bell size={16} />
+                {notifications.some((n) => !n.is_read) && <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-[#E10600]" />}
+              </button>
+              {notifOpen && (
+                <div className="absolute top-full right-0 mt-2 z-30 bg-[#1C1C1C] border border-white/[0.08] w-72 max-h-96 overflow-y-auto shadow-xl">
+                  <div className="px-4 py-3 border-b border-white/[0.06] text-[10px] font-display tracking-widest uppercase text-white/40">Notifications</div>
+                  {notifications.length === 0 && <p className="px-4 py-6 text-[12px] text-white/25 font-display text-center">No notifications yet.</p>}
+                  {notifications.map((n) => (
+                    <button
+                      key={n.id as string}
+                      onClick={async () => { if (!n.is_read) { await sb.from('mejasan_notifications').update({ is_read: true }).eq('id', n.id); setNotifications((ns) => ns.map((x) => (x.id === n.id ? { ...x, is_read: true } : x))); } }}
+                      className={`w-full text-left px-4 py-3 border-b border-white/[0.04] last:border-0 hover:bg-white/[0.03] ${n.is_read ? 'opacity-50' : ''}`}
+                    >
+                      <div className="text-[12px] font-display text-white">{n.title as string}</div>
+                      {!!n.body && <div className="text-[11px] text-white/40 mt-0.5">{n.body as string}</div>}
+                      <div className="text-[9px] text-white/20 mt-1">{new Date(n.created_at as string).toLocaleString('en-KE', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            <button onClick={onSignOut} className="flex items-center gap-1.5 text-[10px] font-display text-white/30 hover:text-white transition-colors uppercase tracking-widest">
+              <LogOut size={13} /> Exit
+            </button>
+          </div>
         </div>
 
         <div className="flex">
@@ -1753,6 +2251,15 @@ function AdminDashboard({ user, onSignOut }: { user: User; onSignOut: () => void
       )}
       {weddingFormModal && (
         <WeddingFormModal item={weddingFormModal} onClose={() => setWeddingFormModal(null)} onStatusChange={updateWeddingFormStatus} />
+      )}
+      {leadModal && (
+        <LeadModal item={leadModal} onClose={() => setLeadModal(null)} onStatusChange={updateLeadStatus} onSaveNotes={saveLeadNotes} />
+      )}
+      {clientModal && (
+        <ClientModal item={clientModal} onClose={() => setClientModal(null)} onSaveNotes={saveClientNotes} />
+      )}
+      {invoiceModal !== null && (
+        <InvoiceModal item={invoiceModal.item} clients={clients} bookings={bookings} projects={projects} onClose={() => setInvoiceModal(null)} onSave={saveInvoice} />
       )}
       {deleteModal && (
         <DeleteConfirm label={deleteModal.label} onConfirm={deleteModal.onConfirm} onClose={() => setDeleteModal(null)} busy={deleteBusy} />

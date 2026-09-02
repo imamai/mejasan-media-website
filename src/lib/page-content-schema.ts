@@ -260,24 +260,32 @@ const plainHeroFields: SchemaField[] = [
 const ctaFields: SchemaField[] = [
   { type: 'text', key: 'heading', label: 'Heading' },
   { type: 'textarea', key: 'text', label: 'Text' },
+  { type: 'text', key: 'buttonLabel', label: 'Button label' },
 ];
 
 /* ── Services / Photography ────────────────────────────────────────── */
 
 export const photographyDefaults = {
   hero: { image: 'https://images.unsplash.com/photo-1519741497674-611481863552?w=1920&q=80', imagePosition: 'center', eyebrow: 'Services', title: 'Photography', subtitle: 'Capturing emotion, light, and story — from intimate weddings to large-scale corporate productions.' },
+  categoriesLabel: 'Specialisations',
+  categoriesHeading: 'Photography Services',
   categories: [
     { title: 'Wedding Photography', img: 'https://images.unsplash.com/photo-1519741497674-611481863552?w=600&q=80', imgPosition: 'center', desc: 'Timeless, emotive documentation of your most important day.' },
     { title: 'Corporate Photography', img: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=600&q=80', imgPosition: 'center', desc: 'Headshots, events, and brand imagery that builds authority.' },
     { title: 'Product Photography', img: 'https://images.unsplash.com/photo-1585297029439-2a5e8d0c0cfe?w=600&q=80', imgPosition: 'center', desc: 'E-commerce, packshots, and lifestyle imagery that sells.' },
     { title: 'Studio Photography', img: 'https://images.unsplash.com/photo-1574269907823-3c4b5c08e4e7?w=600&q=80', imgPosition: 'center', desc: 'Controlled studio sessions with premium lighting setups.' },
   ],
+  packagesLabel: 'Pricing',
+  packagesHeading: 'Photography Packages',
+  packagesButtonLabel: 'Book This Package',
+  packagesDisclaimer: 'All packages customisable. Contact us for destination and international pricing.',
   packages: [
     { name: 'Essential', price: 'KES 45,000', hours: '4 hours', imgs: '200+ edited', coverage: '1 photographer', includes: ['Online gallery delivery', 'High-res digital files', '2-week turnaround', 'Print release'], featured: false },
     { name: 'Premium', price: 'KES 85,000', hours: '8 hours', imgs: '400+ edited', coverage: '2 photographers', includes: ['Everything in Essential', 'Engagement session', 'Album design', 'Drone coverage'], featured: true },
     { name: 'Luxury', price: 'KES 150,000+', hours: 'Full day', imgs: '600+ edited', coverage: '2 photographers + video', includes: ['Everything in Premium', 'Cinematic highlights', 'Hardcover album', 'Priority editing'], featured: false },
   ],
   studioCharges: {
+    label: 'Walk-In Pricing',
     heading: 'Photo Studio Charges',
     description: 'Walk-in studio session pricing for single, group, express, and creative portrait photos.',
     items: [
@@ -309,6 +317,7 @@ export const photographyDefaults = {
     ],
   },
   woodenMount: {
+    label: 'Keepsakes',
     heading: 'Wooden Photo Mount',
     description: "Display your cherished memories with Mejasan Media Production's handcrafted wooden photo mounts. Elegant, timeless, and perfect for any occasion.",
     items: [
@@ -320,6 +329,7 @@ export const photographyDefaults = {
     ],
   },
   traditionalWeddingPackages: {
+    label: 'Weddings',
     heading: 'Traditional Wedding Packages',
     description: 'Our customised Traditional Wedding packages cater for all your needs, offering a blend of candid shots, posed portraits and artistic compositions.',
     note: 'Premium Cinematic Reels @ Ksh. 20,000, Phone Reel Videos @ Ksh. 10,000, Drone Cinematography @ Ksh. 15,000, Extended Party coverage @ Ksh. 20,000. Logistics and transport costs calculated separately per distance.',
@@ -360,6 +370,7 @@ export const photographyDefaults = {
     ],
   },
   weddingQuotation: {
+    label: 'Weddings',
     heading: 'Wedding Quotation',
     description: 'Full wedding-day photography & videography packages.',
     packages: [
@@ -385,7 +396,7 @@ export const photographyDefaults = {
       },
     ],
   },
-  cta: { heading: 'Ready to tell your story?', text: "Every great image starts with a conversation. Let's discuss your vision." },
+  cta: { heading: 'Ready to tell your story?', text: "Every great image starts with a conversation. Let's discuss your vision.", buttonLabel: 'Book a Photography Session' },
 };
 
 const categoryFields: SchemaField[] = [
@@ -442,11 +453,18 @@ const quotationPackageFields: SchemaField[] = [
 
 const photographySchema: SchemaField[] = [
   { type: 'group', key: 'hero', label: 'Hero', fields: plainHeroFields },
+  { type: 'text', key: 'categoriesLabel', label: 'Specialisations — eyebrow label' },
+  { type: 'text', key: 'categoriesHeading', label: 'Specialisations — heading' },
   { type: 'list', key: 'categories', label: 'Specialisations', itemLabelKey: 'title', itemFields: categoryFields,
     newItem: { title: 'New Category', img: '', imgPosition: 'center', desc: '' } },
+  { type: 'text', key: 'packagesLabel', label: 'Packages — eyebrow label' },
+  { type: 'text', key: 'packagesHeading', label: 'Packages — heading' },
+  { type: 'text', key: 'packagesButtonLabel', label: 'Packages — button label' },
+  { type: 'textarea', key: 'packagesDisclaimer', label: 'Packages — disclaimer' },
   { type: 'list', key: 'packages', label: 'Packages', itemLabelKey: 'name', itemFields: photographyPackageFields,
     newItem: { name: 'New Package', price: '', hours: '', imgs: '', coverage: '', includes: [], featured: false } },
   { type: 'group', key: 'studioCharges', label: 'Photo Studio Charges', fields: [
+    { type: 'text', key: 'label', label: 'Eyebrow label' },
     { type: 'text', key: 'heading', label: 'Heading' },
     { type: 'textarea', key: 'description', label: 'Description' },
     { type: 'list', key: 'items', label: 'Pricing rows', itemLabelKey: 'label', itemFields: studioChargeRowFields,
@@ -465,12 +483,14 @@ const photographySchema: SchemaField[] = [
       newItem: { label: 'New Offer', wasPrice: '', nowPrice: '' } },
   ] },
   { type: 'group', key: 'woodenMount', label: 'Wooden Photo Mount', fields: [
+    { type: 'text', key: 'label', label: 'Eyebrow label' },
     { type: 'text', key: 'heading', label: 'Heading' },
     { type: 'textarea', key: 'description', label: 'Description' },
     { type: 'list', key: 'items', label: 'Sizes', itemLabelKey: 'size', itemFields: sizeChargeFields,
       newItem: { size: 'New Size', price: '' } },
   ] },
   { type: 'group', key: 'traditionalWeddingPackages', label: 'Traditional Wedding Packages', fields: [
+    { type: 'text', key: 'label', label: 'Eyebrow label' },
     { type: 'text', key: 'heading', label: 'Heading' },
     { type: 'textarea', key: 'description', label: 'Description' },
     { type: 'textarea', key: 'note', label: 'Footnote' },
@@ -478,6 +498,7 @@ const photographySchema: SchemaField[] = [
       newItem: { label: 'New Package', photographyItems: [], photographyPrice: '', printsItems: [], printsPrice: '', videographyItems: [], videographyPrice: '', addOnsItems: [], total: '' } },
   ] },
   { type: 'group', key: 'weddingQuotation', label: 'Wedding Quotation', fields: [
+    { type: 'text', key: 'label', label: 'Eyebrow label' },
     { type: 'text', key: 'heading', label: 'Heading' },
     { type: 'textarea', key: 'description', label: 'Description' },
     { type: 'list', key: 'packages', label: 'Packages', itemLabelKey: 'label', itemFields: quotationPackageFields,
@@ -490,18 +511,25 @@ const photographySchema: SchemaField[] = [
 
 export const videographyDefaults = {
   hero: { image: 'https://images.unsplash.com/photo-1585647347384-2593bc35786b?w=1920&q=80', imagePosition: 'center', eyebrow: 'Services', title: 'Videography', subtitle: 'Moving images that tell stories, build brands, and create lasting emotional connections.' },
+  typesLabel: 'Specialisations',
+  typesHeading: 'Video Production Services',
+  typesSubheading: 'Click any card to watch a sample reel',
   types: [
     { title: 'Wedding Films', img: 'https://images.unsplash.com/photo-1585647347384-2593bc35786b?w=600&q=80', imgPosition: 'center', desc: 'Cinematic wedding films that capture emotion, atmosphere, and every precious moment.', videoSrc: 'https://www.youtube.com/embed/lsWndfzuOc4?autoplay=1&rel=0' },
     { title: 'Corporate Videos', img: 'https://images.unsplash.com/photo-1551808525-51a94da548ce?w=600&q=80', imgPosition: 'center', desc: 'Brand videos, annual reports, product demos, and executive interviews.', videoSrc: 'https://www.youtube.com/embed/ScMzIvxBSi4?autoplay=1&rel=0' },
     { title: 'Documentaries', img: 'https://images.unsplash.com/photo-1574269907823-3c4b5c08e4e7?w=600&q=80', imgPosition: 'center', desc: 'Narrative-driven storytelling for NGOs, brands, and impact projects.', videoSrc: 'https://www.youtube.com/embed/EngW7tLk6R8?autoplay=1&rel=0' },
     { title: 'Commercial Production', img: 'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?w=600&q=80', imgPosition: 'center', desc: 'TV commercials, social media ads, and branded content campaigns.', videoSrc: 'https://www.youtube.com/embed/XSGBVzeBUbk?autoplay=1&rel=0' },
   ],
+  packagesLabel: 'Pricing',
+  packagesHeading: 'Video Packages',
+  packagesButtonLabel: 'Book This Package',
   packages: [
     { name: 'Highlights', price: 'KES 60,000', duration: '3–5 min film', includes: ['One camera operator', 'Colour graded edit', '2-week delivery', 'Digital download'], featured: false },
     { name: 'Cinematic', price: 'KES 120,000', duration: '8–12 min film', includes: ['Two camera operators', 'Professional audio', 'Drone footage', 'Highlight + full edit', 'Priority delivery'], featured: true },
     { name: 'Production', price: 'KES 250,000+', duration: 'Full production', includes: ['Full production crew', 'Multiple camera angles', 'Professional audio rig', 'Colour grade + grade', 'Music licensing'], featured: false },
   ],
-  cta: { heading: 'Bring your vision to life', text: 'Award-winning video production from pre-production to final delivery.' },
+  videoModalFootnote: 'Sample reel · Full portfolio available on request',
+  cta: { heading: 'Bring your vision to life', text: 'Award-winning video production from pre-production to final delivery.', buttonLabel: 'Book a Video Session', demoButtonLabel: 'Request Demo Reel' },
 };
 
 const videoTypeFields: SchemaField[] = [
@@ -522,17 +550,26 @@ const videographyPackageFields: SchemaField[] = [
 
 const videographySchema: SchemaField[] = [
   { type: 'group', key: 'hero', label: 'Hero', fields: plainHeroFields },
+  { type: 'text', key: 'typesLabel', label: 'Video types — eyebrow label' },
+  { type: 'text', key: 'typesHeading', label: 'Video types — heading' },
+  { type: 'text', key: 'typesSubheading', label: 'Video types — subheading' },
   { type: 'list', key: 'types', label: 'Video types', itemLabelKey: 'title', itemFields: videoTypeFields,
     newItem: { title: 'New Type', img: '', imgPosition: 'center', desc: '', videoSrc: '' } },
+  { type: 'text', key: 'packagesLabel', label: 'Packages — eyebrow label' },
+  { type: 'text', key: 'packagesHeading', label: 'Packages — heading' },
+  { type: 'text', key: 'packagesButtonLabel', label: 'Packages — button label' },
   { type: 'list', key: 'packages', label: 'Packages', itemLabelKey: 'name', itemFields: videographyPackageFields,
     newItem: { name: 'New Package', price: '', duration: '', includes: [], featured: false } },
-  { type: 'group', key: 'cta', label: 'Bottom CTA', fields: ctaFields },
+  { type: 'text', key: 'videoModalFootnote', label: 'Video modal footnote' },
+  { type: 'group', key: 'cta', label: 'Bottom CTA', fields: [...ctaFields, { type: 'text', key: 'demoButtonLabel', label: 'Demo-reel button label' }] },
 ];
 
 /* ── Services / Events ─────────────────────────────────────────────── */
 
 export const eventsDefaults = {
   hero: { image: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=1920&q=80', imagePosition: 'center', eyebrow: 'Services', title: 'Event Coverage', subtitle: 'From international summits to intimate product launches — comprehensive event documentation at world-class standard.' },
+  typesLabel: 'Event Types',
+  typesHeading: 'Events We Cover',
   types: [
     { title: 'Conferences & Summits', desc: 'Multi-day documentation for international conferences, panel discussions, and keynote sessions.', img: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=600&q=80', imgPosition: 'center' },
     { title: 'Product Launches', desc: 'Brand launches, press releases, and product reveal events with cinematic coverage.', img: 'https://images.unsplash.com/photo-1587825140708-dfaf72ae4b04?w=600&q=80', imgPosition: 'center' },
@@ -545,7 +582,7 @@ export const eventsDefaults = {
     { title: 'Multi-Camera', desc: 'Up to 4 simultaneous camera operators for comprehensive coverage.' },
     { title: 'Discreet', desc: 'Unobtrusive coverage that never interrupts the flow of your event.' },
   ],
-  cta: { heading: 'Planning an event?', text: 'Let us discuss your event and build a custom coverage plan.' },
+  cta: { heading: 'Planning an event?', text: 'Let us discuss your event and build a custom coverage plan.', buttonLabel: 'Book Event Coverage' },
 };
 
 const eventTypeFields: SchemaField[] = [
@@ -562,6 +599,8 @@ const highlightFields: SchemaField[] = [
 
 const eventsSchema: SchemaField[] = [
   { type: 'group', key: 'hero', label: 'Hero', fields: plainHeroFields },
+  { type: 'text', key: 'typesLabel', label: 'Event types — eyebrow label' },
+  { type: 'text', key: 'typesHeading', label: 'Event types — heading' },
   { type: 'list', key: 'types', label: 'Event types', itemLabelKey: 'title', itemFields: eventTypeFields,
     newItem: { title: 'New Event Type', desc: '', img: '', imgPosition: 'center' } },
   { type: 'list', key: 'highlights', label: 'Highlights band', itemLabelKey: 'title', itemFields: highlightFields,
@@ -579,11 +618,14 @@ export const droneDefaults = {
     { title: 'Mapping & Survey', img: 'https://images.unsplash.com/photo-1494783367193-149034c05e8f?w=600&q=80', imgPosition: 'center', desc: 'Photogrammetric mapping, orthomosaics, and 3D models for construction and engineering.' },
     { title: 'Site Documentation', img: 'https://images.unsplash.com/photo-1517420704952-d9f39e95b43e?w=600&q=80', imgPosition: 'center', desc: 'Progress documentation for construction sites, infrastructure, and land development.' },
   ],
+  fleetLabel: 'Our Fleet',
+  fleetHeading: 'Professional Grade Aircraft',
   fleet: [
     { name: 'DJI Mavic 3 Pro', specs: '5.1K · 28x zoom · 46-min flight time' },
     { name: 'DJI Air 3', specs: '4K · Dual camera · 46-min flight time' },
     { name: 'DJI Phantom 4 RTK', specs: 'Survey grade · PPK/RTK GPS · Mapping' },
   ],
+  guaranteeLabel: 'Our Guarantee',
   guaranteeHeading: 'Safe, Legal & Insured',
   guaranteeItems: [
     'KCAA-certified remote pilot licence',
@@ -593,7 +635,7 @@ export const droneDefaults = {
     'Full pre-flight safety briefings',
     'Post-flight geo-tagged data delivery',
   ],
-  cta: { heading: 'See the world from above', text: 'KCAA-licensed aerial services across Kenya and East Africa.' },
+  cta: { heading: 'See the world from above', text: 'KCAA-licensed aerial services across Kenya and East Africa.', buttonLabel: 'Book Drone Services' },
 };
 
 const droneServiceFields: SchemaField[] = [
@@ -612,8 +654,11 @@ const droneSchema: SchemaField[] = [
   { type: 'group', key: 'hero', label: 'Hero', fields: [...plainHeroFields, { type: 'text', key: 'badgeText', label: 'Licence badge text' }] },
   { type: 'list', key: 'services', label: 'Service cards', itemLabelKey: 'title', itemFields: droneServiceFields,
     newItem: { title: 'New Service', img: '', imgPosition: 'center', desc: '' } },
+  { type: 'text', key: 'fleetLabel', label: 'Fleet — eyebrow label' },
+  { type: 'text', key: 'fleetHeading', label: 'Fleet — heading' },
   { type: 'list', key: 'fleet', label: 'Fleet', itemLabelKey: 'name', itemFields: fleetFields,
     newItem: { name: 'New Aircraft', specs: '' } },
+  { type: 'text', key: 'guaranteeLabel', label: 'Guarantee — eyebrow label' },
   { type: 'text', key: 'guaranteeHeading', label: 'Guarantee section heading' },
   { type: 'stringlist', key: 'guaranteeItems', label: 'Guarantee bullet points (one per line)' },
   { type: 'group', key: 'cta', label: 'Bottom CTA', fields: ctaFields },
@@ -629,19 +674,23 @@ export const brandingDefaults = {
     { title: 'Brand Storytelling', img: 'https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=600&q=80', imgPosition: 'center', desc: "Narrative-driven content that communicates your brand's values, mission, and unique story." },
     { title: 'Campaign Production', img: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600&q=80', imgPosition: 'center', desc: 'Full-scale campaign production — concept to delivery — for product launches and seasonal campaigns.' },
   ],
+  processLabel: 'The Approach',
+  processHeading: 'How We Build Brands',
   process: [
     { num: '01', title: 'Brand Audit', desc: 'We review your existing visual identity and identify gaps and opportunities.' },
     { num: '02', title: 'Strategy', desc: 'A content strategy aligned to your target audience, platforms, and business goals.' },
     { num: '03', title: 'Production', desc: 'Monthly or quarterly shoots that produce a consistent, premium visual library.' },
     { num: '04', title: 'Optimise & Grow', desc: 'Analytics-backed refinements to maximise reach, engagement, and conversion.' },
   ],
-  cta: { heading: "Build a brand that's remembered", text: 'Strategic content production that grows your business — month after month.' },
+  cta: { heading: "Build a brand that's remembered", text: 'Strategic content production that grows your business — month after month.', buttonLabel: 'Start Your Brand Project' },
 };
 
 const brandingSchema: SchemaField[] = [
   { type: 'group', key: 'hero', label: 'Hero', fields: plainHeroFields },
   { type: 'list', key: 'services', label: 'Service cards', itemLabelKey: 'title', itemFields: droneServiceFields,
     newItem: { title: 'New Service', img: '', imgPosition: 'center', desc: '' } },
+  { type: 'text', key: 'processLabel', label: 'Process — eyebrow label' },
+  { type: 'text', key: 'processHeading', label: 'Process — heading' },
   { type: 'list', key: 'process', label: 'Process steps', itemLabelKey: 'title', itemFields: [
       { type: 'text', key: 'num', label: 'Step number' },
       { type: 'text', key: 'title', label: 'Title' },
@@ -785,6 +834,139 @@ const homeSchema: SchemaField[] = [
   ] },
 ];
 
+/* ── Portfolio (listing) ──────────────────────────────────────────── */
+
+export const portfolioDefaults = {
+  eyebrow: 'Our Work',
+  titleStart: 'Our',
+  titleEm: 'Portfolio',
+  intro: 'A curated selection of our finest work across weddings, corporate, events, aerial, and brand campaigns.',
+  loadMoreLabel: 'Load More',
+  emptyStateText: 'No items in this category yet.',
+};
+
+const portfolioSchema: SchemaField[] = [
+  { type: 'text', key: 'eyebrow', label: 'Eyebrow label' },
+  { type: 'text', key: 'titleStart', label: 'Title (plain part)' },
+  { type: 'text', key: 'titleEm', label: 'Title (highlighted part)' },
+  { type: 'textarea', key: 'intro', label: 'Intro paragraph' },
+  { type: 'text', key: 'loadMoreLabel', label: '"Load more" button label' },
+  { type: 'text', key: 'emptyStateText', label: 'Empty-category text' },
+];
+
+/* ── Blog (listing + post CTA) ────────────────────────────────────── */
+
+export const blogDefaults = {
+  eyebrow: 'Insights & Stories',
+  titleStart: 'The',
+  titleEm: 'Journal',
+  intro: 'Industry insights, behind-the-scenes stories, and creative inspiration from the Mejasan team.',
+  emptyStateText: 'No posts in this category yet.',
+  cta: { eyebrow: 'Ready to Work Together?', heading: 'Bring Your Story to Life', text: 'Our team is ready to create something extraordinary for you.', buttonLabel: 'Book a Session' },
+};
+
+const blogSchema: SchemaField[] = [
+  { type: 'text', key: 'eyebrow', label: 'Eyebrow label' },
+  { type: 'text', key: 'titleStart', label: 'Title (plain part)' },
+  { type: 'text', key: 'titleEm', label: 'Title (highlighted part)' },
+  { type: 'textarea', key: 'intro', label: 'Intro paragraph' },
+  { type: 'text', key: 'emptyStateText', label: 'Empty-category text' },
+  { type: 'group', key: 'cta', label: 'Post-bottom CTA', fields: [{ type: 'text', key: 'eyebrow', label: 'Eyebrow label' }, ...ctaFields] },
+];
+
+/* ── Legal pages (Privacy / Terms) ────────────────────────────────── */
+
+const legalSectionFields: SchemaField[] = [
+  { type: 'text', key: 'heading', label: 'Heading' },
+  { type: 'textarea', key: 'body', label: 'Body text' },
+];
+
+export const privacyDefaults = {
+  lastUpdated: 'January 2025',
+  sections: [
+    { heading: '1. Information We Collect', body: 'We collect information you provide directly to us when you make a booking enquiry, contact us through our website, or create a client portal account. This includes your name, email address, phone number, and project details.' },
+    { heading: '2. How We Use Your Information', body: 'We use the information we collect to provide and improve our services, communicate with you about your projects, send booking confirmations and project updates, and comply with legal obligations.' },
+    { heading: '3. Data Security', body: 'We implement appropriate technical and organisational measures to protect your personal information against unauthorised access, alteration, disclosure, or destruction. Your data is stored securely on Supabase infrastructure with row-level security policies.' },
+    { heading: '4. Data Sharing', body: 'We do not sell, trade, or otherwise transfer your personal information to third parties without your consent, except as required by law or to provide our services (e.g., cloud storage providers).' },
+    { heading: '5. Your Rights', body: 'You have the right to access, correct, or delete your personal information. To exercise these rights, please contact us at info@mejasanmedia.com.' },
+    { heading: '6. Cookies', body: 'Our website uses essential cookies required for authentication and session management. We do not use tracking or advertising cookies.' },
+    { heading: '7. Contact Us', body: 'For privacy-related questions, contact us at: info@mejasanmedia.com or +254 700 864 849.' },
+  ],
+};
+
+const legalSchema: SchemaField[] = [
+  { type: 'text', key: 'lastUpdated', label: 'Last updated (displayed date)' },
+  { type: 'list', key: 'sections', label: 'Clauses', itemLabelKey: 'heading', itemFields: legalSectionFields,
+    newItem: { heading: 'New Clause', body: '' } },
+];
+
+export const termsDefaults = {
+  lastUpdated: 'January 2025',
+  sections: [
+    { heading: '1. Services', body: 'Mejasan Media Production provides professional photography, videography, event coverage, drone footage, and branding services. By engaging our services, you agree to these terms.' },
+    { heading: '2. Bookings and Deposits', body: 'A non-refundable deposit of 50% is required to secure your booking date. This deposit confirms our mutual commitment and covers preparatory work. The remaining balance is due 7 days before the event date.' },
+    { heading: '3. Cancellation Policy', body: 'Cancellations made more than 30 days before the event date will result in forfeiture of the deposit. Cancellations within 30 days of the event date require full payment. We reserve the right to reschedule due to unforeseen circumstances.' },
+    { heading: '4. Intellectual Property', body: 'Mejasan Media Production retains copyright of all work produced. Upon full payment, clients receive a non-exclusive licence to use the final deliverables for personal and commercial purposes. Portfolio use rights are retained by Mejasan Media.' },
+    { heading: '5. Deliverables and Timeline', body: 'Estimated delivery timelines are provided at the time of booking. Standard delivery is 4–6 weeks for photography and 6–8 weeks for video productions. Rush delivery options are available at additional cost.' },
+    { heading: '6. Client Responsibilities', body: 'Clients are responsible for providing accurate event details, obtaining necessary permissions for filming locations, and ensuring reasonable access and safety for our team.' },
+    { heading: '7. Limitation of Liability', body: 'Our liability is limited to the amount paid for the specific service. We are not responsible for circumstances beyond our control, including equipment failure due to extreme conditions or event access restrictions.' },
+    { heading: '8. Governing Law', body: 'These terms are governed by the laws of Kenya. Any disputes shall be resolved through mediation before pursuing legal action.' },
+    { heading: '9. Contact', body: 'For questions about these terms, contact us at info@mejasanmedia.com or +254 700 864 849.' },
+  ],
+};
+
+/* ── Booking form ──────────────────────────────────────────────────── */
+
+export const bookingDefaults = {
+  services: ['Wedding Photography', 'Wedding Film', 'Corporate Photography', 'Corporate Video', 'Event Coverage', 'Drone Services', 'Brand Content', 'Product Photography', 'Documentary', 'Other'],
+  budgets: ['Under KES 50,000', 'KES 50,000 – 100,000', 'KES 100,000 – 250,000', 'KES 250,000+', 'To be discussed'],
+  hearOptions: ['Google Search', 'Instagram', 'Facebook', 'Referral from Friend', 'Previous Client', 'LinkedIn', 'Other'],
+};
+
+const bookingSchema: SchemaField[] = [
+  { type: 'stringlist', key: 'services', label: 'Service options (one per line)' },
+  { type: 'stringlist', key: 'budgets', label: 'Budget range options (one per line)' },
+  { type: 'stringlist', key: 'hearOptions', label: '"How did you hear about us" options (one per line)' },
+];
+
+/* ── Wedding intake form ───────────────────────────────────────────── */
+
+export const weddingFormDefaults = {
+  themeOptions: ['Rustic', 'Royal', 'Modern', 'Garden', 'Traditional', 'Other'],
+  photoStyleOptions: ['Documentary', 'Editorial', 'Traditional', 'Luxury', 'Mix'],
+  videoStyleOptions: ['Cinematic', 'Fun & Upbeat', 'Emotional', 'Dramatic', 'Mix'],
+  docuOptions: ['Yes', 'No', 'Discuss later'],
+  paOptions: ['Yes', 'No', 'Not sure'],
+  deliveryOptions: ['Within 4 weeks', 'Within 6 weeks', 'Within 8 weeks', 'Flexible'],
+};
+
+const weddingFormSchema: SchemaField[] = [
+  { type: 'stringlist', key: 'themeOptions', label: 'Wedding theme options (one per line)' },
+  { type: 'stringlist', key: 'photoStyleOptions', label: 'Photography style options (one per line)' },
+  { type: 'stringlist', key: 'videoStyleOptions', label: 'Video style options (one per line)' },
+  { type: 'stringlist', key: 'docuOptions', label: 'Documentary-edit options (one per line)' },
+  { type: 'stringlist', key: 'paOptions', label: 'PA-system options (one per line)' },
+  { type: 'stringlist', key: 'deliveryOptions', label: 'Delivery-timeline options (one per line)' },
+];
+
+/* ── Gallery (public image wall) ──────────────────────────────────── */
+
+export const galleryDefaults = {
+  eyebrow: 'Visual Library',
+  titleStart: 'Our',
+  titleEm: 'Gallery',
+  intro: 'A running collection of moments captured across our shoots — updated regularly.',
+  emptyStateText: 'No images uploaded yet. Check back soon.',
+};
+
+const gallerySchema: SchemaField[] = [
+  { type: 'text', key: 'eyebrow', label: 'Eyebrow label' },
+  { type: 'text', key: 'titleStart', label: 'Title (plain part)' },
+  { type: 'text', key: 'titleEm', label: 'Title (highlighted part)' },
+  { type: 'textarea', key: 'intro', label: 'Intro paragraph' },
+  { type: 'text', key: 'emptyStateText', label: 'Empty state text' },
+];
+
 /* ── Contact ───────────────────────────────────────────────────────── */
 
 export const contactDefaults = {
@@ -866,6 +1048,13 @@ export const PAGE_CONTENT: Record<string, PageContentDef> = {
   'services-branding': { slug: 'services-branding', label: 'Services — Branding', schema: brandingSchema, defaults: brandingDefaults },
   'contact': { slug: 'contact', label: 'Contact', schema: contactSchema, defaults: contactDefaults },
   'site': { slug: 'site', label: 'Site — Footer & Global', schema: siteSchema, defaults: siteDefaults },
+  'portfolio': { slug: 'portfolio', label: 'Portfolio (listing)', schema: portfolioSchema, defaults: portfolioDefaults },
+  'blog': { slug: 'blog', label: 'Blog (listing + post CTA)', schema: blogSchema, defaults: blogDefaults },
+  'privacy': { slug: 'privacy', label: 'Privacy Policy', schema: legalSchema, defaults: privacyDefaults },
+  'terms': { slug: 'terms', label: 'Terms of Service', schema: legalSchema, defaults: termsDefaults },
+  'booking': { slug: 'booking', label: 'Booking form options', schema: bookingSchema, defaults: bookingDefaults },
+  'wedding-form': { slug: 'wedding-form', label: 'Wedding form options', schema: weddingFormSchema, defaults: weddingFormDefaults },
+  'gallery': { slug: 'gallery', label: 'Gallery (public)', schema: gallerySchema, defaults: galleryDefaults },
 };
 
 export const PAGE_SLUGS = Object.keys(PAGE_CONTENT);
@@ -888,3 +1077,9 @@ export type DroneContent = typeof droneDefaults;
 export type BrandingContent = typeof brandingDefaults;
 export type ContactContent = typeof contactDefaults;
 export type SiteContent = typeof siteDefaults;
+export type PortfolioListContent = typeof portfolioDefaults;
+export type BlogListContent = typeof blogDefaults;
+export type LegalContent = typeof privacyDefaults;
+export type BookingContent = typeof bookingDefaults;
+export type WeddingFormOptionsContent = typeof weddingFormDefaults;
+export type GalleryContent = typeof galleryDefaults;

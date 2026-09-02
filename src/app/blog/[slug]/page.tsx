@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowLeft, Calendar, Clock, ArrowRight } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
+import { getPageContent, type BlogListContent } from '@/lib/page-content-schema';
 
 interface Params { params: Promise<{ slug: string }> }
 
@@ -155,6 +156,9 @@ export default async function BlogPostPage({ params }: Params) {
   const { slug } = await params;
   const post = await loadPost(slug);
   const htmlContent = mdToHtml(post.content);
+  const sb = await createClient();
+  const { data: pageData } = await sb.from('mejasan_page_content').select('content').eq('page_slug', 'blog').maybeSingle();
+  const { cta } = getPageContent('blog', pageData?.content) as BlogListContent;
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -212,11 +216,11 @@ export default async function BlogPostPage({ params }: Params) {
       {/* CTA */}
       <div className="max-w-[900px] mx-auto px-4 sm:px-8 pb-20">
         <div className="bg-[#141414] border border-white/[0.06] p-8 sm:p-10 text-center">
-          <div className="text-[10px] font-display tracking-widest text-[#E10600] uppercase mb-4">Ready to Work Together?</div>
-          <h2 className="text-2xl sm:text-3xl font-heading font-light text-white mb-4">Bring Your Story to Life</h2>
-          <p className="text-white/40 text-sm mb-6 max-w-sm mx-auto">Our team is ready to create something extraordinary for you.</p>
+          <div className="text-[10px] font-display tracking-widest text-[#E10600] uppercase mb-4">{cta.eyebrow}</div>
+          <h2 className="text-2xl sm:text-3xl font-heading font-light text-white mb-4">{cta.heading}</h2>
+          <p className="text-white/40 text-sm mb-6 max-w-sm mx-auto">{cta.text}</p>
           <Link href="/booking" className="btn-primary inline-flex group">
-            Book a Session <ArrowRight size={13} className="group-hover:translate-x-0.5 transition-transform" />
+            {cta.buttonLabel} <ArrowRight size={13} className="group-hover:translate-x-0.5 transition-transform" />
           </Link>
         </div>
       </div>

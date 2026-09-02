@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { motion, AnimatePresence, useInView } from 'framer-motion';
 import { X, ZoomIn, Download, ChevronLeft, ChevronRight } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
+import { getPageContent, portfolioDefaults, type PortfolioListContent } from '@/lib/page-content-schema';
 
 interface Item { id: string; title: string; category: string; location: string; image: string; imagePosition: string; slug: string; }
 
@@ -125,8 +126,19 @@ export default function PortfolioPage() {
   const [items, setItems]   = useState<Item[]>(FALLBACK);
   const [page, setPage]     = useState(1);
   const [lightbox, setLightbox] = useState<number | null>(null);
+  const [content, setContent] = useState<PortfolioListContent>(portfolioDefaults);
   const ref = useRef(null);
   const inView = useInView(ref, { once: true });
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const sb = createClient();
+        const { data } = await sb.from('mejasan_page_content').select('content').eq('page_slug', 'portfolio').maybeSingle();
+        setContent(getPageContent('portfolio', data?.content) as PortfolioListContent);
+      } catch { /* use defaults */ }
+    })();
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -171,14 +183,14 @@ export default function PortfolioPage() {
         <div className="max-w-[1400px] mx-auto px-4 sm:px-8 lg:px-16 text-center">
           <div className="flex items-center justify-center gap-3 mb-5">
             <div className="w-8 h-px bg-[#E10600]" />
-            <span className="text-[11px] font-display font-semibold tracking-[0.3em] text-[#E10600] uppercase">Our Work</span>
+            <span className="text-[11px] font-display font-semibold tracking-[0.3em] text-[#E10600] uppercase">{content.eyebrow}</span>
             <div className="w-8 h-px bg-[#E10600]" />
           </div>
           <h1 className="text-[clamp(3rem,8vw,8rem)] font-heading font-light text-white leading-[0.92] mb-5">
-            Our <em className="text-[#E10600] not-italic italic">Portfolio</em>
+            {content.titleStart} <em className="text-[#E10600] not-italic italic">{content.titleEm}</em>
           </h1>
           <p className="text-base sm:text-lg text-white/55 max-w-xl mx-auto leading-relaxed">
-            A curated selection of our finest work across weddings, corporate, events, aerial, and brand campaigns.
+            {content.intro}
           </p>
         </div>
       </div>
@@ -225,12 +237,12 @@ export default function PortfolioPage() {
         </motion.div>
 
         {filtered.length === 0 && (
-          <p className="text-center py-24 text-white/40 font-display text-sm">No items in this category yet.</p>
+          <p className="text-center py-24 text-white/40 font-display text-sm">{content.emptyStateText}</p>
         )}
 
         {hasMore && (
           <div className="text-center mt-12">
-            <button onClick={loadMore} className="btn-outline px-12">Load More</button>
+            <button onClick={loadMore} className="btn-outline px-12">{content.loadMoreLabel}</button>
           </div>
         )}
       </div>

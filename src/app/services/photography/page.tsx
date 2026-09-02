@@ -13,7 +13,7 @@ export default async function PhotographyPage() {
   const sb = await createClient();
   const { data } = await sb.from('mejasan_page_content').select('content').eq('page_slug', 'services-photography').maybeSingle();
   const content = getPageContent('services-photography', data?.content) as PhotographyContent;
-  const { hero, categories, packages, studioCharges, photoMounting, studioOffer, woodenMount, traditionalWeddingPackages, weddingQuotation, cta } = content;
+  const { hero, categoriesLabel, categoriesHeading, categories, packagesLabel, packagesHeading, packagesButtonLabel, packagesDisclaimer, packages, studioCharges, photoMounting, studioOffer, woodenMount, traditionalWeddingPackages, weddingQuotation, cta } = content;
 
   return (
     <div className="bg-[#0B0B0B]">
@@ -32,8 +32,8 @@ export default async function PhotographyPage() {
       {/* Categories — light */}
       <section className="bg-white py-24 md:py-32">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-8 lg:px-16">
-          <div className="flex items-center gap-3 mb-4"><div className="w-8 h-px bg-[#E10600]" /><span className="text-[10px] font-display tracking-[0.3em] text-[#E10600] uppercase font-semibold">Specialisations</span></div>
-          <h2 className="text-[clamp(2rem,4vw,4rem)] font-heading font-light text-[#0F0F0F] mb-12">Photography Services</h2>
+          <div className="flex items-center gap-3 mb-4"><div className="w-8 h-px bg-[#E10600]" /><span className="text-[10px] font-display tracking-[0.3em] text-[#E10600] uppercase font-semibold">{categoriesLabel}</span></div>
+          <h2 className="text-[clamp(2rem,4vw,4rem)] font-heading font-light text-[#0F0F0F] mb-12">{categoriesHeading}</h2>
           <div className="grid sm:grid-cols-2 gap-0.5">
             {categories.map(({ title, img, imgPosition, desc }) => (
               <div key={title} className="group relative overflow-hidden h-64 sm:h-80">
@@ -53,8 +53,8 @@ export default async function PhotographyPage() {
       {/* Packages — off-white */}
       <section className="bg-[#F5F5F0] py-24 md:py-32">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-8 lg:px-16">
-          <div className="flex items-center gap-3 mb-4"><div className="w-8 h-px bg-[#E10600]" /><span className="text-[10px] font-display tracking-[0.3em] text-[#E10600] uppercase font-semibold">Pricing</span></div>
-          <h2 className="text-[clamp(2rem,4vw,4rem)] font-heading font-light text-[#0F0F0F] mb-12">Photography Packages</h2>
+          <div className="flex items-center gap-3 mb-4"><div className="w-8 h-px bg-[#E10600]" /><span className="text-[10px] font-display tracking-[0.3em] text-[#E10600] uppercase font-semibold">{packagesLabel}</span></div>
+          <h2 className="text-[clamp(2rem,4vw,4rem)] font-heading font-light text-[#0F0F0F] mb-12">{packagesHeading}</h2>
           <div className="grid md:grid-cols-3 gap-0.5">
             {packages.map(({ name, price, hours, imgs, coverage, includes, featured }) => (
               <div key={name} className={`p-8 border relative ${featured ? 'border-[#E10600]/40 bg-white shadow-md' : 'border-[#0F0F0F]/[0.07] bg-white'}`}>
@@ -70,18 +70,18 @@ export default async function PhotographyPage() {
                     </li>
                   ))}
                 </ul>
-                <Link href="/booking" className={`btn-${featured ? 'primary' : 'outline-dark'} w-full justify-center`}>Book This Package</Link>
+                <Link href="/booking" className={`btn-${featured ? 'primary' : 'outline-dark'} w-full justify-center`}>{packagesButtonLabel}</Link>
               </div>
             ))}
           </div>
-          <p className="text-[12px] text-[#0F0F0F]/30 mt-6 text-center font-display">All packages customisable. Contact us for destination and international pricing.</p>
+          <p className="text-[12px] text-[#0F0F0F]/30 mt-6 text-center font-display">{packagesDisclaimer}</p>
         </div>
       </section>
 
       {/* Studio walk-in pricing — off-white */}
       <section className="bg-[#F5F5F0] py-24 md:py-32">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-8 lg:px-16">
-          <div className="flex items-center gap-3 mb-4"><div className="w-8 h-px bg-[#E10600]" /><span className="text-[10px] font-display tracking-[0.3em] text-[#E10600] uppercase font-semibold">Walk-In Pricing</span></div>
+          <div className="flex items-center gap-3 mb-4"><div className="w-8 h-px bg-[#E10600]" /><span className="text-[10px] font-display tracking-[0.3em] text-[#E10600] uppercase font-semibold">{studioCharges.label}</span></div>
           <h2 className="text-[clamp(2rem,4vw,4rem)] font-heading font-light text-[#0F0F0F] mb-3">{studioCharges.heading}</h2>
           <p className="text-[14px] text-[#0F0F0F]/45 font-display mb-12 max-w-xl leading-relaxed">{studioCharges.description}</p>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-0.5 mb-16">
@@ -124,7 +124,7 @@ export default async function PhotographyPage() {
       {/* Wooden Photo Mount — white */}
       <section className="bg-white py-24 md:py-32">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-8 lg:px-16">
-          <div className="flex items-center gap-3 mb-4"><div className="w-8 h-px bg-[#E10600]" /><span className="text-[10px] font-display tracking-[0.3em] text-[#E10600] uppercase font-semibold">Keepsakes</span></div>
+          <div className="flex items-center gap-3 mb-4"><div className="w-8 h-px bg-[#E10600]" /><span className="text-[10px] font-display tracking-[0.3em] text-[#E10600] uppercase font-semibold">{woodenMount.label}</span></div>
           <h2 className="text-[clamp(2rem,4vw,4rem)] font-heading font-light text-[#0F0F0F] mb-3">{woodenMount.heading}</h2>
           <p className="text-[14px] text-[#0F0F0F]/50 font-display mb-12 max-w-xl leading-relaxed">{woodenMount.description}</p>
           <div className="grid grid-cols-3 sm:grid-cols-5 gap-0.5">
@@ -141,7 +141,7 @@ export default async function PhotographyPage() {
       {/* Traditional Wedding Packages — off-white */}
       <section className="bg-[#F5F5F0] py-24 md:py-32">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-8 lg:px-16">
-          <div className="flex items-center gap-3 mb-4"><div className="w-8 h-px bg-[#E10600]" /><span className="text-[10px] font-display tracking-[0.3em] text-[#E10600] uppercase font-semibold">Weddings</span></div>
+          <div className="flex items-center gap-3 mb-4"><div className="w-8 h-px bg-[#E10600]" /><span className="text-[10px] font-display tracking-[0.3em] text-[#E10600] uppercase font-semibold">{traditionalWeddingPackages.label}</span></div>
           <h2 className="text-[clamp(2rem,4vw,4rem)] font-heading font-light text-[#0F0F0F] mb-3">{traditionalWeddingPackages.heading}</h2>
           <p className="text-[14px] text-[#0F0F0F]/50 font-display mb-12 max-w-2xl leading-relaxed">{traditionalWeddingPackages.description}</p>
           <div className="grid md:grid-cols-3 gap-0.5">
@@ -193,7 +193,7 @@ export default async function PhotographyPage() {
       {/* Wedding Quotation — white */}
       <section className="bg-white py-24 md:py-32">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-8 lg:px-16">
-          <div className="flex items-center gap-3 mb-4"><div className="w-8 h-px bg-[#E10600]" /><span className="text-[10px] font-display tracking-[0.3em] text-[#E10600] uppercase font-semibold">Weddings</span></div>
+          <div className="flex items-center gap-3 mb-4"><div className="w-8 h-px bg-[#E10600]" /><span className="text-[10px] font-display tracking-[0.3em] text-[#E10600] uppercase font-semibold">{weddingQuotation.label}</span></div>
           <h2 className="text-[clamp(2rem,4vw,4rem)] font-heading font-light text-[#0F0F0F] mb-3">{weddingQuotation.heading}</h2>
           <p className="text-[14px] text-[#0F0F0F]/50 font-display mb-12 max-w-xl leading-relaxed">{weddingQuotation.description}</p>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-0.5">
@@ -218,7 +218,7 @@ export default async function PhotographyPage() {
       <section className="bg-[#0B0B0B] py-20 text-center px-4">
         <h2 className="text-[clamp(1.8rem,4vw,3.5rem)] font-heading font-light text-white mb-4">{cta.heading}</h2>
         <p className="text-white/55 mb-8 max-w-md mx-auto text-sm">{cta.text}</p>
-        <Link href="/booking" className="btn-primary inline-flex group">Book a Photography Session <ArrowRight size={13} className="group-hover:translate-x-0.5 transition-transform" /></Link>
+        <Link href="/booking" className="btn-primary inline-flex group">{cta.buttonLabel} <ArrowRight size={13} className="group-hover:translate-x-0.5 transition-transform" /></Link>
       </section>
     </div>
   );

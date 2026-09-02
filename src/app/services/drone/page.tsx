@@ -13,7 +13,7 @@ export default async function DronePage() {
   const sb = await createClient();
   const { data } = await sb.from('mejasan_page_content').select('content').eq('page_slug', 'services-drone').maybeSingle();
   const content = getPageContent('services-drone', data?.content) as DroneContent;
-  const { hero, services, fleet, guaranteeHeading, guaranteeItems, cta } = content;
+  const { hero, services, fleetLabel, fleetHeading, fleet, guaranteeLabel, guaranteeHeading, guaranteeItems, cta } = content;
 
   return (
     <div className="bg-[#0B0B0B]">
@@ -54,8 +54,8 @@ export default async function DronePage() {
       <section className="bg-[#F5F5F0] py-24 md:py-32">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-8 lg:px-16 grid lg:grid-cols-2 gap-16">
           <div>
-            <div className="flex items-center gap-3 mb-4"><div className="w-8 h-px bg-[#E10600]" /><span className="text-[10px] font-display tracking-[0.3em] text-[#E10600] uppercase font-semibold">Our Fleet</span></div>
-            <h2 className="text-[clamp(2rem,4vw,4rem)] font-heading font-light text-[#0F0F0F] mb-8">Professional Grade Aircraft</h2>
+            <div className="flex items-center gap-3 mb-4"><div className="w-8 h-px bg-[#E10600]" /><span className="text-[10px] font-display tracking-[0.3em] text-[#E10600] uppercase font-semibold">{fleetLabel}</span></div>
+            <h2 className="text-[clamp(2rem,4vw,4rem)] font-heading font-light text-[#0F0F0F] mb-8">{fleetHeading}</h2>
             <div className="space-y-4">
               {fleet.map(({ name, specs }) => (
                 <div key={name} className="flex items-start gap-4 p-5 border border-[#0F0F0F]/[0.07] bg-white">
@@ -69,7 +69,7 @@ export default async function DronePage() {
             </div>
           </div>
           <div>
-            <div className="flex items-center gap-3 mb-4"><div className="w-8 h-px bg-[#E10600]" /><span className="text-[10px] font-display tracking-[0.3em] text-[#E10600] uppercase font-semibold">Our Guarantee</span></div>
+            <div className="flex items-center gap-3 mb-4"><div className="w-8 h-px bg-[#E10600]" /><span className="text-[10px] font-display tracking-[0.3em] text-[#E10600] uppercase font-semibold">{guaranteeLabel}</span></div>
             <h2 className="text-[clamp(2rem,4vw,4rem)] font-heading font-light text-[#0F0F0F] mb-8">{guaranteeHeading}</h2>
             <ul className="space-y-4">
               {guaranteeItems.map((item) => (
@@ -86,7 +86,7 @@ export default async function DronePage() {
       <section className="bg-[#0B0B0B] py-20 text-center px-4">
         <h2 className="text-[clamp(1.8rem,4vw,3.5rem)] font-heading font-light text-white mb-4">{cta.heading}</h2>
         <p className="text-white/55 mb-8 max-w-md mx-auto text-sm">{cta.text}</p>
-        <Link href="/booking" className="btn-primary inline-flex group">Book Drone Services <ArrowRight size={13} className="group-hover:translate-x-0.5 transition-transform" /></Link>
+        <Link href="/booking" className="btn-primary inline-flex group">{cta.buttonLabel} <ArrowRight size={13} className="group-hover:translate-x-0.5 transition-transform" /></Link>
       </section>
     </div>
   );

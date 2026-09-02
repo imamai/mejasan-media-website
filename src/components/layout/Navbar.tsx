@@ -21,6 +21,7 @@ const NAV = [
     ],
   },
   { label: 'Portfolio', href: '/portfolio' },
+  { label: 'Gallery',   href: '/gallery' },
   { label: 'Blog',      href: '/blog' },
   { label: 'Contact',   href: '/contact' },
 ];

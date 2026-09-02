@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { ArrowRight, Calendar, Clock } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
+import { getPageContent, blogDefaults, type BlogListContent } from '@/lib/page-content-schema';
 
 interface Post {
   id: string;
@@ -30,6 +31,17 @@ const FALLBACK: Post[] = [
 export default function BlogPage() {
   const [cat, setCat] = useState('All');
   const [posts, setPosts] = useState<Post[]>(FALLBACK);
+  const [content, setContent] = useState<BlogListContent>(blogDefaults);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const sb = createClient();
+        const { data } = await sb.from('mejasan_page_content').select('content').eq('page_slug', 'blog').maybeSingle();
+        setContent(getPageContent('blog', data?.content) as BlogListContent);
+      } catch { /* use defaults */ }
+    })();
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -60,13 +72,13 @@ export default function BlogPage() {
         <div className="max-w-[1400px] mx-auto px-4 sm:px-8 lg:px-16 text-center">
           <div className="flex items-center justify-center gap-3 mb-5">
             <div className="w-8 h-px bg-[#E10600]" />
-            <span className="text-[11px] font-display font-semibold tracking-[0.3em] text-[#E10600] uppercase">Insights & Stories</span>
+            <span className="text-[11px] font-display font-semibold tracking-[0.3em] text-[#E10600] uppercase">{content.eyebrow}</span>
             <div className="w-8 h-px bg-[#E10600]" />
           </div>
           <h1 className="text-[clamp(3rem,8vw,8rem)] font-heading font-light text-[#0F0F0F] leading-[0.92] mb-5">
-            The <em className="text-[#E10600] not-italic italic">Journal</em>
+            {content.titleStart} <em className="text-[#E10600] not-italic italic">{content.titleEm}</em>
           </h1>
-          <p className="text-base text-[#0F0F0F]/55 max-w-lg mx-auto">Industry insights, behind-the-scenes stories, and creative inspiration from the Mejasan team.</p>
+          <p className="text-base text-[#0F0F0F]/55 max-w-lg mx-auto">{content.intro}</p>
         </div>
       </div>
 
@@ -132,7 +144,7 @@ export default function BlogPage() {
         </div>
 
         {filtered.length === 0 && (
-          <p className="text-center py-24 text-[#0F0F0F]/40 font-display text-sm">No posts in this category yet.</p>
+          <p className="text-center py-24 text-[#0F0F0F]/40 font-display text-sm">{content.emptyStateText}</p>
         )}
       </div>
     </div>

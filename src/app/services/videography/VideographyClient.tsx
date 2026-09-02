@@ -16,7 +16,7 @@ export default function VideographyClient({
   weddingQuotation: PhotographyContent['weddingQuotation'];
 }) {
   const [activeVideo, setActiveVideo] = useState<string | null>(null);
-  const { hero, types, packages, cta } = content;
+  const { hero, typesLabel, typesHeading, typesSubheading, types, packagesLabel, packagesHeading, packagesButtonLabel, packages, videoModalFootnote, cta } = content;
 
   return (
     <div className="bg-[#0B0B0B]">
@@ -35,9 +35,9 @@ export default function VideographyClient({
       {/* Video type cards — white */}
       <section className="bg-white py-24 md:py-32">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-8 lg:px-16">
-          <div className="flex items-center gap-3 mb-4"><div className="w-8 h-px bg-[#E10600]" /><span className="text-[10px] font-display tracking-[0.3em] text-[#E10600] uppercase font-semibold">Specialisations</span></div>
-          <h2 className="text-[clamp(2rem,4vw,4rem)] font-heading font-light text-[#0F0F0F] mb-3">Video Production Services</h2>
-          <p className="text-[14px] text-[#0F0F0F]/45 font-display mb-12">Click any card to watch a sample reel</p>
+          <div className="flex items-center gap-3 mb-4"><div className="w-8 h-px bg-[#E10600]" /><span className="text-[10px] font-display tracking-[0.3em] text-[#E10600] uppercase font-semibold">{typesLabel}</span></div>
+          <h2 className="text-[clamp(2rem,4vw,4rem)] font-heading font-light text-[#0F0F0F] mb-3">{typesHeading}</h2>
+          <p className="text-[14px] text-[#0F0F0F]/45 font-display mb-12">{typesSubheading}</p>
           <div className="grid sm:grid-cols-2 gap-0.5">
             {types.map(({ title, img, imgPosition, desc, videoSrc }) => (
               <button
@@ -70,8 +70,8 @@ export default function VideographyClient({
       {/* Packages — off-white */}
       <section className="bg-[#F5F5F0] py-24 md:py-32">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-8 lg:px-16">
-          <div className="flex items-center gap-3 mb-4"><div className="w-8 h-px bg-[#E10600]" /><span className="text-[10px] font-display tracking-[0.3em] text-[#E10600] uppercase font-semibold">Pricing</span></div>
-          <h2 className="text-[clamp(2rem,4vw,4rem)] font-heading font-light text-[#0F0F0F] mb-12">Video Packages</h2>
+          <div className="flex items-center gap-3 mb-4"><div className="w-8 h-px bg-[#E10600]" /><span className="text-[10px] font-display tracking-[0.3em] text-[#E10600] uppercase font-semibold">{packagesLabel}</span></div>
+          <h2 className="text-[clamp(2rem,4vw,4rem)] font-heading font-light text-[#0F0F0F] mb-12">{packagesHeading}</h2>
           <div className="grid md:grid-cols-3 gap-0.5">
             {packages.map(({ name, price, duration, includes, featured }) => (
               <div key={name} className={`p-8 border relative ${featured ? 'border-[#E10600]/40 bg-white shadow-md' : 'border-[#0F0F0F]/[0.07] bg-white'}`}>
@@ -83,7 +83,7 @@ export default function VideographyClient({
                 <ul className="space-y-2.5 mb-8">
                   {includes.map((inc) => <li key={inc} className="flex items-center gap-2.5 text-[13px] text-[#0F0F0F]/65"><Check size={13} className="text-[#E10600] shrink-0" />{inc}</li>)}
                 </ul>
-                <Link href="/booking" className={`${featured ? 'btn-primary' : 'btn-outline-dark'} w-full justify-center`}>Book This Package</Link>
+                <Link href="/booking" className={`${featured ? 'btn-primary' : 'btn-outline-dark'} w-full justify-center`}>{packagesButtonLabel}</Link>
               </div>
             ))}
           </div>
@@ -93,7 +93,7 @@ export default function VideographyClient({
       {/* Traditional Wedding Packages — off-white (edited under Services — Photography) */}
       <section className="bg-[#F5F5F0] py-24 md:py-32">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-8 lg:px-16">
-          <div className="flex items-center gap-3 mb-4"><div className="w-8 h-px bg-[#E10600]" /><span className="text-[10px] font-display tracking-[0.3em] text-[#E10600] uppercase font-semibold">Weddings</span></div>
+          <div className="flex items-center gap-3 mb-4"><div className="w-8 h-px bg-[#E10600]" /><span className="text-[10px] font-display tracking-[0.3em] text-[#E10600] uppercase font-semibold">{traditionalWeddingPackages.label}</span></div>
           <h2 className="text-[clamp(2rem,4vw,4rem)] font-heading font-light text-[#0F0F0F] mb-3">{traditionalWeddingPackages.heading}</h2>
           <p className="text-[14px] text-[#0F0F0F]/50 font-display mb-12 max-w-2xl leading-relaxed">{traditionalWeddingPackages.description}</p>
           <div className="grid md:grid-cols-3 gap-0.5">
@@ -145,7 +145,7 @@ export default function VideographyClient({
       {/* Wedding Quotation — white (edited under Services — Photography) */}
       <section className="bg-white py-24 md:py-32">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-8 lg:px-16">
-          <div className="flex items-center gap-3 mb-4"><div className="w-8 h-px bg-[#E10600]" /><span className="text-[10px] font-display tracking-[0.3em] text-[#E10600] uppercase font-semibold">Weddings</span></div>
+          <div className="flex items-center gap-3 mb-4"><div className="w-8 h-px bg-[#E10600]" /><span className="text-[10px] font-display tracking-[0.3em] text-[#E10600] uppercase font-semibold">{weddingQuotation.label}</span></div>
           <h2 className="text-[clamp(2rem,4vw,4rem)] font-heading font-light text-[#0F0F0F] mb-3">{weddingQuotation.heading}</h2>
           <p className="text-[14px] text-[#0F0F0F]/50 font-display mb-12 max-w-xl leading-relaxed">{weddingQuotation.description}</p>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-0.5">
@@ -171,9 +171,9 @@ export default function VideographyClient({
         <h2 className="text-[clamp(1.8rem,4vw,3.5rem)] font-heading font-light text-white mb-4">{cta.heading}</h2>
         <p className="text-white/55 mb-8 max-w-md mx-auto text-sm">{cta.text}</p>
         <div className="flex flex-col sm:flex-row gap-4 items-center justify-center">
-          <Link href="/booking" className="btn-primary group">Book a Video Session <ArrowRight size={13} className="group-hover:translate-x-0.5 transition-transform" /></Link>
+          <Link href="/booking" className="btn-primary group">{cta.buttonLabel} <ArrowRight size={13} className="group-hover:translate-x-0.5 transition-transform" /></Link>
           <a href={`https://wa.me/254700864849?text=${WA_MSG}`} target="_blank" rel="noopener noreferrer" className="btn-outline group flex items-center gap-2">
-            <MessageCircle size={14} /> Request Demo Reel
+            <MessageCircle size={14} /> {cta.demoButtonLabel}
           </a>
         </div>
       </section>
@@ -214,7 +214,7 @@ export default function VideographyClient({
                 />
               </div>
               <p className="mt-4 text-center text-[12px] text-white/30 font-display">
-                Sample reel · Full portfolio available on request ·{' '}
+                {videoModalFootnote} ·{' '}
                 <a href="/contact" className="text-[#E10600] hover:underline">Contact us</a>
               </p>
             </motion.div>

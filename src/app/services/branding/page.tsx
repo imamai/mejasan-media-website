@@ -22,7 +22,7 @@ export default async function BrandingPage() {
   const sb = await createClient();
   const { data } = await sb.from('mejasan_page_content').select('content').eq('page_slug', 'services-branding').maybeSingle();
   const content = getPageContent('services-branding', data?.content) as BrandingContent;
-  const { hero, services, process, cta } = content;
+  const { hero, services, processLabel, processHeading, process, cta } = content;
 
   return (
     <div className="bg-[#0B0B0B]">
@@ -64,8 +64,8 @@ export default async function BrandingPage() {
       {/* Process — off-white */}
       <section className="bg-[#F5F5F0] py-24 md:py-32">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-8 lg:px-16">
-          <div className="flex items-center gap-3 mb-4"><div className="w-8 h-px bg-[#E10600]" /><span className="text-[10px] font-display tracking-[0.3em] text-[#E10600] uppercase font-semibold">The Approach</span></div>
-          <h2 className="text-[clamp(2rem,4vw,4rem)] font-heading font-light text-[#0F0F0F] mb-12">How We Build Brands</h2>
+          <div className="flex items-center gap-3 mb-4"><div className="w-8 h-px bg-[#E10600]" /><span className="text-[10px] font-display tracking-[0.3em] text-[#E10600] uppercase font-semibold">{processLabel}</span></div>
+          <h2 className="text-[clamp(2rem,4vw,4rem)] font-heading font-light text-[#0F0F0F] mb-12">{processHeading}</h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {process.map(({ num, title, desc }) => (
               <div key={num} className="flex gap-4">
@@ -84,7 +84,7 @@ export default async function BrandingPage() {
       <section className="bg-[#0B0B0B] py-20 text-center px-4">
         <h2 className="text-[clamp(1.8rem,4vw,3.5rem)] font-heading font-light text-white mb-4">{cta.heading}</h2>
         <p className="text-white/55 mb-8 max-w-md mx-auto text-sm">{cta.text}</p>
-        <Link href="/booking" className="btn-primary inline-flex group">Start Your Brand Project <ArrowRight size={13} className="group-hover:translate-x-0.5 transition-transform" /></Link>
+        <Link href="/booking" className="btn-primary inline-flex group">{cta.buttonLabel} <ArrowRight size={13} className="group-hover:translate-x-0.5 transition-transform" /></Link>
       </section>
     </div>
   );
