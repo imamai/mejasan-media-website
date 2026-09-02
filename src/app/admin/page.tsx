@@ -808,8 +808,8 @@ function LeadModal({
           </select>
         </div>
         <DL pairs={[
-          ['Email', item.email], ['Phone', item.phone], ['Service', item.service_type ?? item.subject],
-          ['Event Date', item.event_date], ['Budget', item.budget_range], ['Message', item.message],
+          ['Email', item.email], ['Phone', item.phone], ['Service', item.service],
+          ['Event Date', item.event_date], ['Budget', item.budget], ['Message', item.message],
         ]} />
         <Field label="Notes"><textarea rows={4} value={notes} onChange={(e) => setNotes(e.target.value)} className={textareaCls} placeholder="Internal notes about this lead…" /></Field>
         <Field label="Tags (comma-separated)"><input value={tagsText} onChange={(e) => setTagsText(e.target.value)} className={inputCls} placeholder="e.g. wedding, high-budget, referral" /></Field>
@@ -879,7 +879,7 @@ function ClientModal({
                     <div className="space-y-2">
                       {rows.map((r) => (
                         <div key={r.id as string} className="flex items-center justify-between text-[12px] font-display text-white/60 py-1.5 border-b border-white/[0.04] last:border-0">
-                          <span>{(r.title ?? r.booking_ref ?? r.invoice_number ?? `${r.bride_name ?? ''} & ${r.groom_name ?? ''}`) as string}</span>
+                          <span>{(r.title ?? r.reference ?? r.invoice_number ?? `${r.bride_name ?? ''} & ${r.groom_name ?? ''}`) as string}</span>
                           {r.status ? <Chip status={r.status as string} /> : null}
                         </div>
                       ))}
@@ -970,7 +970,7 @@ function InvoiceModal({
           <Field label="Linked Booking (optional)">
             <select value={bookingId} onChange={(e) => setBookingId(e.target.value)} className={selectCls}>
               <option value="">— None —</option>
-              {bookings.map((b) => <option key={b.id as string} value={b.id as string}>{b.booking_ref as string}</option>)}
+              {bookings.map((b) => <option key={b.id as string} value={b.id as string}>{b.reference as string}</option>)}
             </select>
           </Field>
           <Field label="Linked Project (optional)">
@@ -1576,8 +1576,8 @@ function AdminDashboard({ user, onSignOut }: { user: User; onSignOut: () => void
               {bookings.filter((b) => b.status !== 'cancelled').slice(0, 5).map((b) => (
                 <div key={b.id as string} className="flex items-center justify-between gap-3 py-2 border-b border-white/[0.04] last:border-0">
                   <div className="min-w-0">
-                    <div className="text-[12px] font-display text-white truncate">{b.booking_ref as string}</div>
-                    <div className="text-[10px] text-white/30 truncate">{b.service_type as string} · {b.event_date ? new Date(b.event_date as string).toLocaleDateString('en-KE') : 'TBD'}</div>
+                    <div className="text-[12px] font-display text-white truncate">{b.reference as string}</div>
+                    <div className="text-[10px] text-white/30 truncate">{b.service as string} · {b.event_date ? new Date(b.event_date as string).toLocaleDateString('en-KE') : 'TBD'}</div>
                   </div>
                   <Chip status={b.status as string} />
                 </div>
@@ -1620,7 +1620,7 @@ function AdminDashboard({ user, onSignOut }: { user: User; onSignOut: () => void
             <tr key={l.id as string} className="hover:bg-white/[0.02] transition-colors">
               <TD className="font-semibold text-white">{l.name as string}</TD>
               <TD>{l.email as string}</TD>
-              <TD>{(l.service_type as string) ?? (l.subject as string) ?? '—'}</TD>
+              <TD>{(l.service as string) ?? '—'}</TD>
               <TD>{l.event_date ? new Date(l.event_date as string).toLocaleDateString('en-KE') : '—'}</TD>
               <TD><Chip status={(l.status as string) ?? 'new'} /></TD>
               <TD>
@@ -1649,9 +1649,9 @@ function AdminDashboard({ user, onSignOut }: { user: User; onSignOut: () => void
         <AdminTable heads={['Ref', 'Client', 'Service', 'Date', 'Location', 'Status', 'Update']} onRefresh={fetchAll}>
           {bookings.filter((b) => !bookingsQuery || `${b.client_name} ${b.client_email}`.toLowerCase().includes(bookingsQuery.toLowerCase())).map((b) => (
             <tr key={b.id as string} className="hover:bg-white/[0.02]">
-              <TD className="text-white font-semibold">{b.booking_ref as string}</TD>
+              <TD className="text-white font-semibold">{b.reference as string}</TD>
               <TD>{(b.client_name as string) ?? (b.client_email as string) ?? '—'}</TD>
-              <TD>{b.service_type as string}</TD>
+              <TD>{b.service as string}</TD>
               <TD>{b.event_date ? new Date(b.event_date as string).toLocaleDateString('en-KE') : '—'}</TD>
               <TD>{(b.event_location as string) ?? '—'}</TD>
               <TD><Chip status={b.status as string} /></TD>

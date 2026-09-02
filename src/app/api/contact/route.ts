@@ -4,11 +4,12 @@ import { createAdminClient } from '@/lib/supabase/server';
 async function sendEmail(to: string, subject: string, html: string) {
   const key = process.env.RESEND_API_KEY;
   if (!key || key === 're_...') return; // not configured
-  const from = `${process.env.RESEND_FROM_NAME ?? 'Mejasan Media'} <${process.env.RESEND_FROM_EMAIL ?? 'noreply@mejasanmedia.com'}>`;
+  const from = `${process.env.RESEND_FROM_NAME ?? 'Mejasan Media'} <${process.env.RESEND_FROM_EMAIL ?? 'noreply@edoscentre.co.ke'}>`;
+  const replyTo = process.env.RESEND_REPLY_TO ?? 'info@mejasanmedia.com';
   await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ from, to: [to], subject, html }),
+    body: JSON.stringify({ from, to: [to], reply_to: replyTo, subject, html }),
   });
 }
 
@@ -22,19 +23,19 @@ export async function POST(req: Request) {
     if (type === 'booking') {
       const ref = `MJB-${Math.random().toString(36).substring(2,8).toUpperCase()}`;
       const { error } = await supabase.from('mejasan_bookings').insert({
-        booking_ref:     ref,
+        reference:       ref,
         client_name:     `${first_name} ${last_name}`.trim(),
         client_email:    email,
         client_phone:    phone,
-        service_type:    service,
+        service:         service,
         event_date:      event_date || null,
-        event_time:      event_time || null,
+        event_type:      service,
         event_location:  location,
         duration:        duration || null,
-        budget_range:    budget,
-        heard_via:       hear || null,
-        notes:           message,
+        budget:          budget,
+        notes:           event_time ? `Preferred time: ${event_time}\n\n${message ?? ''}`.trim() : message,
         status:          'pending',
+        metadata:        { heard_via: hear || null, event_time: event_time || null },
       });
       if (error) throw error;
 
@@ -63,20 +64,22 @@ export async function POST(req: Request) {
     }
 
     // General contact form
+    const subjectLine = subject || service || 'Website Enquiry';
     const { error } = await supabase.from('mejasan_contact_submissions').insert({
       name:    name ?? `${first_name ?? ''} ${last_name ?? ''}`.trim(),
       email,
       phone:   phone || null,
-      subject: subject || service || 'Website Enquiry',
+      service: subjectLine,
       message,
       status: 'new',
+      metadata: { subject: subjectLine },
     });
     if (error) throw error;
 
-    await sendEmail('info@mejasanmedia.com', `New Contact: ${subject}`, `
+    await sendEmail('info@mejasanmedia.com', `New Contact: ${subjectLine}`, `
       <h3>New Contact Form Submission</h3>
       <p><strong>From:</strong> ${name} (${email})</p>
-      <p><strong>Subject:</strong> ${subject}</p>
+      <p><strong>Subject:</strong> ${subjectLine}</p>
       <p><strong>Message:</strong></p>
       <p>${message}</p>
     `);

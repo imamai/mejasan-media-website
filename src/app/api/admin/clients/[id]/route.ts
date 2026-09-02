@@ -27,7 +27,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     const email = user?.user?.email ?? '';
 
     const [bookings, projects, invoices, weddingIntake] = await Promise.all([
-      admin.from('mejasan_bookings').select('id,booking_ref,status,event_date').eq('client_user_id', id).order('created_at', { ascending: false }),
+      admin.from('mejasan_bookings').select('id,reference,status,event_date').eq('client_user_id', id).order('created_at', { ascending: false }),
       admin.from('mejasan_projects').select('id,title,status,stage').eq('client_user_id', id).order('created_at', { ascending: false }),
       admin.from('mejasan_invoices').select('id,invoice_number,status,total_amount').eq('client_user_id', id).order('created_at', { ascending: false }),
       email

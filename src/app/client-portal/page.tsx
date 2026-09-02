@@ -340,8 +340,8 @@ function Dashboard({ user, session, onSignOut }: { user: User; session: Session;
                   {bookings.map((b: Record<string,unknown>) => (
                     <div key={b.id as string} className="bg-[#141414] border border-white/[0.06] p-5 flex items-center justify-between">
                       <div>
-                        <div className="text-[10px] font-display text-[#E10600] uppercase tracking-widest mb-1">{b.service_type as string}</div>
-                        <div className="text-sm font-display text-white">{b.booking_ref as string} · {b.event_date ? new Date(b.event_date as string).toLocaleDateString('en-KE') : 'TBD'}</div>
+                        <div className="text-[10px] font-display text-[#E10600] uppercase tracking-widest mb-1">{b.service as string}</div>
+                        <div className="text-sm font-display text-white">{b.reference as string} · {b.event_date ? new Date(b.event_date as string).toLocaleDateString('en-KE') : 'TBD'}</div>
                         <div className="text-[11px] text-white/30 font-display mt-0.5">{b.event_location as string}</div>
                       </div>
                       <StatusBadge status={b.status as string} />

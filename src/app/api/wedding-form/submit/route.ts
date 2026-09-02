@@ -27,11 +27,12 @@ interface SubmitBody {
 async function sendEmail(to: string, subject: string, html: string, attachments: { filename: string; content: string }[]) {
   const key = process.env.RESEND_API_KEY;
   if (!key || key === 're_...') return;
-  const from = `${process.env.RESEND_FROM_NAME ?? 'Mejasan Media'} <${process.env.RESEND_FROM_EMAIL ?? 'noreply@mejasanmedia.com'}>`;
+  const from = `${process.env.RESEND_FROM_NAME ?? 'Mejasan Media'} <${process.env.RESEND_FROM_EMAIL ?? 'noreply@edoscentre.co.ke'}>`;
+  const replyTo = process.env.RESEND_REPLY_TO ?? 'info@mejasanmedia.com';
   await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ from, to: [to], subject, html, attachments }),
+    body: JSON.stringify({ from, to: [to], reply_to: replyTo, subject, html, attachments }),
   });
 }
 
