@@ -165,9 +165,12 @@ const cstyles = StyleSheet.create({
   clause: { marginBottom: 9 },
   clauseTitle: { fontSize: 9.5, fontFamily: 'Helvetica-Bold', marginBottom: 2 },
   clauseText: { fontSize: 9, lineHeight: 1.4, color: '#222' },
-  consentRow: { flexDirection: 'row', marginBottom: 3, alignItems: 'flex-start' },
-  consentBox: { fontSize: 9, marginRight: 6 },
+  consentRow: { flexDirection: 'row', marginBottom: 5, alignItems: 'flex-start' },
+  consentBoxWrap: { width: 11, height: 11, borderWidth: 1.2, borderColor: '#0a0a0a', marginRight: 7, marginTop: 1, alignItems: 'center', justifyContent: 'center' },
+  consentBoxWrapChecked: { borderColor: RED, backgroundColor: RED },
+  consentBoxMark: { fontSize: 8, fontFamily: 'Helvetica-Bold', color: '#fff' },
   consentLabel: { fontSize: 9, fontFamily: 'Helvetica-Bold' },
+  consentSelected: { fontSize: 9.5, fontFamily: 'Helvetica-Bold', color: RED, marginTop: 4 },
   refLine: { fontSize: 9, fontFamily: 'Helvetica-Oblique', marginTop: 14, marginBottom: 4 },
   signingLine: { fontSize: 8.5, fontFamily: 'Helvetica-Bold', textAlign: 'center', marginTop: 10, marginBottom: 4 },
   hr: { borderBottomWidth: 1, borderBottomColor: RED, marginBottom: 16 },
@@ -182,7 +185,16 @@ const cstyles = StyleSheet.create({
   footer: { position: 'absolute', bottom: 24, left: 44, right: 44, textAlign: 'center' },
   footerRule: { borderBottomWidth: 1, borderBottomColor: RED, marginBottom: 6 },
   footerText: { fontSize: 7.5, fontFamily: 'Helvetica-Oblique', color: '#888' },
+  reviewBox: { borderWidth: 1, borderColor: RED, padding: 12, marginTop: 16 },
+  reviewTitle: { fontSize: 9.5, fontFamily: 'Helvetica-Bold', color: RED, marginBottom: 6 },
+  reviewText: { fontSize: 9, lineHeight: 1.4, color: '#222', marginBottom: 2 },
 });
+
+export interface CompanySignoff {
+  name: string;
+  title?: string;
+  date: string;
+}
 
 function SigCell({ heading, name, dateLabel, date, sig }: { heading: string; name: string; dateLabel: string; date: string; sig?: string | null }) {
   return (
@@ -199,11 +211,13 @@ function SigCell({ heading, name, dateLabel, date, sig }: { heading: string; nam
   );
 }
 
-function ContractDocument({ d, weddingCoupleLabel, sigs, generatedDate }: {
+function ContractDocument({ d, weddingCoupleLabel, sigs, generatedDate, invoiceNumber, companySignoff }: {
   d: WeddingContractData;
   weddingCoupleLabel: string;
   sigs: WeddingContractSignatures;
   generatedDate: string;
+  invoiceNumber?: string | null;
+  companySignoff?: CompanySignoff | null;
 }) {
   const isYes = /^yes/i.test(d.media_consent || '');
   const isNo = /^no/i.test(d.media_consent || '');
@@ -256,17 +270,24 @@ function ContractDocument({ d, weddingCoupleLabel, sigs, generatedDate }: {
           <Text style={cstyles.clauseText}>Upon final delivery, the CLIENT holds full usage rights. The COMPANY may share select content for promotional purposes. Please indicate your preference:</Text>
           <View style={{ marginTop: 6 }}>
             <View style={cstyles.consentRow}>
-              <Text style={cstyles.consentBox}>{isYes ? '☑' : '☐'}</Text>
+              <View style={[cstyles.consentBoxWrap, isYes ? cstyles.consentBoxWrapChecked : undefined]}>
+                {isYes && <Text style={cstyles.consentBoxMark}>X</Text>}
+              </View>
               <Text style={cstyles.consentLabel}>YES — I give Mejasan Media Production permission to use selected content from my event for promotional purposes.</Text>
             </View>
             <View style={cstyles.consentRow}>
-              <Text style={cstyles.consentBox}>{isNo ? '☑' : '☐'}</Text>
+              <View style={[cstyles.consentBoxWrap, isNo ? cstyles.consentBoxWrapChecked : undefined]}>
+                {isNo && <Text style={cstyles.consentBoxMark}>X</Text>}
+              </View>
               <Text style={cstyles.consentLabel}>NO — I prefer my content to remain private and not be shared publicly.</Text>
             </View>
           </View>
+          <Text style={cstyles.consentSelected}>
+            Client&apos;s selection: {isYes ? 'YES — permission given to use content for promotional purposes.' : isNo ? 'NO — content to remain private and not shared publicly.' : 'Not yet answered.'}
+          </Text>
         </View>
 
-        <Text style={cstyles.refLine}>REFERENCE: This agreement refers to Quote/Invoice No: {d.quote_ref || '____________________________'}</Text>
+        <Text style={cstyles.refLine}>REFERENCE: This agreement refers to Quote/Invoice No: {invoiceNumber || d.quote_ref || '____________________________'}</Text>
 
         <Text style={cstyles.signingLine}>By signing this contract, Mejasan Media Production and the CLIENT agree to all terms and conditions stated above and in the related invoice.</Text>
         <View style={cstyles.hr} />
@@ -292,6 +313,16 @@ function ContractDocument({ d, weddingCoupleLabel, sigs, generatedDate }: {
           </View>
         </View>
 
+        {companySignoff?.name ? (
+          <View style={cstyles.reviewBox} wrap={false}>
+            <Text style={cstyles.reviewTitle}>REVIEWED &amp; APPROVED — MEJASAN MEDIA PRODUCTION</Text>
+            <Text style={cstyles.reviewText}>This contract has been reviewed and formally approved by Mejasan Media Production management, and constitutes the final signed copy of this agreement.</Text>
+            <Text style={cstyles.reviewText}>Approved by: {companySignoff.name}{companySignoff.title ? `, ${companySignoff.title}` : ''}</Text>
+            <Text style={cstyles.reviewText}>Date reviewed: {companySignoff.date}</Text>
+            <Text style={cstyles.reviewText}>Invoice/Quote No: {invoiceNumber || d.quote_ref || '—'}</Text>
+          </View>
+        ) : null}
+
         <View style={cstyles.footer} fixed>
           <View style={cstyles.footerRule} />
           <Text style={cstyles.footerText}>Mejasan Media Production · We Deliver Quality · Kisumu, Kenya · Contract generated {generatedDate}</Text>
@@ -309,7 +340,17 @@ export async function renderContractPdf(
   data: WeddingContractData,
   weddingCoupleLabel: string,
   sigs: WeddingContractSignatures,
-  generatedDate: string
+  generatedDate: string,
+  options?: { invoiceNumber?: string | null; companySignoff?: CompanySignoff | null }
 ): Promise<Buffer> {
-  return renderToBuffer(<ContractDocument d={data} weddingCoupleLabel={weddingCoupleLabel} sigs={sigs} generatedDate={generatedDate} />);
+  return renderToBuffer(
+    <ContractDocument
+      d={data}
+      weddingCoupleLabel={weddingCoupleLabel}
+      sigs={sigs}
+      generatedDate={generatedDate}
+      invoiceNumber={options?.invoiceNumber}
+      companySignoff={options?.companySignoff}
+    />
+  );
 }

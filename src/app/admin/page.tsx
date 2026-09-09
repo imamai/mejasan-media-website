@@ -160,7 +160,7 @@ function DeleteConfirm({ label, onConfirm, onClose, busy }: { label: string; onC
         <AlertTriangle size={28} className="text-red-400" />
         <p className="text-white/60 font-display text-sm">Delete <span className="text-white font-semibold">{label}</span>? This cannot be undone.</p>
         <div className="flex gap-3">
-          <button onClick={onClose} className="btn-outline-dark px-6 py-2 text-[11px]">Cancel</button>
+          <button onClick={onClose} className="btn-outline px-6 py-2 text-[11px]">Cancel</button>
           <button onClick={onConfirm} disabled={busy} className="bg-red-600 hover:bg-red-700 text-white font-display text-[11px] tracking-widest uppercase px-6 py-2 disabled:opacity-50 transition-colors">
             {busy ? 'Deleting…' : 'Delete'}
           </button>
@@ -327,7 +327,7 @@ function PortfolioModal({
           <span className="text-[12px] font-display text-white/50">Publish immediately</span>
         </label>
         <div className="flex gap-3 pt-2">
-          <button onClick={onClose} className="btn-outline-dark flex-1 justify-center py-2.5 text-[11px]">Cancel</button>
+          <button onClick={onClose} className="btn-outline flex-1 justify-center py-2.5 text-[11px]">Cancel</button>
           <button onClick={submit} disabled={busy} className="btn-primary flex-1 justify-center disabled:opacity-50">
             <Save size={12} /> {busy ? 'Saving…' : 'Save'}
           </button>
@@ -412,7 +412,7 @@ function BlogModal({
           <span className="text-[12px] font-display text-white/50">Publish immediately</span>
         </label>
         <div className="flex gap-3 pt-2">
-          <button onClick={onClose} className="btn-outline-dark flex-1 justify-center py-2.5 text-[11px]">Cancel</button>
+          <button onClick={onClose} className="btn-outline flex-1 justify-center py-2.5 text-[11px]">Cancel</button>
           <button onClick={submit} disabled={busy} className="btn-primary flex-1 justify-center disabled:opacity-50">
             <Save size={12} /> {busy ? 'Saving…' : 'Save Post'}
           </button>
@@ -476,7 +476,7 @@ function TestimonialModal({
           <span className="text-[12px] font-display text-white/50">Published</span>
         </label>
         <div className="flex gap-3 pt-2">
-          <button onClick={onClose} className="btn-outline-dark flex-1 justify-center py-2.5 text-[11px]">Cancel</button>
+          <button onClick={onClose} className="btn-outline flex-1 justify-center py-2.5 text-[11px]">Cancel</button>
           <button onClick={submit} disabled={busy} className="btn-primary flex-1 justify-center disabled:opacity-50">
             <Save size={12} /> {busy ? 'Saving…' : 'Save'}
           </button>
@@ -574,7 +574,7 @@ function ProjectModal({
           <textarea rows={3} value={form.description} onChange={(e) => set('description', e.target.value)} className={textareaCls} placeholder="Notes about this project…" />
         </Field>
         <div className="flex gap-3 pt-2">
-          <button onClick={onClose} className="btn-outline-dark flex-1 justify-center py-2.5 text-[11px]">Cancel</button>
+          <button onClick={onClose} className="btn-outline flex-1 justify-center py-2.5 text-[11px]">Cancel</button>
           <button onClick={submit} disabled={busy} className="btn-primary flex-1 justify-center disabled:opacity-50">
             <Save size={12} /> {busy ? 'Saving…' : 'Save'}
           </button>
@@ -657,7 +657,7 @@ function DocumentModal({
           <DocumentUploadField value={form.docs} onChange={(docs) => set('docs', docs)} />
         </Field>
         <div className="flex gap-3 pt-2">
-          <button onClick={onClose} className="btn-outline-dark flex-1 justify-center py-2.5 text-[11px]">Cancel</button>
+          <button onClick={onClose} className="btn-outline flex-1 justify-center py-2.5 text-[11px]">Cancel</button>
           <button onClick={submit} disabled={busy} className="btn-primary flex-1 justify-center disabled:opacity-50">
             <Save size={12} /> {busy ? 'Saving…' : 'Save & Generate Link'}
           </button>
@@ -668,8 +668,6 @@ function DocumentModal({
 }
 
 /* ── Wedding Form Modal ────────────────────────────────────────────── */
-const WF_STATUSES = ['submitted', 'reviewed'];
-
 const QUESTIONNAIRE_LABELS: [string, string][] = [
   ['theme_colors', 'Theme Colour(s)'], ['wedding_theme', 'Theme / Concept'],
   ['bride_prep_location', 'Bride Prep Location'], ['groom_prep_location', 'Groom Prep Location'],
@@ -715,9 +713,38 @@ function DL({ pairs }: { pairs: [string, unknown][] }) {
   );
 }
 
+function ConsentBadge({ value }: { value: string }) {
+  const isYes = /^yes/i.test(value || '');
+  const isNo = /^no/i.test(value || '');
+  if (isYes) return <span className="inline-flex items-center gap-1 text-[11px] font-display font-semibold text-emerald-400"><Check size={13} strokeWidth={3} /> YES — permission given</span>;
+  if (isNo) return <span className="inline-flex items-center gap-1 text-[11px] font-display font-semibold text-[#E10600]"><X size={13} strokeWidth={3} /> NO — kept private</span>;
+  return <span className="inline-flex items-center gap-1 text-[11px] font-display text-white/30">— Not yet answered</span>;
+}
+
+function EditGrid({ pairs, values, onChange }: { pairs: [string, string][]; values: Record<string, string>; onChange: (key: string, val: string) => void }) {
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
+      {pairs.map(([key, label]) => (
+        <div key={key}>
+          <label className="block text-[9px] font-display tracking-widest uppercase text-white/25 mb-1">{label}</label>
+          <input value={values[key] ?? ''} onChange={(e) => onChange(key, e.target.value)} className={`${inputCls} text-[12px] py-2`} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function fmtDateTime(v?: string | null) {
+  if (!v) return '—';
+  try { return new Date(v).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }); }
+  catch { return v; }
+}
+
+type PatchResult = { ok: boolean; error?: string; missing?: string[]; item?: Record<string, unknown> };
+
 function WeddingFormModal({
-  item, onClose, onStatusChange,
-}: { item: Record<string, unknown>; onClose: () => void; onStatusChange: (id: string, status: string) => Promise<void> }) {
+  item, onClose, onPatch,
+}: { item: Record<string, unknown>; onClose: () => void; onPatch: (id: string, body: Record<string, unknown>) => Promise<PatchResult> }) {
   const q = (item.questionnaire as Record<string, unknown>) ?? {};
   const c = (item.contract as Record<string, unknown>) ?? {};
   const sigs = [
@@ -727,43 +754,176 @@ function WeddingFormModal({
     ['Witness (Company)', item.signature_company_witness_url as string | null],
   ] as [string, string | null][];
 
+  const [top, setTop] = useState({
+    bride_name: (item.bride_name as string) ?? '',
+    groom_name: (item.groom_name as string) ?? '',
+    wedding_date: (item.wedding_date as string) ?? '',
+    client_email: (item.client_email as string) ?? '',
+    client_phone: (item.client_phone as string) ?? '',
+  });
+  const [qEdits, setQEdits] = useState<Record<string, string>>(() => {
+    const out: Record<string, string> = {};
+    QUESTIONNAIRE_LABELS.forEach(([k]) => { out[k] = (q[k] as string) ?? ''; });
+    return out;
+  });
+  const [cEdits, setCEdits] = useState<Record<string, string>>(() => {
+    const out: Record<string, string> = {};
+    CONTRACT_LABELS.forEach(([k]) => { out[k] = (c[k] as string) ?? ''; });
+    return out;
+  });
+  const [invoiceNumber, setInvoiceNumber] = useState((item.invoice_number as string) ?? '');
+  const [signoffName, setSignoffName] = useState((item.company_signoff_name as string) ?? '');
+  const [signoffTitle, setSignoffTitle] = useState((item.company_signoff_title as string) ?? '');
+  const [status, setStatus] = useState((item.status as string) ?? 'submitted');
+  const [busy, setBusy] = useState<'save' | 'finalize' | 'revert' | null>(null);
+  const [missing, setMissing] = useState<string[] | null>(null);
+  const [meta, setMeta] = useState({
+    reviewed_by: item.reviewed_by as string | null,
+    reviewed_at: item.reviewed_at as string | null,
+    company_signoff_at: item.company_signoff_at as string | null,
+    signed_contract_pdf_url: item.signed_contract_pdf_url as string | null,
+    client_notified_at: item.client_notified_at as string | null,
+  });
+
+  const runSave = async (finalize: boolean) => {
+    setBusy(finalize ? 'finalize' : 'save');
+    setMissing(null);
+    const res = await onPatch(item.id as string, {
+      ...top,
+      questionnaire: qEdits,
+      contract: cEdits,
+      invoice_number: invoiceNumber,
+      company_signoff_name: signoffName,
+      company_signoff_title: signoffTitle,
+      finalize,
+    });
+    setBusy(null);
+    if (!res.ok) {
+      if (res.missing) setMissing(res.missing);
+      toast.error(res.error || 'Save failed');
+      return;
+    }
+    if (finalize) {
+      setStatus('reviewed');
+      const it = res.item ?? {};
+      setMeta({
+        reviewed_by: it.reviewed_by as string | null,
+        reviewed_at: it.reviewed_at as string | null,
+        company_signoff_at: it.company_signoff_at as string | null,
+        signed_contract_pdf_url: it.signed_contract_pdf_url as string | null,
+        client_notified_at: it.client_notified_at as string | null,
+      });
+      toast.success('Reviewed — signed contract sent to client & info@mejasanmedia.com');
+    } else {
+      toast.success('Changes saved');
+    }
+  };
+
+  const runRevert = async () => {
+    setBusy('revert');
+    const res = await onPatch(item.id as string, { status: 'submitted', finalize: false });
+    setBusy(null);
+    if (!res.ok) { toast.error(res.error || 'Failed to revert'); return; }
+    setStatus('submitted');
+    toast.success('Reverted to Submitted');
+  };
+
+  const canFinalize = !!invoiceNumber.trim() && !!signoffName.trim();
+
   return (
-    <Modal title={`${item.bride_name as string} & ${item.groom_name as string}`} onClose={onClose} wide>
+    <Modal title={`${top.bride_name} & ${top.groom_name}`} onClose={onClose} wide>
       <div className="space-y-8">
         <div className="flex flex-wrap items-center gap-3">
-          <select
-            value={item.status as string}
-            onChange={(e) => onStatusChange(item.id as string, e.target.value)}
-            className={`${selectCls} w-auto`}
-          >
-            {WF_STATUSES.map((s) => <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>)}
-          </select>
+          <span className={`text-[10px] font-display tracking-widest uppercase px-3 py-1.5 border ${status === 'reviewed' ? 'border-emerald-400/30 text-emerald-400' : 'border-white/[0.12] text-white/50'}`}>
+            {status === 'reviewed' ? 'Reviewed' : 'Submitted'}
+          </span>
           {!!item.questionnaire_pdf_url && (
-            <a href={item.questionnaire_pdf_url as string} target="_blank" rel="noreferrer" className="btn-outline-dark px-4 py-2 text-[10px] flex items-center gap-1.5">
+            <a href={item.questionnaire_pdf_url as string} target="_blank" rel="noreferrer" className="btn-outline px-4 py-2 text-[10px] flex items-center gap-1.5">
               <DownloadIcon size={12} /> Questionnaire PDF
             </a>
           )}
           {!!item.contract_pdf_url && (
-            <a href={item.contract_pdf_url as string} target="_blank" rel="noreferrer" className="btn-outline-dark px-4 py-2 text-[10px] flex items-center gap-1.5">
-              <DownloadIcon size={12} /> Contract PDF
+            <a href={item.contract_pdf_url as string} target="_blank" rel="noreferrer" className="btn-outline px-4 py-2 text-[10px] flex items-center gap-1.5">
+              <DownloadIcon size={12} /> Contract PDF (as submitted)
+            </a>
+          )}
+          {meta.signed_contract_pdf_url && (
+            <a href={meta.signed_contract_pdf_url} target="_blank" rel="noreferrer" className="btn-outline px-4 py-2 text-[10px] flex items-center gap-1.5 border-emerald-400/30 text-emerald-400">
+              <DownloadIcon size={12} /> Signed Contract (full copy)
             </a>
           )}
           {item.is_correction ? <Chip status="corrected" /> : null}
         </div>
 
+        {status === 'reviewed' && (
+          <div className="border border-emerald-400/20 bg-emerald-400/[0.04] px-4 py-3 text-[11px] font-display text-white/60 space-y-1">
+            <div>Approved by <span className="text-white/90">{signoffName || '—'}</span>{signoffTitle ? `, ${signoffTitle}` : ''} on {fmtDateTime(meta.company_signoff_at)}</div>
+            <div>Reviewed by (admin account): <span className="text-white/90">{meta.reviewed_by || '—'}</span></div>
+            <div>Signed copy emailed to {top.client_email} and info@mejasanmedia.com on {fmtDateTime(meta.client_notified_at)}</div>
+          </div>
+        )}
+
+        {missing && (
+          <div className="border border-[#E10600]/30 bg-[#E10600]/[0.06] px-4 py-3 text-[11px] font-display text-white/70 flex gap-2.5">
+            <AlertTriangle size={14} className="text-[#E10600] shrink-0 mt-0.5" />
+            <div>
+              <div className="text-white/90 mb-1">Cannot mark as reviewed — missing:</div>
+              <ul className="list-disc list-inside space-y-0.5 text-white/60">{missing.map((m) => <li key={m}>{m}</li>)}</ul>
+            </div>
+          </div>
+        )}
+
+        <div>
+          <h3 className="text-[11px] font-display tracking-widest uppercase text-white/40 mb-3 pb-2 border-b border-white/[0.06]">Couple &amp; Contact</h3>
+          <EditGrid
+            pairs={[['bride_name', 'Bride Name'], ['groom_name', 'Groom Name'], ['wedding_date', 'Wedding Date'], ['client_email', 'Client Email'], ['client_phone', 'Client Phone']]}
+            values={top}
+            onChange={(k, v) => setTop((s) => ({ ...s, [k]: v }))}
+          />
+        </div>
+
         <div>
           <h3 className="text-[11px] font-display tracking-widest uppercase text-white/40 mb-3 pb-2 border-b border-white/[0.06]">Questionnaire</h3>
-          <DL pairs={[['Wedding Date', item.wedding_date], ['Client Email', item.client_email], ['Client Phone', item.client_phone],
-            ...QUESTIONNAIRE_LABELS.map(([k, label]) => [label, q[k]] as [string, unknown])]} />
+          <EditGrid pairs={QUESTIONNAIRE_LABELS} values={qEdits} onChange={(k, v) => setQEdits((s) => ({ ...s, [k]: v }))} />
         </div>
 
         <div>
           <h3 className="text-[11px] font-display tracking-widest uppercase text-white/40 mb-3 pb-2 border-b border-white/[0.06]">Contract</h3>
-          <DL pairs={CONTRACT_LABELS.map(([k, label]) => [label, c[k]] as [string, unknown])} />
+          <div className="mb-5 border border-white/[0.08] px-4 py-3">
+            <label className="block text-[9px] font-display tracking-widest uppercase text-white/25 mb-1.5">Copyright &amp; Consent to Share</label>
+            <div className="flex flex-wrap items-center gap-3">
+              <select
+                value={cEdits.media_consent ?? ''}
+                onChange={(e) => setCEdits((s) => ({ ...s, media_consent: e.target.value }))}
+                className={`${selectCls} w-auto text-[12px] py-2`}
+              >
+                <option value="">— Not answered —</option>
+                <option value="Yes – I give permission">Yes — I give permission</option>
+                <option value="No – Keep my content private">No — Keep my content private</option>
+              </select>
+              <ConsentBadge value={cEdits.media_consent} />
+            </div>
+          </div>
+          <EditGrid pairs={CONTRACT_LABELS.filter(([k]) => k !== 'media_consent')} values={cEdits} onChange={(k, v) => setCEdits((s) => ({ ...s, [k]: v }))} />
         </div>
 
         <div>
-          <h3 className="text-[11px] font-display tracking-widest uppercase text-white/40 mb-3 pb-2 border-b border-white/[0.06]">Signatures</h3>
+          <h3 className="text-[11px] font-display tracking-widest uppercase text-white/40 mb-3 pb-2 border-b border-white/[0.06]">Office Use — Invoice &amp; Mejasan Sign-off</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-6 gap-y-3">
+            <Field label="Invoice Number">
+              <input value={invoiceNumber} onChange={(e) => setInvoiceNumber(e.target.value)} className={`${inputCls} text-[12px] py-2`} placeholder="e.g. INV-2026-014" />
+            </Field>
+            <Field label="Signed off by (Mejasan Media)">
+              <input value={signoffName} onChange={(e) => setSignoffName(e.target.value)} className={`${inputCls} text-[12px] py-2`} placeholder="Full name" />
+            </Field>
+            <Field label="Title / Role">
+              <input value={signoffTitle} onChange={(e) => setSignoffTitle(e.target.value)} className={`${inputCls} text-[12px] py-2`} placeholder="e.g. Director" />
+            </Field>
+          </div>
+        </div>
+
+        <div>
+          <h3 className="text-[11px] font-display tracking-widest uppercase text-white/40 mb-3 pb-2 border-b border-white/[0.06]">Signatures (captured on client form)</h3>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             {sigs.map(([label, url]) => (
               <div key={label}>
@@ -777,6 +937,26 @@ function WeddingFormModal({
               </div>
             ))}
           </div>
+        </div>
+
+        <div className="pt-2 border-t border-white/[0.06] space-y-3">
+          <div className="flex flex-wrap gap-3">
+            <button onClick={onClose} className="btn-outline px-6 py-2.5 text-[11px]">Close</button>
+            <button onClick={() => runSave(false)} disabled={busy !== null} className="btn-outline px-6 py-2.5 text-[11px] disabled:opacity-50">
+              {busy === 'save' ? 'Saving…' : 'Save Changes'}
+            </button>
+            <button onClick={() => runSave(true)} disabled={busy !== null || !canFinalize} className="btn-primary px-6 py-2.5 text-[11px] disabled:opacity-50" title={!canFinalize ? 'Invoice Number and Mejasan sign-off name are required' : undefined}>
+              {busy === 'finalize' ? 'Sending…' : status === 'reviewed' ? 'Resend Signed Copy to Client' : 'Mark Reviewed & Send Signed Copy'}
+            </button>
+            {status === 'reviewed' && (
+              <button onClick={runRevert} disabled={busy !== null} className="btn-outline px-6 py-2.5 text-[11px] disabled:opacity-50 border-white/[0.08] text-white/40">
+                {busy === 'revert' ? 'Reverting…' : 'Revert to Submitted'}
+              </button>
+            )}
+          </div>
+          <p className="text-[10px] font-display text-white/25 leading-relaxed">
+            Marking a submission reviewed requires: Invoice Number, a Mejasan Media sign-off name, a completed Copyright &amp; Consent answer, the core contract details (event date, location, cost, client name &amp; phone), and the client&apos;s signature already on file. It generates the final signed contract PDF and emails it to the client and info@mejasanmedia.com automatically.
+          </p>
         </div>
       </div>
     </Modal>
@@ -814,7 +994,7 @@ function LeadModal({
         <Field label="Notes"><textarea rows={4} value={notes} onChange={(e) => setNotes(e.target.value)} className={textareaCls} placeholder="Internal notes about this lead…" /></Field>
         <Field label="Tags (comma-separated)"><input value={tagsText} onChange={(e) => setTagsText(e.target.value)} className={inputCls} placeholder="e.g. wedding, high-budget, referral" /></Field>
         <div className="flex gap-3 pt-2">
-          <button onClick={onClose} className="btn-outline-dark flex-1 justify-center py-2.5 text-[11px]">Close</button>
+          <button onClick={onClose} className="btn-outline flex-1 justify-center py-2.5 text-[11px]">Close</button>
           <button onClick={submit} disabled={busy} className="btn-primary flex-1 justify-center disabled:opacity-50"><Save size={12} /> {busy ? 'Saving…' : 'Save Notes'}</button>
         </div>
       </div>
@@ -1009,7 +1189,7 @@ function InvoiceModal({
         </div>
 
         <div className="flex gap-3 pt-2">
-          <button onClick={onClose} className="btn-outline-dark flex-1 justify-center py-2.5 text-[11px]">Cancel</button>
+          <button onClick={onClose} className="btn-outline flex-1 justify-center py-2.5 text-[11px]">Cancel</button>
           <button onClick={submit} disabled={busy} className="btn-primary flex-1 justify-center disabled:opacity-50"><Save size={12} /> {busy ? 'Saving…' : 'Save Invoice'}</button>
         </div>
       </div>
@@ -1168,12 +1348,23 @@ function AdminDashboard({ user, onSignOut }: { user: User; onSignOut: () => void
     logActivity('status_change', 'booking', id, { status });
   };
 
-  const updateWeddingFormStatus = async (id: string, status: string) => {
-    await sb.from('mejasan_wedding_intake').update({ status }).eq('id', id);
-    setWeddingForms((f) => f.map((x) => (x.id === id ? { ...x, status } : x)));
-    setWeddingFormModal((m) => (m && m.id === id ? { ...m, status } : m));
-    toast.success('Status updated');
-    logActivity('status_change', 'wedding_intake', id, { status });
+  const patchWeddingForm = async (id: string, body: Record<string, unknown>) => {
+    const { data: { session } } = await sb.auth.getSession();
+    const res = await fetch(`/api/admin/wedding-intake/${id}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+      },
+      body: JSON.stringify(body),
+    });
+    const json = await res.json();
+    if (!res.ok) return { ok: false as const, error: json.error as string, missing: json.missing as string[] | undefined };
+    const item = json.item as Record<string, unknown>;
+    setWeddingForms((f) => f.map((x) => (x.id === id ? item : x)));
+    setWeddingFormModal((m) => (m && m.id === id ? item : m));
+    logActivity(body.finalize ? 'reviewed_and_sent' : 'update', 'wedding_intake', id, { finalize: !!body.finalize, status: item.status });
+    return { ok: true as const, item };
   };
 
   const LEAD_STATUSES = ['new', 'read', 'replied', 'archived'];
@@ -1689,12 +1880,13 @@ function AdminDashboard({ user, onSignOut }: { user: User; onSignOut: () => void
           <h2 className="text-2xl font-heading font-light text-white">Wedding Forms</h2>
           <span className="text-[11px] font-display text-white/30">{weddingForms.length} total</span>
         </div>
-        <AdminTable heads={['Couple', 'Wedding Date', 'Client Email', 'Status', 'Submitted', '']} onRefresh={fetchAll}>
+        <AdminTable heads={['Couple', 'Wedding Date', 'Client Email', 'Consent', 'Status', 'Submitted', '']} onRefresh={fetchAll}>
           {weddingForms.map((f) => (
             <tr key={f.id as string} className="hover:bg-white/[0.02]">
               <TD className="text-white font-semibold">{f.bride_name as string} &amp; {f.groom_name as string}</TD>
               <TD>{f.wedding_date ? new Date(f.wedding_date as string).toLocaleDateString('en-KE') : '—'}</TD>
               <TD>{f.client_email as string}</TD>
+              <TD><ConsentBadge value={((f.contract as Record<string, unknown> | undefined)?.media_consent as string) ?? ''} /></TD>
               <TD><Chip status={f.status as string} /></TD>
               <TD>{f.created_at ? new Date(f.created_at as string).toLocaleDateString('en-KE') : '—'}</TD>
               <TD>
@@ -1704,7 +1896,7 @@ function AdminDashboard({ user, onSignOut }: { user: User; onSignOut: () => void
               </TD>
             </tr>
           ))}
-          {weddingForms.length === 0 && <tr><td colSpan={6} className="px-5 py-12 text-center text-[12px] text-white/20">No wedding intake submissions yet.</td></tr>}
+          {weddingForms.length === 0 && <tr><td colSpan={7} className="px-5 py-12 text-center text-[12px] text-white/20">No wedding intake submissions yet.</td></tr>}
         </AdminTable>
       </div>
     ),
@@ -2250,7 +2442,7 @@ function AdminDashboard({ user, onSignOut }: { user: User; onSignOut: () => void
         <DocumentModal bookings={bookings} onClose={() => setDocumentModal(false)} onSave={saveDocument} />
       )}
       {weddingFormModal && (
-        <WeddingFormModal item={weddingFormModal} onClose={() => setWeddingFormModal(null)} onStatusChange={updateWeddingFormStatus} />
+        <WeddingFormModal item={weddingFormModal} onClose={() => setWeddingFormModal(null)} onPatch={patchWeddingForm} />
       )}
       {leadModal && (
         <LeadModal item={leadModal} onClose={() => setLeadModal(null)} onStatusChange={updateLeadStatus} onSaveNotes={saveLeadNotes} />

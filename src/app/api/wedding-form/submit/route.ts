@@ -7,6 +7,7 @@ import {
   type WeddingQuestionnaireData,
   type WeddingContractData,
 } from '@/lib/pdf/weddingDocuments';
+import { sendEmail, MEJASAN_ADMIN_EMAIL } from '@/lib/email';
 
 const SIG_BUCKET = 'mejasan-media';
 const DOC_BUCKET = 'mejasan-event-docs'; // allows application/pdf; mejasan-media is images/video only
@@ -22,18 +23,6 @@ interface SubmitBody {
   };
   is_correction: boolean;
   correction_of?: string | null;
-}
-
-async function sendEmail(to: string, subject: string, html: string, attachments: { filename: string; content: string }[]) {
-  const key = process.env.RESEND_API_KEY;
-  if (!key || key === 're_...') return;
-  const from = `${process.env.RESEND_FROM_NAME ?? 'Mejasan Media'} <${process.env.RESEND_FROM_EMAIL ?? 'noreply@edoscentre.co.ke'}>`;
-  const replyTo = process.env.RESEND_REPLY_TO ?? 'info@mejasanmedia.com';
-  await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ from, to: [to], reply_to: replyTo, subject, html, attachments }),
-  });
 }
 
 function dataUrlToBuffer(dataUrl: string | null | undefined): Buffer | null {
@@ -135,18 +124,7 @@ export async function POST(req: Request) {
       <p>Your Questionnaire and Contract are attached as PDFs for your records.</p>
       <p>We look forward to telling your story beautifully.</p>
       <p>— Mejasan Media Production</p>
-    `, attachments);
-
-    await sendEmail('info@mejasanmedia.com', `${is_correction ? 'Updated' : 'New'} wedding intake — ${coupleLabel} (${q.wedding_date})`, `
-      <h3>${is_correction ? 'Updated' : 'New'} Wedding Intake Submission</h3>
-      <p><strong>Couple:</strong> ${coupleLabel}</p>
-      <p><strong>Wedding date:</strong> ${q.wedding_date}</p>
-      <p><strong>Client email:</strong> ${q.client_email}</p>
-      <p><strong>Client phone:</strong> ${c.client_phone}</p>
-      <p><strong>Package:</strong> ${q.selected_package || '—'}</p>
-      <p><strong>Total cost:</strong> KES ${c.cost}</p>
-      <p>Full questionnaire and signed contract are attached, and reviewable in the admin dashboard under Wedding Forms.</p>
-    `, attachments);
+    `, attachments, { cc: MEJASAN_ADMIN_EMAIL });
 
     return NextResponse.json({ ok: true, id, questionnaire_pdf_url: questionnairePdfUrl, contract_pdf_url: contractPdfUrl });
   } catch (error: unknown) {
