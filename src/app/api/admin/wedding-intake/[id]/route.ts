@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient, createAdminClient } from '@/lib/supabase/server';
-import { renderContractPdf, type WeddingContractData, type WeddingQuestionnaireData } from '@/lib/pdf/weddingDocuments';
+import { renderContractPdf, renderQuestionnairePdf, type WeddingContractData, type WeddingQuestionnaireData } from '@/lib/pdf/weddingDocuments';
 import { sendEmail, MEJASAN_ADMIN_EMAIL } from '@/lib/email';
 
 const DOC_BUCKET = 'mejasan-event-docs';
@@ -78,23 +78,29 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
       const draftGeneratedDate = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
       const draftCoupleLabel = `${body.bride_name ?? row.bride_name} and ${body.groom_name ?? row.groom_name}`;
-      const draftPdf = await renderContractPdf(mergedContract, draftCoupleLabel, {
-        client: row.signature_client_url,
-        witness: row.signature_witness_url,
-        company: null,
-        companyWitness: null,
-      }, draftGeneratedDate, {
-        invoiceNumber: body.invoice_number ?? row.invoice_number,
-        companySignoff: null,
-      });
+      const [draftQuestionnairePdf, draftContractPdf] = await Promise.all([
+        renderQuestionnairePdf(mergedQuestionnaire),
+        renderContractPdf(mergedContract, draftCoupleLabel, {
+          client: row.signature_client_url,
+          witness: row.signature_witness_url,
+          company: null,
+          companyWitness: null,
+        }, draftGeneratedDate, {
+          invoiceNumber: body.invoice_number ?? row.invoice_number,
+          companySignoff: null,
+        }),
+      ]);
 
       const clientEmail = (body.client_email ?? row.client_email) as string;
       await sendEmail(clientEmail, `Draft contract for your review — ${draftCoupleLabel}`, `
         <h2>Hello ${body.bride_name ?? row.bride_name} &amp; ${body.groom_name ?? row.groom_name},</h2>
-        <p>Attached is a draft of your wedding contract reflecting the latest details discussed with Mejasan Media Production.</p>
+        <p>Attached are the latest draft Questionnaire and Contract reflecting the details discussed with Mejasan Media Production.</p>
         <p>Please review the terms and let us know if any changes are needed. This is <strong>not yet the final signed copy</strong> — once everything is confirmed, we'll send the fully signed version separately.</p>
         <p>— Mejasan Media Production</p>
-      `, [{ filename: `Draft Contract — ${draftCoupleLabel} — ${mergedContract.event_date}.pdf`, content: draftPdf.toString('base64') }], { cc: MEJASAN_ADMIN_EMAIL });
+      `, [
+        { filename: `Questionnaire — ${draftCoupleLabel} — ${mergedContract.event_date}.pdf`, content: draftQuestionnairePdf.toString('base64') },
+        { filename: `Draft Contract — ${draftCoupleLabel} — ${mergedContract.event_date}.pdf`, content: draftContractPdf.toString('base64') },
+      ], { cc: MEJASAN_ADMIN_EMAIL });
 
       return NextResponse.json({ ok: true, item: updated });
     }
@@ -157,10 +163,13 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       companyWitness: effectiveCompanyWitnessUrl,
     };
 
-    const contractPdf = await renderContractPdf(mergedContract, coupleLabel, sigUrls, generatedDate, {
-      invoiceNumber,
-      companySignoff: { name: signoffName, title: signoffTitle, date: generatedDate },
-    });
+    const [questionnairePdf, contractPdf] = await Promise.all([
+      renderQuestionnairePdf(mergedQuestionnaire),
+      renderContractPdf(mergedContract, coupleLabel, sigUrls, generatedDate, {
+        invoiceNumber,
+        companySignoff: { name: signoffName, title: signoffTitle, date: generatedDate },
+      }),
+    ]);
 
     const objectPath = `wedding-documents/${id}/contract-signed.pdf`;
     const { error: upErr } = await admin.storage.from(DOC_BUCKET).upload(objectPath, contractPdf, { contentType: 'application/pdf', upsert: true });
@@ -186,12 +195,15 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     if (updErr) throw updErr;
 
     const clientEmail = (body.client_email ?? row.client_email) as string;
-    const attachments = [{ filename: `Signed Contract — ${coupleLabel} — ${mergedContract.event_date}.pdf`, content: contractPdf.toString('base64') }];
+    const attachments = [
+      { filename: `Questionnaire — ${coupleLabel} — ${mergedContract.event_date}.pdf`, content: questionnairePdf.toString('base64') },
+      { filename: `Signed Contract — ${coupleLabel} — ${mergedContract.event_date}.pdf`, content: contractPdf.toString('base64') },
+    ];
 
     await sendEmail(clientEmail, `Your signed wedding contract — ${coupleLabel}`, `
       <h2>Hello ${body.bride_name ?? row.bride_name} &amp; ${body.groom_name ?? row.groom_name},</h2>
       <p>Your wedding contract has been reviewed and formally approved by Mejasan Media Production.</p>
-      <p>The full signed copy is attached as a PDF for your records${invoiceNumber ? ` (Invoice/Quote No: ${invoiceNumber})` : ''}.</p>
+      <p>The full signed contract and your latest questionnaire are attached as PDFs for your records${invoiceNumber ? ` (Invoice/Quote No: ${invoiceNumber})` : ''}.</p>
       <p>Approved by: ${signoffName}${signoffTitle ? `, ${signoffTitle}` : ''}</p>
       <p>— Mejasan Media Production</p>
     `, attachments, { cc: MEJASAN_ADMIN_EMAIL });

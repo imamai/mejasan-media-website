@@ -991,7 +991,7 @@ function WeddingFormModal({
             )}
           </div>
           <p className="text-[10px] font-display text-white/25 leading-relaxed">
-            &quot;Send Draft to Client&quot; emails the current terms for review — no company signatures, no review stamp, nothing marked as reviewed. Use it as many times as needed while details are still being confirmed. Marking a submission reviewed requires: Invoice Number, a Mejasan Media sign-off name, a completed Copyright &amp; Consent answer, the core contract details (event date, location, cost, client name &amp; phone), and the client&apos;s signature already on file. Company Rep and Witness (Company) signatures — and the approved-by name/title — are pulled from Settings automatically. It generates the final signed contract PDF and emails it to the client and info@mejasanmedia.com automatically.
+            &quot;Send Draft to Client&quot; emails the current questionnaire and contract terms for review — no company signatures, no review stamp, nothing marked as reviewed. Use it as many times as needed while details are still being confirmed. Marking a submission reviewed requires: Invoice Number, a Mejasan Media sign-off name, a completed Copyright &amp; Consent answer, the core contract details (event date, location, cost, client name &amp; phone), and the client&apos;s signature already on file. Company Rep and Witness (Company) signatures — and the approved-by name/title — are pulled from Settings automatically. Both actions always reflect the latest saved edits and email a matching Questionnaire + Contract pair to the client and info@mejasanmedia.com automatically.
           </p>
         </div>
       </div>
