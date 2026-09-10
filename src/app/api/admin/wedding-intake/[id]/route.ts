@@ -70,7 +70,10 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       // revisions. No validation gate, no company signatures/review stamp (those
       // are exclusively finalize's job), and nothing marked as reviewed/signed —
       // this can be sent as many times as needed while terms are still settling.
-      const { data: updated, error: updErr } = await admin.from('mejasan_wedding_intake').update(baseUpdates).eq('id', id).select().single();
+      const { data: updated, error: updErr } = await admin.from('mejasan_wedding_intake').update({
+        ...baseUpdates,
+        last_draft_sent_at: new Date().toISOString(),
+      }).eq('id', id).select().single();
       if (updErr) throw updErr;
 
       const draftGeneratedDate = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });

@@ -788,6 +788,7 @@ function WeddingFormModal({
     company_signoff_at: item.company_signoff_at as string | null,
     signed_contract_pdf_url: item.signed_contract_pdf_url as string | null,
     client_notified_at: item.client_notified_at as string | null,
+    last_draft_sent_at: item.last_draft_sent_at as string | null,
   });
 
   const runSave = async (finalize: boolean) => {
@@ -811,13 +812,14 @@ function WeddingFormModal({
     if (finalize) {
       setStatus('reviewed');
       const it = res.item ?? {};
-      setMeta({
+      setMeta((m) => ({
+        ...m,
         reviewed_by: it.reviewed_by as string | null,
         reviewed_at: it.reviewed_at as string | null,
         company_signoff_at: it.company_signoff_at as string | null,
         signed_contract_pdf_url: it.signed_contract_pdf_url as string | null,
         client_notified_at: it.client_notified_at as string | null,
-      });
+      }));
       toast.success('Reviewed — signed contract sent to client & info@mejasanmedia.com');
     } else {
       toast.success('Changes saved');
@@ -837,6 +839,7 @@ function WeddingFormModal({
     });
     setBusy(null);
     if (!res.ok) { toast.error(res.error || 'Failed to send draft'); return; }
+    setMeta((m) => ({ ...m, last_draft_sent_at: (res.item?.last_draft_sent_at as string | null) ?? new Date().toISOString() }));
     toast.success('Draft sent to client for review');
   };
 
@@ -881,6 +884,12 @@ function WeddingFormModal({
             <div>Approved by <span className="text-white/90">{signoffName || '—'}</span>{signoffTitle ? `, ${signoffTitle}` : ''} on {fmtDateTime(meta.company_signoff_at)}</div>
             <div>Reviewed by (admin account): <span className="text-white/90">{meta.reviewed_by || '—'}</span></div>
             <div>Signed copy emailed to {top.client_email} and info@mejasanmedia.com on {fmtDateTime(meta.client_notified_at)}</div>
+          </div>
+        )}
+
+        {meta.last_draft_sent_at && (
+          <div className="border border-white/10 bg-white/[0.02] px-4 py-3 text-[11px] font-display text-white/40">
+            Last draft (no signatures) emailed to {top.client_email} on {fmtDateTime(meta.last_draft_sent_at)}
           </div>
         )}
 
