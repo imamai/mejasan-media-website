@@ -780,7 +780,7 @@ function WeddingFormModal({
   const [signoffName, setSignoffName] = useState((item.company_signoff_name as string) || companySignoffAssets.companySignoffName || '');
   const [signoffTitle, setSignoffTitle] = useState((item.company_signoff_title as string) || companySignoffAssets.companySignoffTitle || '');
   const [status, setStatus] = useState((item.status as string) ?? 'submitted');
-  const [busy, setBusy] = useState<'save' | 'finalize' | 'revert' | null>(null);
+  const [busy, setBusy] = useState<'save' | 'draft' | 'finalize' | 'revert' | null>(null);
   const [missing, setMissing] = useState<string[] | null>(null);
   const [meta, setMeta] = useState({
     reviewed_by: item.reviewed_by as string | null,
@@ -822,6 +822,22 @@ function WeddingFormModal({
     } else {
       toast.success('Changes saved');
     }
+  };
+
+  const runSendDraft = async () => {
+    setBusy('draft');
+    const res = await onPatch(item.id as string, {
+      ...top,
+      questionnaire: qEdits,
+      contract: cEdits,
+      invoice_number: invoiceNumber,
+      company_signoff_name: signoffName,
+      company_signoff_title: signoffTitle,
+      sendDraft: true,
+    });
+    setBusy(null);
+    if (!res.ok) { toast.error(res.error || 'Failed to send draft'); return; }
+    toast.success('Draft sent to client for review');
   };
 
   const runRevert = async () => {
@@ -953,6 +969,9 @@ function WeddingFormModal({
             <button onClick={() => runSave(false)} disabled={busy !== null} className="btn-outline px-6 py-2.5 text-[11px] disabled:opacity-50">
               {busy === 'save' ? 'Saving…' : 'Save Changes'}
             </button>
+            <button onClick={runSendDraft} disabled={busy !== null} className="btn-outline px-6 py-2.5 text-[11px] disabled:opacity-50" title="Sends the current terms to the client for review — no company signatures, not the final copy">
+              {busy === 'draft' ? 'Sending…' : 'Send Draft to Client'}
+            </button>
             <button onClick={() => runSave(true)} disabled={busy !== null || !canFinalize} className="btn-primary px-6 py-2.5 text-[11px] disabled:opacity-50" title={!canFinalize ? 'Invoice Number and Mejasan sign-off name are required' : undefined}>
               {busy === 'finalize' ? 'Sending…' : status === 'reviewed' ? 'Resend Signed Copy to Client' : 'Mark Reviewed & Send Signed Copy'}
             </button>
@@ -963,7 +982,7 @@ function WeddingFormModal({
             )}
           </div>
           <p className="text-[10px] font-display text-white/25 leading-relaxed">
-            Marking a submission reviewed requires: Invoice Number, a Mejasan Media sign-off name, a completed Copyright &amp; Consent answer, the core contract details (event date, location, cost, client name &amp; phone), and the client&apos;s signature already on file. Company Rep and Witness (Company) signatures — and the approved-by name/title — are pulled from Settings automatically. It generates the final signed contract PDF and emails it to the client and info@mejasanmedia.com automatically.
+            &quot;Send Draft to Client&quot; emails the current terms for review — no company signatures, no review stamp, nothing marked as reviewed. Use it as many times as needed while details are still being confirmed. Marking a submission reviewed requires: Invoice Number, a Mejasan Media sign-off name, a completed Copyright &amp; Consent answer, the core contract details (event date, location, cost, client name &amp; phone), and the client&apos;s signature already on file. Company Rep and Witness (Company) signatures — and the approved-by name/title — are pulled from Settings automatically. It generates the final signed contract PDF and emails it to the client and info@mejasanmedia.com automatically.
           </p>
         </div>
       </div>

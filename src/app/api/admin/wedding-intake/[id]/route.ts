@@ -30,6 +30,7 @@ interface PatchBody {
   company_signoff_title?: string;
   status?: string;
   finalize?: boolean;
+  sendDraft?: boolean;
 }
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -63,6 +64,37 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     if (body.invoice_number !== undefined) baseUpdates.invoice_number = body.invoice_number;
     if (body.company_signoff_name !== undefined) baseUpdates.company_signoff_name = body.company_signoff_name;
     if (body.company_signoff_title !== undefined) baseUpdates.company_signoff_title = body.company_signoff_title;
+
+    if (body.sendDraft) {
+      // Send an in-progress copy for the client to review during back-and-forth
+      // revisions. No validation gate, no company signatures/review stamp (those
+      // are exclusively finalize's job), and nothing marked as reviewed/signed —
+      // this can be sent as many times as needed while terms are still settling.
+      const { data: updated, error: updErr } = await admin.from('mejasan_wedding_intake').update(baseUpdates).eq('id', id).select().single();
+      if (updErr) throw updErr;
+
+      const draftGeneratedDate = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+      const draftCoupleLabel = `${body.bride_name ?? row.bride_name} and ${body.groom_name ?? row.groom_name}`;
+      const draftPdf = await renderContractPdf(mergedContract, draftCoupleLabel, {
+        client: row.signature_client_url,
+        witness: row.signature_witness_url,
+        company: null,
+        companyWitness: null,
+      }, draftGeneratedDate, {
+        invoiceNumber: body.invoice_number ?? row.invoice_number,
+        companySignoff: null,
+      });
+
+      const clientEmail = (body.client_email ?? row.client_email) as string;
+      await sendEmail(clientEmail, `Draft contract for your review — ${draftCoupleLabel}`, `
+        <h2>Hello ${body.bride_name ?? row.bride_name} &amp; ${body.groom_name ?? row.groom_name},</h2>
+        <p>Attached is a draft of your wedding contract reflecting the latest details discussed with Mejasan Media Production.</p>
+        <p>Please review the terms and let us know if any changes are needed. This is <strong>not yet the final signed copy</strong> — once everything is confirmed, we'll send the fully signed version separately.</p>
+        <p>— Mejasan Media Production</p>
+      `, [{ filename: `Draft Contract — ${draftCoupleLabel} — ${mergedContract.event_date}.pdf`, content: draftPdf.toString('base64') }], { cc: MEJASAN_ADMIN_EMAIL });
+
+      return NextResponse.json({ ok: true, item: updated });
+    }
 
     if (!body.finalize) {
       // Plain edit (and/or a manual status change, e.g. reverting a reviewed
