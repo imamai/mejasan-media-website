@@ -74,9 +74,15 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     }
 
     // Finalizing: validate everything required for a signed, sendable contract exists.
+    const { data: signoffSettings } = await admin
+      .from('mejasan_settings')
+      .select('key,value')
+      .in('key', ['company_rep_signature_url', 'company_witness_signature_url', 'company_signoff_name', 'company_signoff_title']);
+    const settingsMap = Object.fromEntries((signoffSettings ?? []).map((s) => [s.key, s.value]));
+
     const invoiceNumber = (body.invoice_number ?? row.invoice_number ?? '').toString().trim();
-    const signoffName = (body.company_signoff_name ?? row.company_signoff_name ?? '').toString().trim();
-    const signoffTitle = (body.company_signoff_title ?? row.company_signoff_title ?? '').toString().trim();
+    const signoffName = (body.company_signoff_name ?? row.company_signoff_name ?? settingsMap.company_signoff_name ?? '').toString().trim();
+    const signoffTitle = (body.company_signoff_title ?? row.company_signoff_title ?? settingsMap.company_signoff_title ?? '').toString().trim();
 
     const missing: string[] = [];
     if (!invoiceNumber) missing.push('Invoice Number');
@@ -91,13 +97,12 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     }
     if (!row.signature_client_url) missing.push("Client's signature");
 
-    const { data: signoffSettings } = await admin
-      .from('mejasan_settings')
-      .select('key,value')
-      .in('key', ['company_rep_signature_url', 'company_witness_signature_url']);
-    const settingsMap = Object.fromEntries((signoffSettings ?? []).map((s) => [s.key, s.value]));
-    const effectiveCompanyUrl: string | null = row.signature_company_url || settingsMap.company_rep_signature_url || null;
-    const effectiveCompanyWitnessUrl: string | null = row.signature_company_witness_url || settingsMap.company_witness_signature_url || null;
+    // Company Rep / Witness (Company) always use the canonical Settings image when one is
+    // configured — the public client-facing form's canvas for these two boxes marks itself
+    // "signed" on the first touch/click even without an actual stroke, so a per-record value
+    // there can be a blank accidental capture rather than a real signature.
+    const effectiveCompanyUrl: string | null = settingsMap.company_rep_signature_url || row.signature_company_url || null;
+    const effectiveCompanyWitnessUrl: string | null = settingsMap.company_witness_signature_url || row.signature_company_witness_url || null;
 
     if (!effectiveCompanyUrl) missing.push('Company Rep signature not configured — upload it in Settings first');
     if (!effectiveCompanyWitnessUrl) missing.push('Witness (Company) signature not configured — upload it in Settings first');

@@ -744,14 +744,19 @@ type PatchResult = { ok: boolean; error?: string; missing?: string[]; item?: Rec
 
 function WeddingFormModal({
   item, onClose, onPatch, companySignoffAssets,
-}: { item: Record<string, unknown>; onClose: () => void; onPatch: (id: string, body: Record<string, unknown>) => Promise<PatchResult>; companySignoffAssets: { companyRepSignatureUrl: string; companyWitnessSignatureUrl: string } }) {
+}: { item: Record<string, unknown>; onClose: () => void; onPatch: (id: string, body: Record<string, unknown>) => Promise<PatchResult>; companySignoffAssets: { companyRepSignatureUrl: string; companyWitnessSignatureUrl: string; companySignoffName: string; companySignoffTitle: string } }) {
   const q = (item.questionnaire as Record<string, unknown>) ?? {};
   const c = (item.contract as Record<string, unknown>) ?? {};
+  // Company Rep / Witness (Company) always use the Settings-configured image when one exists
+  // (see route.ts) — the public form's canvas for these two can register a blank accidental
+  // tap as "signed", so Settings wins over whatever (if anything) is on this record.
+  const companyRepUrl = companySignoffAssets.companyRepSignatureUrl || (item.signature_company_url as string | null) || null;
+  const companyWitnessUrl = companySignoffAssets.companyWitnessSignatureUrl || (item.signature_company_witness_url as string | null) || null;
   const sigs = [
     ['Client', item.signature_client_url as string | null, null],
     ['Witness (Client)', item.signature_witness_url as string | null, null],
-    ['Company Rep', item.signature_company_url as string | null, companySignoffAssets.companyRepSignatureUrl || null],
-    ['Witness (Company)', item.signature_company_witness_url as string | null, companySignoffAssets.companyWitnessSignatureUrl || null],
+    ['Company Rep', companyRepUrl, companySignoffAssets.companyRepSignatureUrl ? 'From Settings — auto-applied on finalize.' : companyRepUrl ? null : 'Not configured — add in Settings first.'],
+    ['Witness (Company)', companyWitnessUrl, companySignoffAssets.companyWitnessSignatureUrl ? 'From Settings — auto-applied on finalize.' : companyWitnessUrl ? null : 'Not configured — add in Settings first.'],
   ] as [string, string | null, string | null][];
 
   const [top, setTop] = useState({
@@ -772,8 +777,8 @@ function WeddingFormModal({
     return out;
   });
   const [invoiceNumber, setInvoiceNumber] = useState((item.invoice_number as string) ?? '');
-  const [signoffName, setSignoffName] = useState((item.company_signoff_name as string) ?? '');
-  const [signoffTitle, setSignoffTitle] = useState((item.company_signoff_title as string) ?? '');
+  const [signoffName, setSignoffName] = useState((item.company_signoff_name as string) || companySignoffAssets.companySignoffName || '');
+  const [signoffTitle, setSignoffTitle] = useState((item.company_signoff_title as string) || companySignoffAssets.companySignoffTitle || '');
   const [status, setStatus] = useState((item.status as string) ?? 'submitted');
   const [busy, setBusy] = useState<'save' | 'finalize' | 'revert' | null>(null);
   const [missing, setMissing] = useState<string[] | null>(null);
@@ -925,7 +930,7 @@ function WeddingFormModal({
         <div>
           <h3 className="text-[11px] font-display tracking-widest uppercase text-white/40 mb-3 pb-2 border-b border-white/[0.06]">Signatures (captured on client form)</h3>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            {sigs.map(([label, url, canonicalUrl]) => (
+            {sigs.map(([label, url, note]) => (
               <div key={label}>
                 <div className="text-[9px] font-display tracking-widest uppercase text-white/25 mb-1.5">{label}</div>
                 {url ? (
@@ -934,12 +939,8 @@ function WeddingFormModal({
                 ) : (
                   <div className="h-16 border border-dashed border-white/10 rounded flex items-center justify-center text-white/15 text-[10px]">Not signed</div>
                 )}
-                {!url && canonicalUrl !== null && (
-                  canonicalUrl ? (
-                    <div className="text-[9px] font-display text-white/25 mt-1">Will be auto-applied from Settings on finalize.</div>
-                  ) : (
-                    <div className="text-[9px] font-display text-red-400/70 mt-1">Not configured — add in Settings first.</div>
-                  )
+                {note && (
+                  <div className={`text-[9px] font-display mt-1 ${url ? 'text-white/25' : 'text-red-400/70'}`}>{note}</div>
                 )}
               </div>
             ))}
@@ -962,7 +963,7 @@ function WeddingFormModal({
             )}
           </div>
           <p className="text-[10px] font-display text-white/25 leading-relaxed">
-            Marking a submission reviewed requires: Invoice Number, a Mejasan Media sign-off name, a completed Copyright &amp; Consent answer, the core contract details (event date, location, cost, client name &amp; phone), and the client&apos;s signature already on file. Company Rep and Witness (Company) signatures, if not already on file for this submission, are auto-applied from the images saved under Settings. It generates the final signed contract PDF and emails it to the client and info@mejasanmedia.com automatically.
+            Marking a submission reviewed requires: Invoice Number, a Mejasan Media sign-off name, a completed Copyright &amp; Consent answer, the core contract details (event date, location, cost, client name &amp; phone), and the client&apos;s signature already on file. Company Rep and Witness (Company) signatures — and the approved-by name/title — are pulled from Settings automatically. It generates the final signed contract PDF and emails it to the client and info@mejasanmedia.com automatically.
           </p>
         </div>
       </div>
@@ -1257,16 +1258,18 @@ function AdminDashboard({ user, onSignOut }: { user: User; onSignOut: () => void
   const [settings, setSettings] = useState({ name: 'Mejasan Media Production', email: 'info@mejasanmedia.com', phone: '+254 700 864 849', location: 'Kisumu, Kenya', whatsapp: '+254700864849' });
   const [savingSettings, setSavingSettings] = useState(false);
 
-  /* Company sign-off signatures (reused on every wedding contract at finalize) */
-  const [companySignoffAssets, setCompanySignoffAssets] = useState({ companyRepSignatureUrl: '', companyWitnessSignatureUrl: '' });
+  /* Company sign-off signatures + approver name/title (reused on every wedding contract at finalize) */
+  const [companySignoffAssets, setCompanySignoffAssets] = useState({ companyRepSignatureUrl: '', companyWitnessSignatureUrl: '', companySignoffName: '', companySignoffTitle: '' });
   const [savingSignoffAssets, setSavingSignoffAssets] = useState(false);
 
   const fetchCompanySignoffAssets = async () => {
-    const { data } = await sb.from('mejasan_settings').select('key,value').in('key', ['company_rep_signature_url', 'company_witness_signature_url']);
+    const { data } = await sb.from('mejasan_settings').select('key,value').in('key', ['company_rep_signature_url', 'company_witness_signature_url', 'company_signoff_name', 'company_signoff_title']);
     const map = Object.fromEntries((data ?? []).map((s) => [s.key, s.value as string | null]));
     setCompanySignoffAssets({
       companyRepSignatureUrl: map.company_rep_signature_url ?? '',
       companyWitnessSignatureUrl: map.company_witness_signature_url ?? '',
+      companySignoffName: map.company_signoff_name ?? '',
+      companySignoffTitle: map.company_signoff_title ?? '',
     });
   };
 
@@ -1275,10 +1278,12 @@ function AdminDashboard({ user, onSignOut }: { user: User; onSignOut: () => void
     const { error } = await sb.from('mejasan_settings').upsert([
       { key: 'company_rep_signature_url', value: companySignoffAssets.companyRepSignatureUrl },
       { key: 'company_witness_signature_url', value: companySignoffAssets.companyWitnessSignatureUrl },
+      { key: 'company_signoff_name', value: companySignoffAssets.companySignoffName },
+      { key: 'company_signoff_title', value: companySignoffAssets.companySignoffTitle },
     ], { onConflict: 'key' });
     setSavingSignoffAssets(false);
-    if (error) toast.error('Save failed — check mejasan_settings table exists');
-    else toast.success('Signatures saved');
+    if (error) toast.error(`Save failed: ${error.message}`);
+    else toast.success('Saved');
   };
 
   /* Page content (About + Services) */
@@ -2374,9 +2379,9 @@ function AdminDashboard({ user, onSignOut }: { user: User; onSignOut: () => void
           </button>
         </div>
         <div className="bg-[#141414] border border-white/[0.06] p-6 space-y-4">
-          <div className="text-[10px] font-display tracking-widest text-[#E10600] uppercase mb-2">Company Sign-off Signatures</div>
+          <div className="text-[10px] font-display tracking-widest text-[#E10600] uppercase mb-2">Company Sign-off Defaults</div>
           <p className="text-[11px] text-white/35 font-display leading-relaxed">
-            Upload the Company Rep and Witness (Company) signature images once here. They are automatically stamped onto every wedding contract&apos;s Company Rep / Witness (Company) slots when an admin marks it Reviewed — no need to sign each contract individually.
+            Set these once. Every wedding contract is automatically stamped with them when an admin marks it Reviewed — no need to sign or type them per submission. A submission&apos;s own values (if explicitly entered) still take precedence.
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
@@ -2387,9 +2392,17 @@ function AdminDashboard({ user, onSignOut }: { user: User; onSignOut: () => void
               <label className="block text-[10px] font-display tracking-widest uppercase text-white/30 mb-1.5">Witness (Company) Signature</label>
               <ImageUploadField value={companySignoffAssets.companyWitnessSignatureUrl} onChange={(v) => setCompanySignoffAssets((s) => ({ ...s, companyWitnessSignatureUrl: v }))} folder="signoffs" />
             </div>
+            <div>
+              <label className="block text-[10px] font-display tracking-widest uppercase text-white/30 mb-1.5">Approved-by Name</label>
+              <input value={companySignoffAssets.companySignoffName} onChange={(e) => setCompanySignoffAssets((s) => ({ ...s, companySignoffName: e.target.value }))} className={inputCls} placeholder="e.g. Mejasan Media Production" />
+            </div>
+            <div>
+              <label className="block text-[10px] font-display tracking-widest uppercase text-white/30 mb-1.5">Approved-by Title</label>
+              <input value={companySignoffAssets.companySignoffTitle} onChange={(e) => setCompanySignoffAssets((s) => ({ ...s, companySignoffTitle: e.target.value }))} className={inputCls} placeholder="e.g. CEO" />
+            </div>
           </div>
           <button onClick={saveCompanySignoffAssets} disabled={savingSignoffAssets} className="btn-primary mt-2 disabled:opacity-50">
-            <Save size={13} /> {savingSignoffAssets ? 'Saving…' : 'Save Signatures'}
+            <Save size={13} /> {savingSignoffAssets ? 'Saving…' : 'Save Defaults'}
           </button>
         </div>
         <div className="bg-[#141414] border border-white/[0.06] p-6">
