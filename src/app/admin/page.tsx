@@ -743,16 +743,16 @@ function fmtDateTime(v?: string | null) {
 type PatchResult = { ok: boolean; error?: string; missing?: string[]; item?: Record<string, unknown> };
 
 function WeddingFormModal({
-  item, onClose, onPatch,
-}: { item: Record<string, unknown>; onClose: () => void; onPatch: (id: string, body: Record<string, unknown>) => Promise<PatchResult> }) {
+  item, onClose, onPatch, companySignoffAssets,
+}: { item: Record<string, unknown>; onClose: () => void; onPatch: (id: string, body: Record<string, unknown>) => Promise<PatchResult>; companySignoffAssets: { companyRepSignatureUrl: string; companyWitnessSignatureUrl: string } }) {
   const q = (item.questionnaire as Record<string, unknown>) ?? {};
   const c = (item.contract as Record<string, unknown>) ?? {};
   const sigs = [
-    ['Client', item.signature_client_url as string | null],
-    ['Witness (Client)', item.signature_witness_url as string | null],
-    ['Company Rep', item.signature_company_url as string | null],
-    ['Witness (Company)', item.signature_company_witness_url as string | null],
-  ] as [string, string | null][];
+    ['Client', item.signature_client_url as string | null, null],
+    ['Witness (Client)', item.signature_witness_url as string | null, null],
+    ['Company Rep', item.signature_company_url as string | null, companySignoffAssets.companyRepSignatureUrl || null],
+    ['Witness (Company)', item.signature_company_witness_url as string | null, companySignoffAssets.companyWitnessSignatureUrl || null],
+  ] as [string, string | null, string | null][];
 
   const [top, setTop] = useState({
     bride_name: (item.bride_name as string) ?? '',
@@ -925,7 +925,7 @@ function WeddingFormModal({
         <div>
           <h3 className="text-[11px] font-display tracking-widest uppercase text-white/40 mb-3 pb-2 border-b border-white/[0.06]">Signatures (captured on client form)</h3>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            {sigs.map(([label, url]) => (
+            {sigs.map(([label, url, canonicalUrl]) => (
               <div key={label}>
                 <div className="text-[9px] font-display tracking-widest uppercase text-white/25 mb-1.5">{label}</div>
                 {url ? (
@@ -933,6 +933,13 @@ function WeddingFormModal({
                   <img src={url} alt={label} className="bg-white rounded p-1 w-full h-16 object-contain" />
                 ) : (
                   <div className="h-16 border border-dashed border-white/10 rounded flex items-center justify-center text-white/15 text-[10px]">Not signed</div>
+                )}
+                {!url && canonicalUrl !== null && (
+                  canonicalUrl ? (
+                    <div className="text-[9px] font-display text-white/25 mt-1">Will be auto-applied from Settings on finalize.</div>
+                  ) : (
+                    <div className="text-[9px] font-display text-red-400/70 mt-1">Not configured — add in Settings first.</div>
+                  )
                 )}
               </div>
             ))}
@@ -955,7 +962,7 @@ function WeddingFormModal({
             )}
           </div>
           <p className="text-[10px] font-display text-white/25 leading-relaxed">
-            Marking a submission reviewed requires: Invoice Number, a Mejasan Media sign-off name, a completed Copyright &amp; Consent answer, the core contract details (event date, location, cost, client name &amp; phone), and the client&apos;s signature already on file. It generates the final signed contract PDF and emails it to the client and info@mejasanmedia.com automatically.
+            Marking a submission reviewed requires: Invoice Number, a Mejasan Media sign-off name, a completed Copyright &amp; Consent answer, the core contract details (event date, location, cost, client name &amp; phone), and the client&apos;s signature already on file. Company Rep and Witness (Company) signatures, if not already on file for this submission, are auto-applied from the images saved under Settings. It generates the final signed contract PDF and emails it to the client and info@mejasanmedia.com automatically.
           </p>
         </div>
       </div>
@@ -1250,6 +1257,30 @@ function AdminDashboard({ user, onSignOut }: { user: User; onSignOut: () => void
   const [settings, setSettings] = useState({ name: 'Mejasan Media Production', email: 'info@mejasanmedia.com', phone: '+254 700 864 849', location: 'Kisumu, Kenya', whatsapp: '+254700864849' });
   const [savingSettings, setSavingSettings] = useState(false);
 
+  /* Company sign-off signatures (reused on every wedding contract at finalize) */
+  const [companySignoffAssets, setCompanySignoffAssets] = useState({ companyRepSignatureUrl: '', companyWitnessSignatureUrl: '' });
+  const [savingSignoffAssets, setSavingSignoffAssets] = useState(false);
+
+  const fetchCompanySignoffAssets = async () => {
+    const { data } = await sb.from('mejasan_settings').select('key,value').in('key', ['company_rep_signature_url', 'company_witness_signature_url']);
+    const map = Object.fromEntries((data ?? []).map((s) => [s.key, s.value as string | null]));
+    setCompanySignoffAssets({
+      companyRepSignatureUrl: map.company_rep_signature_url ?? '',
+      companyWitnessSignatureUrl: map.company_witness_signature_url ?? '',
+    });
+  };
+
+  const saveCompanySignoffAssets = async () => {
+    setSavingSignoffAssets(true);
+    const { error } = await sb.from('mejasan_settings').upsert([
+      { key: 'company_rep_signature_url', value: companySignoffAssets.companyRepSignatureUrl },
+      { key: 'company_witness_signature_url', value: companySignoffAssets.companyWitnessSignatureUrl },
+    ], { onConflict: 'key' });
+    setSavingSignoffAssets(false);
+    if (error) toast.error('Save failed — check mejasan_settings table exists');
+    else toast.success('Signatures saved');
+  };
+
   /* Page content (About + Services) */
   const [pageSlug, setPageSlug] = useState<string>(PAGE_SLUGS[0]);
   const [pageContent, setPageContent] = useState<Record<string, unknown> | null>(null);
@@ -1339,7 +1370,7 @@ function AdminDashboard({ user, onSignOut }: { user: User; onSignOut: () => void
     else toast.success('Page content saved');
   };
 
-  useEffect(() => { fetchAll(); fetchGallery(); fetchClients(); fetchPageContent(pageSlug); fetchNotifications(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { fetchAll(); fetchGallery(); fetchClients(); fetchPageContent(pageSlug); fetchNotifications(); fetchCompanySignoffAssets(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const updateBookingStatus = async (id: string, status: string) => {
     await sb.from('mejasan_bookings').update({ status }).eq('id', id);
@@ -2342,6 +2373,25 @@ function AdminDashboard({ user, onSignOut }: { user: User; onSignOut: () => void
             <Save size={13} /> {savingSettings ? 'Saving…' : 'Save Settings'}
           </button>
         </div>
+        <div className="bg-[#141414] border border-white/[0.06] p-6 space-y-4">
+          <div className="text-[10px] font-display tracking-widest text-[#E10600] uppercase mb-2">Company Sign-off Signatures</div>
+          <p className="text-[11px] text-white/35 font-display leading-relaxed">
+            Upload the Company Rep and Witness (Company) signature images once here. They are automatically stamped onto every wedding contract&apos;s Company Rep / Witness (Company) slots when an admin marks it Reviewed — no need to sign each contract individually.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-[10px] font-display tracking-widest uppercase text-white/30 mb-1.5">Company Rep Signature</label>
+              <ImageUploadField value={companySignoffAssets.companyRepSignatureUrl} onChange={(v) => setCompanySignoffAssets((s) => ({ ...s, companyRepSignatureUrl: v }))} folder="signoffs" />
+            </div>
+            <div>
+              <label className="block text-[10px] font-display tracking-widest uppercase text-white/30 mb-1.5">Witness (Company) Signature</label>
+              <ImageUploadField value={companySignoffAssets.companyWitnessSignatureUrl} onChange={(v) => setCompanySignoffAssets((s) => ({ ...s, companyWitnessSignatureUrl: v }))} folder="signoffs" />
+            </div>
+          </div>
+          <button onClick={saveCompanySignoffAssets} disabled={savingSignoffAssets} className="btn-primary mt-2 disabled:opacity-50">
+            <Save size={13} /> {savingSignoffAssets ? 'Saving…' : 'Save Signatures'}
+          </button>
+        </div>
         <div className="bg-[#141414] border border-white/[0.06] p-6">
           <div className="text-[10px] font-display tracking-widest text-[#E10600] uppercase mb-4">Account</div>
           <p className="text-[12px] text-white/35 font-display mb-4">Signed in as: {user.email}</p>
@@ -2442,7 +2492,7 @@ function AdminDashboard({ user, onSignOut }: { user: User; onSignOut: () => void
         <DocumentModal bookings={bookings} onClose={() => setDocumentModal(false)} onSave={saveDocument} />
       )}
       {weddingFormModal && (
-        <WeddingFormModal item={weddingFormModal} onClose={() => setWeddingFormModal(null)} onPatch={patchWeddingForm} />
+        <WeddingFormModal item={weddingFormModal} onClose={() => setWeddingFormModal(null)} onPatch={patchWeddingForm} companySignoffAssets={companySignoffAssets} />
       )}
       {leadModal && (
         <LeadModal item={leadModal} onClose={() => setLeadModal(null)} onStatusChange={updateLeadStatus} onSaveNotes={saveLeadNotes} />

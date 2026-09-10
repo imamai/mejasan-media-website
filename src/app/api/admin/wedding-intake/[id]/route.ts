@@ -91,6 +91,17 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     }
     if (!row.signature_client_url) missing.push("Client's signature");
 
+    const { data: signoffSettings } = await admin
+      .from('mejasan_settings')
+      .select('key,value')
+      .in('key', ['company_rep_signature_url', 'company_witness_signature_url']);
+    const settingsMap = Object.fromEntries((signoffSettings ?? []).map((s) => [s.key, s.value]));
+    const effectiveCompanyUrl: string | null = row.signature_company_url || settingsMap.company_rep_signature_url || null;
+    const effectiveCompanyWitnessUrl: string | null = row.signature_company_witness_url || settingsMap.company_witness_signature_url || null;
+
+    if (!effectiveCompanyUrl) missing.push('Company Rep signature not configured — upload it in Settings first');
+    if (!effectiveCompanyWitnessUrl) missing.push('Witness (Company) signature not configured — upload it in Settings first');
+
     if (missing.length) {
       return NextResponse.json({ error: 'Cannot mark as reviewed — required information is missing.', missing }, { status: 400 });
     }
@@ -102,8 +113,8 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     const sigUrls = {
       client: row.signature_client_url,
       witness: row.signature_witness_url,
-      company: row.signature_company_url,
-      companyWitness: row.signature_company_witness_url,
+      company: effectiveCompanyUrl,
+      companyWitness: effectiveCompanyWitnessUrl,
     };
 
     const contractPdf = await renderContractPdf(mergedContract, coupleLabel, sigUrls, generatedDate, {
@@ -124,6 +135,8 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       company_signoff_at: nowIso,
       reviewed_by: caller.email ?? caller.id,
       reviewed_at: nowIso,
+      signature_company_url: effectiveCompanyUrl,
+      signature_company_witness_url: effectiveCompanyWitnessUrl,
       signed_contract_pdf_url: signedContractPdfUrl,
       client_notified_at: nowIso,
       status: 'reviewed',
